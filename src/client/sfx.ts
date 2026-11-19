@@ -29,7 +29,7 @@ function audio(): AudioContext | null {
       const data = noiseBuf.getChannelData(0);
       for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
     }
-    if (ac.state === 'suspended') void ac.resume();
+    if (ac.state !== 'running') void ac.resume();
     return ac;
   } catch {
     return null;
@@ -90,7 +90,8 @@ const hat = (at = 0, vol = 0.035) => noise({ dur: 0.035, vol, f: 7000, at, music
 
 const semis = (n: number) => 2 ** (n / 12);
 // Major pentatonic ladder: each step of a combo climbs one rung.
-const LADDER = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24, 26, 28];
+/** Semitones a streak can climb before the pitch holds. */
+const CLIMB = 30;
 
 function arp(notes: number[], step: number, o: Partial<Tone> = {}) {
   notes.forEach((n, i) => {
@@ -190,16 +191,55 @@ const NAMED: Record<string, () => void> = {
   boing: () => tone({ f: 180, to: 520, dur: 0.2, type: 'triangle', vol: 0.14 }),
 };
 
-// iPhones mute Web Audio while the ring switch is on silent. Asking the audio session for
-// the "playback" category (iOS 16.4 and later) lifts that. It is a plain property, with no
-// hidden media element that an embedded web view could choke on.
-let asked = false;
+// iPhones mute Web Audio while the ring switch is on silent, though speech still plays.
+// Asking the audio session for the "playback" category (iOS 16.4 and later) lifts that.
+// Where that is missing, one looping clip of real silence moves the page into the media
+// category instead. It is a single reused element, tried on a few gestures at most.
+let sessionAsked = false;
+let clipTries = 0;
+let clip: HTMLAudioElement | null = null;
+function silence(): string {
+  const n = 8000; // one second of 8-bit mono at 8 kHz
+  const bytes = new Uint8Array(44 + n).fill(128);
+  const head = new DataView(bytes.buffer);
+  const put = (at: number, text: string) => [...text].forEach((ch, i) => head.setUint8(at + i, ch.charCodeAt(0)));
+  put(0, 'RIFF');
+  head.setUint32(4, 36 + n, true);
+  put(8, 'WAVEfmt ');
+  head.setUint32(16, 16, true);
+  head.setUint16(20, 1, true);
+  head.setUint16(22, 1, true);
+  head.setUint32(24, 8000, true);
+  head.setUint32(28, 8000, true);
+  head.setUint16(32, 1, true);
+  head.setUint16(34, 8, true);
+  put(36, 'data');
+  head.setUint32(40, n, true);
+  let text = '';
+  bytes.forEach((v) => (text += String.fromCharCode(v)));
+  return `data:audio/wav;base64,${btoa(text)}`;
+}
 function unmuteIos() {
-  if (asked) return;
-  asked = true;
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (!ios) return;
   try {
     const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
-    if (session) session.type = 'playback';
+    if (session) {
+      if (!sessionAsked) session.type = 'playback';
+      sessionAsked = true;
+      return;
+    }
+    if (clipTries >= 3) return;
+    clipTries++;
+    if (!clip) {
+      clip = new Audio(silence());
+      clip.loop = true;
+      clip.setAttribute('playsinline', '');
+    }
+    void clip.play().then(
+      () => (clipTries = 3),
+      () => undefined
+    );
   } catch {
     /* sound stays tied to the ring switch */
   }
@@ -212,21 +252,31 @@ export const sfx = {
     void audio();
     unmuteIos();
   },
+  /** Every pad press answers with its own note: low, middle, high for red, green, blue. */
   press(b: number) {
-    tone({ f: [392, 494, 587][b], dur: 0.07, type: 'triangle', vol: 0.12 });
-    noise({ dur: 0.02, vol: 0.03, f: 3500 });
+    tone({ f: [330, 415, 494][b], dur: 0.06, type: 'triangle', vol: 0.15 });
+    noise({ dur: 0.025, vol: 0.05, f: 3200 });
   },
-  /** Rising pitch: `combo` is the streak length including this hit. */
+  /**
+   * A hit. `combo` is the streak length including this one: the note climbs a semitone
+   * with every hit in a row, for two and a half octaves, so a streak winds up like a
+   * siren and a miss drops it back to the bottom.
+   */
   good(combo: number) {
-    const n = LADDER[Math.min(combo - 1, LADDER.length - 1)];
-    tone({ f: 523.25 * semis(n), dur: 0.14, type: 'square', vol: 0.085 });
-    tone({ f: 1046.5 * semis(n), dur: 0.1, type: 'triangle', vol: 0.075, at: 0.03 });
-    noise({ dur: 0.05, vol: 0.02, f: 7500 });
+    const step = Math.min(combo - 1, CLIMB);
+    const f = 349.23 * semis(step);
+    tone({ f, to: f * 1.04, dur: 0.13, type: 'square', vol: 0.1 });
+    tone({ f: f * 2, dur: 0.09, type: 'triangle', vol: 0.085, at: 0.025 });
+    // At the top of the climb a shimmer keeps each hit feeling like more.
+    if (combo - 1 > CLIMB) tone({ f: f * 3, dur: 0.07, type: 'triangle', vol: 0.04, at: 0.05 });
+    noise({ dur: 0.04, vol: 0.02, f: 7500 });
   },
+  /** A miss: a two-step falling buzz that cannot be mistaken for anything good. */
   bad() {
-    tone({ f: 150, to: 70, dur: 0.24, type: 'sawtooth', vol: 0.11 });
-    tone({ f: 158, to: 74, dur: 0.24, type: 'square', vol: 0.05 });
-    noise({ dur: 0.1, vol: 0.05, type: 'lowpass', f: 600 });
+    tone({ f: 196, to: 120, dur: 0.12, type: 'sawtooth', vol: 0.15 });
+    tone({ f: 110, to: 55, dur: 0.26, type: 'sawtooth', vol: 0.15, at: 0.1 });
+    tone({ f: 116, to: 58, dur: 0.26, type: 'square', vol: 0.07, at: 0.1 });
+    noise({ dur: 0.16, vol: 0.07, type: 'lowpass', f: 500 });
   },
   milestone() {
     arp([12, 16, 19, 24], 0.045, { vol: 0.06, dur: 0.1 });

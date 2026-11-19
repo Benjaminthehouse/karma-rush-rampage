@@ -72,7 +72,7 @@ function setPads(labels: [string, string, string], actions?: ((() => void) | nul
 
 const held = [false, false, false];
 /** Shown on the menu so a tester can tell which build they are looking at. */
-const BUILD = 10;
+const BUILD = 11;
 
 // Mobile browsers only let sound and speech start from an "activation" gesture, and a
 // finger landing is not one: a finger lifting, a click or a key press is.
