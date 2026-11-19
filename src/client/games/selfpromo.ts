@@ -1,5 +1,5 @@
 import './selfpromo.css';
-import { COLOR, dealer, h, padDots, person, postCard, pulse, randBtn, randInt, ratio, setSprite, sprite, type Btn, type GameFactory } from './common';
+import { COLOR, dealer, h, padDots, postCard, pulse, randBtn, randInt, ratio, setSprite, sprite, type Btn, type GameFactory } from './common';
 
 const PITCHES = [
   'I vibecoded this in a weekend!',
@@ -12,7 +12,8 @@ const PITCHES = [
   'Honest feedback? (say it’s good)',
 ];
 const SUBS = ['r/ShipIt', 'r/VibeCoders', 'r/RoastMyApp', 'r/WeekendApps', 'r/IndieBuilds', 'r/JustLaunched'];
-const MOOD = { nap: 'sleep', warn: 'wink', watch: 'angry' } as const;
+/** Which drawing of the mod bear each moment shows (art/selfpromo). */
+const MOOD = { nap: 'sleep', warn: 'peep', watch: 'angry' } as const;
 const SIGN = { nap: 'zed', warn: 'quest', watch: 'bang' } as const;
 const PER_CARD = 3; // plugs of one pitch before the next card, in a new colour
 const GRACE = 300; // ms after a card changes in which presses on its old colour are forgiven
@@ -56,9 +57,11 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   // and your spam piling up in the feed between you.
   const wrap = h('div', 'g-selfpromo scene-office');
   const desk = h('div', 'desk');
-  const mod = person({ tone: 'brown', kind: 'bear', hat: 'mod', mood: 'sleep', px: 0.5 });
+  // All three moods are stacked and only one shows, so a swap never waits on an image.
+  const mod = h('div', 'bear sleep');
+  for (const m of Object.values(MOOD)) mod.append(h('i', m));
   const sign = sprite('zed', { px: 0.3 }, 'sign');
-  desk.append(mod.el, sign, h('span', 'plate', 'MOD DESK'));
+  desk.append(mod, sign, h('span', 'plate', 'MOD DESK'));
   const pile = h('div', 'pile');
   const you = h('div', 'you');
   const horn = sprite('megaphone', { px: 0.32 }, 'horn');
@@ -138,12 +141,12 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       const now = stateAt(t);
       if (now === state) return;
       state = now;
-      mod.mood(MOOD[now]);
+      mod.className = `bear ${MOOD[now]}`;
       setSprite(sign, SIGN[now], { px: 0.3 });
       wrap.classList.toggle('alarm', now === 'watch');
       wrap.classList.toggle('stir', now === 'warn');
       if (now === 'watch') {
-        pulse(mod.el, 'bump');
+        pulse(mod, 'bump');
         fx.sound('zap');
       }
       if (now === 'nap') fx.sound('whoosh');

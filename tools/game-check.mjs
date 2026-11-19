@@ -158,7 +158,7 @@ async function checkGame(id, browser) {
       format: 'iife',
       target: 'es2020',
       alias: { '@game': files.ts, '@meta': files.meta },
-      loader: { '.woff2': 'dataurl', '.woff': 'dataurl', '.png': 'dataurl', '.webp': 'dataurl' },
+      loader: { '.woff2': 'dataurl', '.woff': 'dataurl', '.png': 'dataurl', '.webp': 'dataurl', '.svg': 'dataurl' },
       logLevel: 'silent',
     });
   } catch (err) {
