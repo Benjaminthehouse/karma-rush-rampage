@@ -122,11 +122,11 @@ async function createDailyPost(): Promise<{ id: string; created: boolean }> {
   const games = (await dayLineupTitles(day));
   const post = await reddit.submitCustomPost({
     subredditName: context.subredditName,
-    title: `Karma Mash — ${prettyDay(day)}: ${games.join(' · ')}`,
+    title: `Karma Rush Rampage — ${prettyDay(day)}: ${games.join(' · ')}`,
     entry: 'default',
     postData: { day },
     textFallback: {
-      text: `Today's Karma Mash: ${games.join(', ')}. Five rapid-fire three-button rounds, one shot at the daily leaderboard. Open this post on new Reddit or the app to play.`,
+      text: `Today's Karma Rush Rampage: ${games.join(', ')}. Five rapid-fire three-button rounds, one shot at the daily leaderboard. Open this post on new Reddit or the app to play.`,
     },
   });
   await redis.set(`post:${day}`, post.id);
@@ -138,7 +138,7 @@ router.post(
   route(async (_req, res) => {
     const { id, created } = await createDailyPost();
     res.json({
-      showToast: created ? 'Posted today’s Karma Mash' : 'Today’s Karma Mash is already up',
+      showToast: created ? 'Posted today’s Karma Rush Rampage' : 'Today’s Karma Rush Rampage is already up',
       navigateTo: `https://reddit.com/r/${context.subredditName}/comments/${id.replace(/^t3_/, '')}`,
     });
   })

@@ -7,7 +7,7 @@ import {
   type PartyState,
   type Rival,
 } from '../shared/api';
-import { GAME_META, MAX_TOTAL, TIMING, botRounds, lineupFor, prettyDay, roundsFromIds, type Round } from '../shared/daily';
+import { GAME_IDS, GAME_META, MAX_TOTAL, TIMING, botRounds, lineupFor, prettyDay, roundsFromIds, type Round } from '../shared/daily';
 import { api, fmt } from './api';
 import { rating, runMatch, standings, type Match } from './engine';
 import { createFx } from './fx';
@@ -68,6 +68,13 @@ function release(b: Btn) {
   held[b] = false;
   padEls[b].classList.remove('down');
   if (screen === 'play') match?.release(b);
+}
+
+function pulsePad(b: Btn) {
+  const el = padEls[b];
+  el.classList.remove('ripple', 'glow');
+  void el.offsetWidth;
+  el.classList.add('ripple', 'glow');
 }
 
 // Each finger holds the pad it landed on until it lifts, so chords and holds work on touch.
@@ -155,6 +162,7 @@ const globalFx = createFx($('app'), $('fxg'));
 function menu() {
   stopParty();
   show('menu');
+  $('menu-count').textContent = `Today’s five, out of ${GAME_IDS.length} mini-games`;
   const played = !!init?.myRun;
   if (init) {
     $('menu-day').textContent = `${prettyDay(init.day)} · ${fmt(init.players)} played`;
@@ -183,6 +191,7 @@ async function solo(kind: 'daily' | 'practice', lineup: Round[], rivals: Rival[]
     me: myName(),
     rivals: () => rivals,
     setPads,
+    pulsePad,
   });
   const mine = match;
   const rounds = await mine.done;
@@ -230,6 +239,7 @@ function daily() {
       badges,
       boardTitle: 'Leaderboard',
       board: leaderboard(init.leaderboard),
+      announce: false,
     });
     return;
   }
@@ -260,6 +270,15 @@ function leaderboard(entries: LbEntry[]): HTMLElement {
 
 // ------------------------------------------------------------------ final
 
+const VERDICTS = [
+  { min: 4600, text: 'LEGENDARY!' },
+  { min: 3800, text: 'FRONT PAGE MATERIAL!' },
+  { min: 2800, text: 'SOLID RUN!' },
+  { min: 1800, text: 'MID.' },
+  { min: 800, text: 'SKILL ISSUE.' },
+  { min: 0, text: 'TOUCH GRASS.' },
+];
+
 function final(o: {
   kind: string;
   lineup: Round[];
@@ -269,12 +288,19 @@ function final(o: {
   boardTitle: string;
   board: HTMLElement;
   again?: () => void;
+  /** False when re-opening an old result: no need to shout it again. */
+  announce?: boolean;
 }) {
   show('final');
   $('final-kind').textContent = o.kind;
   countUp($('final-total'), o.total);
   sfx.fanfare();
   if (o.total >= 2000) globalFx.confetti(o.total >= 4000 ? 120 : 60);
+  const verdict = VERDICTS.find((v) => o.total >= v.min)!;
+  const stamp = $('final-verdict');
+  stamp.textContent = verdict.text;
+  stamp.className = `verdict v${VERDICTS.indexOf(verdict)}`;
+  if (o.announce !== false) window.setTimeout(() => screen === 'final' && voice.say(verdict.text, { rate: 1.05, pitch: 1.2 }), 950);
   $('final-badges').replaceChildren(...(o.badges ?? []).map((b) => h('span', 'chip', b)));
   $('final-rounds').replaceChildren(
     ...o.lineup.map((r, i) => {
@@ -411,6 +437,7 @@ async function joinParty(state: PartyState) {
     me: myName(),
     rivals: partyRivals,
     setPads,
+    pulsePad,
     onRound: (rounds) => {
       api.partyScore({ guest, matchId: id, rounds }).then(takeParty, console.error);
     },

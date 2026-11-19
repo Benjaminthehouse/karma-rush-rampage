@@ -64,6 +64,8 @@ export function runMatch(o: {
   me: string;
   rivals: () => Rival[];
   setPads: (labels: [string, string, string]) => void;
+  /** Light a pad for a beat (the announcer's words chase across the pads). */
+  pulsePad?: (b: Btn) => void;
   onRound?: (rounds: number[]) => void;
 }): Match {
   const phases = timeline(o.lineup);
@@ -137,6 +139,7 @@ export function runMatch(o: {
     const legend = h('div', 'legend');
     meta.labels.forEach((l, i) => {
       const chip = h('span', `c-${COLOR[i]}`, l);
+      chip.prepend(h('kbd', '', 'ASD'[i]));
       legend.append(chip);
     });
     showCard('intro', h('div', 'eyebrow', `ROUND ${ph.round + 1} OF ${o.lineup.length} · ${meta.title}`), shout, how, legend);
@@ -157,6 +160,7 @@ export function runMatch(o: {
           s.classList.add('in');
           sfx.slam(i);
           fx.lights((['red', 'green', 'blue'] as FxColor[])[i % 3]);
+          o.pulsePad?.((i % 3) as Btn);
         },
       })
     );
@@ -180,6 +184,9 @@ export function runMatch(o: {
     sfx.go();
     fx.flash('white');
     music.start(round.seed, round.level);
+    // The arena lights throb in time with the round's music.
+    arena.style.setProperty('--beat', `${60 / music.bpm(round.level)}s`);
+    arena.classList.add('playing');
     const factory = GAMES[round.id];
     try {
       inst = factory({
@@ -233,6 +240,7 @@ export function runMatch(o: {
     inst = null;
     down.fill(false);
     music.stop();
+    arena.classList.remove('playing');
     sfx.roundEnd();
     stage.className = 'frozen';
     bar.style.width = '0%';
@@ -345,6 +353,7 @@ export function runMatch(o: {
     stopped = true;
     cancelAnimationFrame(raf);
     music.stop();
+    arena.classList.remove('playing');
     voice.hush();
     fx.clear();
     card.hidden = true;

@@ -1,6 +1,6 @@
 {
   "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
-  "name": "karma-mash",
+  "name": "karma-rush",
   "post": {
     "dir": "dist/client",
     "entrypoints": {
@@ -20,8 +20,8 @@
   "menu": {
     "items": [
       {
-        "label": "Karma Mash: post today's game",
-        "description": "Creates today's Karma Mash daily post",
+        "label": "Karma Rush Rampage: post today's game",
+        "description": "Creates today's Karma Rush Rampage post",
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/post-create"

@@ -81,4 +81,4 @@ app.post('/api/party/score', async (req, res) => {
 
 app.use(express.static(path.resolve(process.cwd(), 'dist/mock-client')));
 const port = Number(process.env.PORT) || 5199;
-app.listen(port, () => console.log(`mock Karma Mash on http://localhost:${port}/splash.html?u=alice`));
+app.listen(port, () => console.log(`mock Karma Rush Rampage on http://localhost:${port}/splash.html?u=alice`));

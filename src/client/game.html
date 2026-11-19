@@ -3,15 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <title>Karma Mash</title>
+    <title>Karma Rush Rampage</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <div id="app">
       <main>
         <section id="menu" class="screen ui">
-          <div class="logo"><span>KARMA</span><span>MASH</span></div>
+          <div class="logo"><span>KARMA</span><span>RUSH</span><span>RAMPAGE</span></div>
           <p class="tag" id="menu-day">Five rounds. Three buttons. One shot a day.</p>
+          <p class="hint" id="menu-count"></p>
           <div class="chips" id="menu-lineup"></div>
           <div class="choices">
             <button class="choice c-green" data-pad="1">
@@ -51,6 +52,7 @@
         <section id="final" class="screen ui" hidden>
           <div class="eyebrow" id="final-kind"></div>
           <div class="total"><b id="final-total">0</b><span>/ 5,000</span></div>
+          <div class="verdict" id="final-verdict"></div>
           <div class="badges" id="final-badges"></div>
           <ul class="breakdown" id="final-rounds"></ul>
           <h3 id="final-board-title"></h3>

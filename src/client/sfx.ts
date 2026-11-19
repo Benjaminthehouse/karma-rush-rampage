@@ -4,7 +4,12 @@ import { settings } from './settings';
 
 let ac: AudioContext | null = null;
 let out: GainNode | null = null;
+let beat: GainNode | null = null;
 let noiseBuf: AudioBuffer | null = null;
+
+// Mix: what the player does (presses, hits, rewards) must sit on top of the beat.
+const FX_GAIN = 1.9;
+const MUSIC_GAIN = 0.55;
 
 function audio(): AudioContext | null {
   if (!settings.get('sound')) return null;
@@ -15,8 +20,11 @@ function audio(): AudioContext | null {
       comp.threshold.value = -16;
       comp.ratio.value = 6;
       out = ac.createGain();
-      out.gain.value = 0.9;
+      out.gain.value = FX_GAIN;
       out.connect(comp).connect(ac.destination);
+      beat = ac.createGain();
+      beat.gain.value = MUSIC_GAIN;
+      beat.connect(comp);
       noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
       const data = noiseBuf.getChannelData(0);
       for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
@@ -28,11 +36,12 @@ function audio(): AudioContext | null {
   }
 }
 
-type Tone = { f: number; dur: number; type?: OscillatorType; vol?: number; to?: number; at?: number; attack?: number };
+type Tone = { f: number; dur: number; type?: OscillatorType; vol?: number; to?: number; at?: number; attack?: number; music?: boolean };
 
-function tone({ f, dur, type = 'square', vol = 0.08, to, at = 0, attack = 0.004 }: Tone) {
+function tone({ f, dur, type = 'square', vol = 0.08, to, at = 0, attack = 0.004, music = false }: Tone) {
   const a = audio();
-  if (!a || !out) return;
+  const bus = music ? beat : out;
+  if (!a || !bus) return;
   const t0 = a.currentTime + at;
   const o = a.createOscillator();
   const g = a.createGain();
@@ -41,17 +50,19 @@ function tone({ f, dur, type = 'square', vol = 0.08, to, at = 0, attack = 0.004 
   if (to) o.frequency.exponentialRampToValueAtTime(Math.max(20, to), t0 + dur);
   g.gain.setValueAtTime(0.0001, t0);
   g.gain.exponentialRampToValueAtTime(vol, t0 + attack);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  o.connect(g).connect(out);
+  // Decay to -34 dB rather than to silence, so short sounds keep some body.
+  g.gain.exponentialRampToValueAtTime(vol * 0.02, t0 + dur);
+  o.connect(g).connect(bus);
   o.start(t0);
   o.stop(t0 + dur + 0.02);
 }
 
-type Noise = { dur: number; vol?: number; type?: BiquadFilterType; f?: number; to?: number; at?: number; attack?: number; q?: number };
+type Noise = { dur: number; vol?: number; type?: BiquadFilterType; f?: number; to?: number; at?: number; attack?: number; q?: number; music?: boolean };
 
-function noise({ dur, vol = 0.08, type = 'highpass', f = 2000, to, at = 0, attack = 0.002, q = 0.8 }: Noise) {
+function noise({ dur, vol = 0.08, type = 'highpass', f = 2000, to, at = 0, attack = 0.002, q = 0.8, music = false }: Noise) {
   const a = audio();
-  if (!a || !out || !noiseBuf) return;
+  const bus = music ? beat : out;
+  if (!a || !bus || !noiseBuf) return;
   const t0 = a.currentTime + at;
   const src = a.createBufferSource();
   src.buffer = noiseBuf;
@@ -64,18 +75,18 @@ function noise({ dur, vol = 0.08, type = 'highpass', f = 2000, to, at = 0, attac
   const g = a.createGain();
   g.gain.setValueAtTime(0.0001, t0);
   g.gain.exponentialRampToValueAtTime(vol, t0 + attack);
-  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  src.connect(filt).connect(g).connect(out);
+  g.gain.exponentialRampToValueAtTime(vol * 0.02, t0 + dur);
+  src.connect(filt).connect(g).connect(bus);
   src.start(t0, Math.random() * 0.5);
   src.stop(t0 + dur + 0.02);
 }
 
-const kick = (at = 0, vol = 0.5) => tone({ f: 160, to: 42, dur: 0.16, type: 'sine', vol, at });
+const kick = (at = 0, vol = 0.2, music = false) => tone({ f: 160, to: 42, dur: 0.16, type: 'sine', vol, at, music });
 const snare = (at = 0, vol = 0.12) => {
-  noise({ dur: 0.12, vol, f: 1800, at });
-  tone({ f: 190, to: 120, dur: 0.08, type: 'triangle', vol: vol * 0.8, at });
+  noise({ dur: 0.12, vol, f: 1800, at, music: true });
+  tone({ f: 190, to: 120, dur: 0.08, type: 'triangle', vol: vol * 0.8, at, music: true });
 };
-const hat = (at = 0, vol = 0.035) => noise({ dur: 0.035, vol, f: 7000, at });
+const hat = (at = 0, vol = 0.035) => noise({ dur: 0.035, vol, f: 7000, at, music: true });
 
 const semis = (n: number) => 2 ** (n / 12);
 // Major pentatonic ladder: each step of a combo climbs one rung.
@@ -114,26 +125,28 @@ function musicTick(stepLen: number, riff: number[], root: number) {
   while (musicNext < a.currentTime + 0.12) {
     const at = Math.max(0, musicNext - a.currentTime);
     const s = musicStep % 16;
-    if (s % 4 === 0) kick(at, 0.34);
-    if (s === 4 || s === 12) snare(at, 0.07);
+    if (s % 4 === 0) kick(at, 0.36, true);
+    if (s === 4 || s === 12) snare(at, 0.1);
     if (s % 2 === 1 || musicRush) hat(at, s % 4 === 2 ? 0.04 : 0.022);
     if (s % 2 === 0) {
       const n = riff[(musicStep / 2) % riff.length | 0];
-      tone({ f: root * semis(n), dur: stepLen * 1.7, type: 'sawtooth', vol: 0.045, at });
-      tone({ f: root * 2 * semis(n), dur: stepLen * 0.9, type: 'square', vol: 0.018, at });
+      tone({ f: root * semis(n), dur: stepLen * 1.7, type: 'sawtooth', vol: 0.07, at, music: true });
+      tone({ f: root * 2 * semis(n), dur: stepLen * 0.9, type: 'square', vol: 0.028, at, music: true });
     }
-    if (musicRush && s % 4 === 2) tone({ f: 1760, dur: 0.04, type: 'square', vol: 0.03, at });
+    if (musicRush && s % 4 === 2) tone({ f: 1760, dur: 0.04, type: 'square', vol: 0.05, at, music: true });
     musicNext += stepLen;
     musicStep++;
   }
 }
 
 export const music = {
+  /** Tempo climbs with the round. Games that land on the beat use the same number. */
+  bpm: (round: number) => 128 + round * 7,
   start(seed: number, round: number) {
     music.stop();
     const a = audio();
     if (!a) return;
-    const bpm = 128 + round * 7;
+    const bpm = music.bpm(round);
     const stepLen = 60 / bpm / 4;
     const riff = RIFFS[seed % RIFFS.length];
     const root = 55 * semis([0, 3, 5, 7, 10][(seed >>> 3) % 5]);
@@ -164,7 +177,7 @@ const NAMED: Record<string, () => void> = {
   zap: () => tone({ f: 1400, to: 180, dur: 0.14, type: 'sawtooth', vol: 0.07 }),
   whoosh: () => noise({ dur: 0.26, vol: 0.09, type: 'bandpass', f: 400, to: 4200, attack: 0.08 }),
   thud: () => {
-    tone({ f: 110, to: 38, dur: 0.22, type: 'sine', vol: 0.45 });
+    tone({ f: 110, to: 38, dur: 0.22, type: 'sine', vol: 0.22 });
     noise({ dur: 0.08, vol: 0.06, type: 'lowpass', f: 500 });
   },
   tick: () => tone({ f: 1250, dur: 0.025, vol: 0.04 }),
@@ -181,14 +194,14 @@ export const sfx = {
   /** Call from a user gesture so the audio context may start. */
   unlock: () => void audio(),
   press(b: number) {
-    tone({ f: [392, 494, 587][b], dur: 0.055, type: 'triangle', vol: 0.11 });
-    noise({ dur: 0.02, vol: 0.035, f: 3500 });
+    tone({ f: [392, 494, 587][b], dur: 0.07, type: 'triangle', vol: 0.12 });
+    noise({ dur: 0.02, vol: 0.03, f: 3500 });
   },
   /** Rising pitch: `combo` is the streak length including this hit. */
   good(combo: number) {
     const n = LADDER[Math.min(combo - 1, LADDER.length - 1)];
-    tone({ f: 523.25 * semis(n), dur: 0.13, type: 'square', vol: 0.075 });
-    tone({ f: 1046.5 * semis(n), dur: 0.09, type: 'triangle', vol: 0.06, at: 0.03 });
+    tone({ f: 523.25 * semis(n), dur: 0.14, type: 'square', vol: 0.085 });
+    tone({ f: 1046.5 * semis(n), dur: 0.1, type: 'triangle', vol: 0.075, at: 0.03 });
     noise({ dur: 0.05, vol: 0.02, f: 7500 });
   },
   bad() {
@@ -202,24 +215,24 @@ export const sfx = {
   },
   /** One announcer word landing. `i` is the word index, so the stabs climb. */
   slam(i: number) {
-    kick(0, 0.5);
-    noise({ dur: 0.07, vol: 0.1, f: 1500 });
-    tone({ f: 261.63 * semis([0, 4, 7, 12, 14, 16][i % 6]), dur: 0.13, type: 'sawtooth', vol: 0.07 });
+    kick(0, 0.2);
+    noise({ dur: 0.07, vol: 0.06, f: 1500 });
+    tone({ f: 261.63 * semis([0, 4, 7, 12, 14, 16][i % 6]), dur: 0.16, type: 'sawtooth', vol: 0.11 });
   },
   whoosh: () => NAMED.whoosh(),
   count(n: number) {
-    tone({ f: n > 0 ? 660 : 1320, dur: 0.11, vol: 0.09 });
-    kick(0, 0.3);
+    tone({ f: n > 0 ? 660 : 1320, dur: 0.14, vol: 0.11 });
+    kick(0, 0.14);
   },
   go() {
-    [392, 494, 587, 784].forEach((f) => tone({ f, to: f * 1.03, dur: 0.42, type: 'sawtooth', vol: 0.05 }));
-    noise({ dur: 0.35, vol: 0.06, f: 3000, attack: 0.01 });
-    kick(0, 0.5);
+    [392, 494, 587, 784].forEach((f) => tone({ f, to: f * 1.03, dur: 0.42, type: 'sawtooth', vol: 0.055 }));
+    noise({ dur: 0.35, vol: 0.05, f: 3000, attack: 0.01 });
+    kick(0, 0.2);
   },
   tick: () => NAMED.tick(),
   roundEnd() {
-    noise({ dur: 0.7, vol: 0.09, f: 5000, attack: 0.005 });
-    kick(0, 0.5);
+    noise({ dur: 0.7, vol: 0.06, f: 5000, attack: 0.005 });
+    kick(0, 0.18);
   },
   /** 0 = flop ... 3 = perfect. */
   result(tier: number) {
