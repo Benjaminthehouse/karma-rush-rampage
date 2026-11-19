@@ -68,9 +68,12 @@ export function createFx(arena: HTMLElement, layer: HTMLElement) {
       const r = (at ?? layer).getBoundingClientRect();
       const x = r.left + r.width / 2 - base.left;
       const y = Math.max(18, (at ? r.top : r.top + r.height * 0.4) - base.top);
-      const el = spawn('pop-text', Math.min(base.width - 30, Math.max(30, x)), y);
+      const el = spawn('pop-text', x, y);
       el.textContent = text;
       el.style.color = HEX[color];
+      // Keep the whole word on stage, however long it is and whichever column it came from.
+      const half = el.offsetWidth / 2 + 6;
+      el.style.left = `${Math.min(Math.max(half, base.width - half), Math.max(half, x))}px`;
     },
     /** A puff of pixel smoke: the "poof" under anything that jumps, lands, pops or vanishes. */
     poof(at: Element | null) {

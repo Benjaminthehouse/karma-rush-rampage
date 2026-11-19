@@ -8,5 +8,5 @@ export default defineGame({
   labels: ['RANK IT', 'RANK IT', 'RANK IT'],
   duration: 8000,
   kind: 'brain',
-  think: 550,
+  think: 600,
 });

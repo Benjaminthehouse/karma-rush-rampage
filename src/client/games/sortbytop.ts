@@ -34,7 +34,9 @@ function label(n: number): string {
 const snap = (v: number) => (v < 1000 ? Math.round(v) : Math.round(v / 100) * 100);
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
-  const par = Math.round(27 + level * 1.5); // a flawless set is worth 5
+  // A flawless set is worth 5, and a quick reader clears five and a bit. The par stays put:
+  // later rounds are already slower to read (closer scores, 999 against 1.0k, minus signs).
+  const par = 26;
   const spread = 1.1 - level * 0.22; // how many powers of ten the three scores may sit apart
   const post = dealer(rng, POSTS);
   const face = dealer(rng, FACES);
@@ -117,7 +119,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
 
   return {
     press(b, t) {
-      if (t < lockedUntil || dealAt) return;
+      if (t < lockedUntil || dealAt) return fx.sound('tick');
       const s = current();
       const p = posts[b];
       if (picked.includes(b)) {
@@ -142,7 +144,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       good(p.card.arrow);
       if (picked.length === 3) {
         done++;
-        dealAt = t + 250;
+        dealAt = t + 300;
         // Smoke where a post jumps from as the feed snaps into order.
         BTNS.forEach((i) => picked[i] !== i && fx.poof(posts[i].card.el));
         fx.pop(feed, clean ? 'PERFECT SORT! +2' : 'SORTED', clean ? 'gold' : 'white');

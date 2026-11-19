@@ -29,8 +29,7 @@ const SAFE = ['LOG OFF. TOUCH GRASS.', 'IT CAN WAIT.', 'MONDAY PROBLEM.', 'LAPTO
 const OUTAGE = ['enjoy your weekend', 'the pager knows where you live', 'the rollback failed too', 'status page: also down', 'see you on Saturday'];
 const DOWN = 650; // ms prod stays down (and your hands stay off) after a Friday deploy
 
-export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
-  const par = 12 + Math.round(level / 2);
+export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   // A Friday page tempts for longer than a reflex takes, then leaves on its own.
   const linger = 650 - level * 15;
   const weekday = dealer(rng, DAYS);
@@ -39,16 +38,31 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const feels = dealer(rng, FEELS);
   const hotfix = dealer(rng, HOTFIX);
   let lastFriday = true;
+  let lastDay = '';
+  let lastBtn = -1;
   const pages = Array.from({ length: 80 }, () => {
     // Never two Fridays in a row, so the round keeps moving.
     const friday = !lastFriday && rng() < (level >= 3 ? 0.4 : 0.3);
     lastFriday = friday;
     // From level 2 the sparkle stops being a tell: a calm Friday hotfix, a tempting Thursday.
-    const decoy = level >= 2 && rng() < 0.3;
-    const day = friday ? 'FRIDAY' : decoy ? 'THURSDAY' : weekday();
+    const decoy = level >= 2 && rng() < 0.3 && (friday || lastDay !== 'THURSDAY');
+    // No day and no colour twice running, so a new page always looks new.
+    let day = friday ? 'FRIDAY' : decoy ? 'THURSDAY' : weekday();
+    if (day === lastDay) day = weekday();
+    lastDay = day;
+    let btn = randBtn(rng);
+    while (btn === lastBtn) btn = randBtn(rng);
+    lastBtn = btn;
     const cap = (decoy ? (friday ? hotfix : feels) : friday ? bait : go)();
-    return { friday, btn: randBtn(rng), day, cap, shiny: friday !== decoy };
+    return { friday, btn, day, cap, shiny: friday !== decoy };
   });
+  // Par is a quick, clean run through these very pages, so a week full of Fridays is not a worse week.
+  const pace = 380 - level * 15;
+  let par = 0;
+  for (let i = 0, at = 0; at < duration; i++) {
+    at += pages[i % pages.length].friday ? linger : pace;
+    if (!pages[i % pages.length].friday && at <= duration) par++;
+  }
   let idx = -1; // flip() turns to the next page
   let shownAt = 0;
   let downUntil = 0;
@@ -116,7 +130,12 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
 
   return {
     press(b, t) {
-      if (downUntil) return;
+      if (downUntil) {
+        // Prod is still down: mashing only rattles the pager.
+        pulse(pager, 'bump');
+        fx.sound('tick');
+        return;
+      }
       const p = page();
       if (p.friday) {
         lost.textContent = deploys ? `-${Math.min(2, deploys)} ROLLED BACK` : 'NOTHING LEFT TO ROLL BACK';
@@ -157,10 +176,11 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       if (downUntil) {
         if (t < downUntil) return;
         downUntil = 0;
+        dev.mood('sad');
         flip(t);
       } else if (page().friday && t - shownAt >= linger) {
         dev.mood('cool');
-        fx.pop(note, SAFE[dodged++ % SAFE.length], 'green');
+        fx.pop(pile, SAFE[dodged++ % SAFE.length], 'green');
         fx.sound('ding');
         flip(t);
       }

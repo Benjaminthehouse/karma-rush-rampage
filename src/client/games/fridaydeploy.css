@@ -2,7 +2,7 @@
 
 /* A tear-off calendar on the wall: the top sheet over the pages still to come. */
 .g-fridaydeploy .cal { position: relative; width: min(100%, 18em); flex: 1 1 auto; max-height: 25em; display: flex; flex-direction: column; padding-bottom: 1.1em; }
-.g-fridaydeploy .sheet { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.3em; padding: 0 0.7em 1.1em; background: #fff; color: #0b1020; box-shadow: 0 -0.2em 0 0 #0b1020, -0.2em 0 0 0 #0b1020, 0.2em 0 0 0 #0b1020, 0 0.2em 0 0 #0b1020, 0 0.55em 0 0 #c4cbe4, -0.2em 0.55em 0 0 #0b1020, 0.2em 0.55em 0 0 #0b1020, 0 0.75em 0 0 #0b1020, 0.5em 1.1em 0 0 #0b102044; }
+.g-fridaydeploy .sheet { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.3em; padding: 0 0.7em 1.35em; background: #fff; color: #0b1020; box-shadow: 0 -0.2em 0 0 #0b1020, -0.2em 0 0 0 #0b1020, 0.2em 0 0 0 #0b1020, 0 0.2em 0 0 #0b1020, 0 0.55em 0 0 #c4cbe4, -0.2em 0.55em 0 0 #0b1020, 0.2em 0.55em 0 0 #0b1020, 0 0.75em 0 0 #0b1020, 0.5em 1.1em 0 0 #0b102044; }
 .g-fridaydeploy .head { position: relative; align-self: stretch; margin: 0 -0.875em; padding: 0.3em 0; background: var(--purple); color: #fff; border-bottom: 0.25em solid #0b1020; font-size: 0.8em; letter-spacing: 0.3em; text-align: center; }
 .g-fridaydeploy .head::before, .g-fridaydeploy .head::after { content: ''; position: absolute; top: -0.9em; width: 0.6em; height: 1.5em; background: #c4cbe4; box-shadow: 0 0 0 0.2em #0b1020; }
 .g-fridaydeploy .head::before { left: 20%; }
@@ -16,16 +16,18 @@
 .g-fridaydeploy .which { display: flex; padding: 0.22em 0.25em; background: #fff; box-shadow: 0 0 0 0.1em #0b1020; font-size: 0.95em; }
 .g-fridaydeploy .glint { position: absolute; left: -0.6em; top: -0.7em; visibility: hidden; filter: drop-shadow(0.06em 0.06em 0 #0b1020); }
 .g-fridaydeploy .glint + .glint { left: auto; top: auto; right: -0.6em; bottom: -0.9em; animation-delay: 0.2s; }
-.g-fridaydeploy .btn.shiny { background: linear-gradient(110deg, #0000 44%, #fff 44% 50%, #0000 50%) 120% 0 / 300% 100% no-repeat, var(--c); outline: 0.16em dashed var(--gold); outline-offset: 0.34em; animation: g-fridaydeploy-tempt 0.5s steps(5) infinite; }
+.g-fridaydeploy .btn.shiny { background: linear-gradient(110deg, #0000 44%, #fff 44% 50%, #0000 50%) 120% 0 / 300% 100% no-repeat, var(--c); animation: g-fridaydeploy-tempt 0.5s steps(5) infinite; }
+.g-fridaydeploy .btn.shiny::after { content: ''; position: absolute; inset: -0.32em -0.3em -0.76em; border: 0.14em dashed var(--gold); filter: drop-shadow(0.05em 0.05em 0 #0b1020); }
 .g-fridaydeploy .btn.shiny .glint { visibility: visible; animation: g-fridaydeploy-twinkle 0.4s steps(2) infinite; }
 
-.g-fridaydeploy .rocket { position: absolute; left: 50%; bottom: 2.2em; margin-left: -1.17em; opacity: 0; pointer-events: none; }
+.g-fridaydeploy .rocket { position: absolute; right: 0.9em; bottom: 2.6em; opacity: 0; pointer-events: none; }
 .g-fridaydeploy .rocket.fly { animation: g-fridaydeploy-fly 0.4s steps(8); }
-.g-fridaydeploy .puff { position: absolute; left: 50%; bottom: 0.9em; }
+.g-fridaydeploy .puff { position: absolute; right: 2.1em; bottom: 2.6em; }
 
 /* PROD IS DOWN: the stage goes red and this covers the page while the pager buzzes. */
-.g-fridaydeploy .outage { position: absolute; inset: 0 0 1.1em; padding: 0.6em; background: #0b1020; color: #fff; box-shadow: 0 0 0 0.25em var(--gold); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6em; text-align: center; visibility: hidden; }
+.g-fridaydeploy .outage { position: absolute; inset: 0 0 1.1em; padding: 0.6em; background: #0b1020; color: #fff; box-shadow: 0 0 0 0.25em var(--gold), 0 0 0 0.45em #0b1020, 0.9em 0.9em 0 0 #0b102055; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6em; text-align: center; visibility: hidden; }
 .g-fridaydeploy.scene-danger .outage { visibility: visible; }
+.g-fridaydeploy.scene-danger .sheet, .g-fridaydeploy.scene-danger .btn.shiny .glint { visibility: hidden; }
 .g-fridaydeploy .outage b { font-size: 3em; line-height: 0.95; color: var(--gold); }
 .g-fridaydeploy .outage em { font-style: normal; color: var(--red); }
 .g-fridaydeploy .pager { display: flex; align-items: center; gap: 0.5em; animation: g-fridaydeploy-buzz 0.08s steps(2) infinite; }

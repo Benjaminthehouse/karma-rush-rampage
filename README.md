@@ -25,6 +25,29 @@ Red, green and blue are the only inputs. Tap the pads, or on a keyboard:
 - **Practice** — a random five, or the **Arcade**: browse every mini-game with the
   pads (prev / play / next) and practise one at a time. Nothing is recorded.
 
+## Screens and states
+
+Everything a player can see, for anyone designing it screen by screen. Each is
+plain HTML in `src/client/game.html` (or `splash.html`) with its logic in `main.ts`
+or `engine.ts`, so the look can change without touching the rules.
+
+| Screen | What it holds |
+| --- | --- |
+| Splash (inline in the post) | Logo, today's five games, top five, live score feed, PLAY |
+| Menu | Daily run / Live party / Practice, streak and best, settings toggles |
+| Practice choice | Back / Random five / Arcade |
+| Arcade | One game at a time: title, shout, how-to, button labels, your best |
+| Lobby | Players in the party, START |
+| Countdown | 3, 2, 1 |
+| Round intro | Round number, the shout dictated word by word, how-to, button legend |
+| Round | HUD (round pips, title, combo, live score), timer, race track, the stage, three pads |
+| Round result | Score counting up, verdict, standings |
+| Final | Total, verdict, per-round breakdown, leaderboard or party standings |
+
+The race track under the timer shows every player's score in the current round,
+live: recorded runs and bots replay as a curve to their final score, and party
+players report theirs about once a second.
+
 ## The mini-games
 
 Each game lives in three small files and is registered automatically. See
@@ -57,7 +80,11 @@ npm run check                     # regenerate registries, type-check client and
 node tools/game-check.mjs --all   # play-test every mini-game with bots, in isolation
 npm run smoke                     # play every mini-game inside the real app, end to end
 npm run mock                      # no Reddit needed: http://localhost:5199/splash.html?u=alice
+node tools/build-artifact.mjs     # a static, server-less demo in dist/artifact
 ```
+
+With no game server behind it (the static demo), the client switches to demo mode:
+today's lineup, house-bot rivals, scores kept on the device, Live Party off.
 
 `npm run mock` serves the real client against the real server rules
 (`src/server/core.ts`) with an in-memory store. `?u=<name>` logs that browser in;
