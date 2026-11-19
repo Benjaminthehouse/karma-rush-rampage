@@ -245,13 +245,29 @@ function unmuteIos() {
   }
 }
 
+let primed = false;
+
 export const sfx = {
   /** Call from a user gesture so the audio context may start. */
   unlock: () => {
     if (!settings.get('sound')) return;
-    void audio();
     unmuteIos();
+    const a = audio();
+    if (!a || primed) return;
+    // Phones only start the audio clock once a sound is played from inside a gesture, so a
+    // one-sample silent buffer is played on each gesture until the clock is running.
+    try {
+      const src = a.createBufferSource();
+      src.buffer = a.createBuffer(1, 1, a.sampleRate);
+      src.connect(a.destination);
+      src.start(0);
+    } catch {
+      /* the next gesture tries again */
+    }
+    if (a.state === 'running') primed = true;
   },
+  /** For the menu's status line: off, none (no audio support), or the audio clock's state. */
+  state: (): string => (!settings.get('sound') ? 'off' : (ac?.state ?? 'not started')),
   /** Every pad press answers with its own note: low, middle, high for red, green, blue. */
   press(b: number) {
     tone({ f: [330, 415, 494][b], dur: 0.06, type: 'triangle', vol: 0.15 });

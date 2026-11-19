@@ -72,7 +72,17 @@ function setPads(labels: [string, string, string], actions?: ((() => void) | nul
 
 const held = [false, false, false];
 /** Shown on the menu so a tester can tell which build they are looking at. */
-const BUILD = 11;
+const BUILD = 12;
+let dayLine = '';
+/** The menu's status line, with the audio state so "no sound" can be told apart by cause. */
+function paintStatus() {
+  const text = `${dayLine} · build ${BUILD} · audio ${sfx.state()}`;
+  const el = document.getElementById('menu-day');
+  if (el && el.textContent !== text) el.textContent = text;
+}
+window.setInterval(() => {
+  if (screen !== 'play') paintStatus();
+}, 500);
 
 // Mobile browsers only let sound and speech start from an "activation" gesture, and a
 // finger landing is not one: a finger lifting, a click or a key press is.
@@ -255,7 +265,8 @@ function menu() {
   $('menu-count').textContent = `Today’s five, out of ${GAME_IDS.length} mini-games`;
   const played = !!init?.myRun;
   if (init) {
-    $('menu-day').textContent = `${prettyDay(init.day)} · ${fmt(init.players)} played · build ${BUILD}`;
+    dayLine = `${prettyDay(init.day)} · ${fmt(init.players)} played`;
+    paintStatus();
     $('menu-lineup').replaceChildren(
       ...dailyLineup().map((r) => h('span', 'chip', GAME_META[r.id].title))
     );
