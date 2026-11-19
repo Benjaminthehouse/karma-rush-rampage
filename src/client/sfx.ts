@@ -190,50 +190,18 @@ const NAMED: Record<string, () => void> = {
   boing: () => tone({ f: 180, to: 520, dur: 0.2, type: 'triangle', vol: 0.14 }),
 };
 
-// iPhones mute Web Audio while the ring switch is on silent, but not media
-// playback. A looping silent clip moves the page into the media category, so the
-// game is heard either way. Started once, from a gesture.
-// The clip must have real length: a zero-sample loop makes the media stack spin. It is
-// tried at most twice, so a web view that refuses media never piles up players.
-let unmuteTries = 0;
-let clip: HTMLAudioElement | null = null;
-function silence(): string {
-  const n = 8000; // one second of 8-bit mono at 8 kHz
-  const bytes = new Uint8Array(44 + n).fill(128);
-  const head = new DataView(bytes.buffer);
-  const put = (at: number, text: string) => [...text].forEach((ch, i) => head.setUint8(at + i, ch.charCodeAt(0)));
-  put(0, 'RIFF');
-  head.setUint32(4, 36 + n, true);
-  put(8, 'WAVEfmt ');
-  head.setUint32(16, 16, true);
-  head.setUint16(20, 1, true);
-  head.setUint16(22, 1, true);
-  head.setUint32(24, 8000, true);
-  head.setUint32(28, 8000, true);
-  head.setUint16(32, 1, true);
-  head.setUint16(34, 8, true);
-  put(36, 'data');
-  head.setUint32(40, n, true);
-  let text = '';
-  bytes.forEach((v) => (text += String.fromCharCode(v)));
-  return `data:audio/wav;base64,${btoa(text)}`;
-}
+// iPhones mute Web Audio while the ring switch is on silent. Asking the audio session for
+// the "playback" category (iOS 16.4 and later) lifts that. It is a plain property, with no
+// hidden media element that an embedded web view could choke on.
+let asked = false;
 function unmuteIos() {
-  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  if (!ios || unmuteTries >= 2) return;
-  unmuteTries++;
+  if (asked) return;
+  asked = true;
   try {
-    if (!clip) {
-      clip = new Audio(silence());
-      clip.loop = true;
-      clip.setAttribute('playsinline', '');
-    }
-    void clip.play().then(
-      () => (unmuteTries = 2),
-      () => undefined
-    );
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    if (session) session.type = 'playback';
   } catch {
-    /* sound may stay tied to the ring switch */
+    /* sound stays tied to the ring switch */
   }
 }
 

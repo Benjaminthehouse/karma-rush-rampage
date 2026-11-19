@@ -28,7 +28,7 @@ export const voice = {
   unlock() {
     // Tried twice at most: a web view that never starts the utterance must not have one
     // queued on every tap, which jams the speech engine and freezes the page.
-    if (!synth || unlocked || tries >= 2) return;
+    if (!synth || unlocked || tries >= 2 || !settings.get('voice') || !settings.get('sound')) return;
     tries++;
     try {
       const u = new SpeechSynthesisUtterance(' ');

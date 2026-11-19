@@ -71,6 +71,8 @@ function setPads(labels: [string, string, string], actions?: ((() => void) | nul
 }
 
 const held = [false, false, false];
+/** Shown on the menu so a tester can tell which build they are looking at. */
+const BUILD = 9;
 
 // Mobile browsers only let sound and speech start from an "activation" gesture, and a
 // finger landing is not one: a finger lifting, a click or a key press is.
@@ -109,7 +111,18 @@ function press(b: Btn) {
     match?.press(b);
   } else if (padActions[b]) {
     sfx.press(b);
-    padActions[b]!();
+    // A menu pad is a tap, not a hold: let go at once, so a lost "finger up" event
+    // (web views drop them) can never leave the pad stuck down and deaf.
+    const action = padActions[b]!;
+    window.setTimeout(() => {
+      for (const [id, pad] of fingers) if (pad === b) fingers.delete(id);
+      release(b);
+    }, 120);
+    try {
+      action();
+    } catch (err) {
+      console.error('menu action failed', err);
+    }
   }
 }
 
@@ -156,6 +169,18 @@ for (const type of ['pointerup', 'pointercancel'] as const) {
     fingers.delete(e.pointerId);
     if (![...fingers.values()].includes(b)) release(b);
   });
+}
+// Safety net: once no finger is on the glass, nothing is held, whatever events went missing.
+for (const type of ['touchend', 'touchcancel'] as const) {
+  window.addEventListener(
+    type,
+    (e) => {
+      if (e.touches.length) return;
+      fingers.clear();
+      ([0, 1, 2] as Btn[]).forEach(release);
+    },
+    { passive: true }
+  );
 }
 window.addEventListener('blur', () => {
   fingers.clear();
@@ -230,7 +255,7 @@ function menu() {
   $('menu-count').textContent = `Today’s five, out of ${GAME_IDS.length} mini-games`;
   const played = !!init?.myRun;
   if (init) {
-    $('menu-day').textContent = `${prettyDay(init.day)} · ${fmt(init.players)} played`;
+    $('menu-day').textContent = `${prettyDay(init.day)} · ${fmt(init.players)} played · build ${BUILD}`;
     $('menu-lineup').replaceChildren(
       ...dailyLineup().map((r) => h('span', 'chip', GAME_META[r.id].title))
     );
