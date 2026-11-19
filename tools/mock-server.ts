@@ -56,6 +56,13 @@ app.get('/mock/realtime', (req, res) => {
   req.on('close', () => set.delete(res));
 });
 
+// Journey events are accepted and logged, so the flow can be checked without Reddit.
+const journey: string[] = [];
+app.get('/mock/journey', (_req, res) => void res.json(journey));
+app.post(/^\/api\/telemetry\/journey\/(.+)$/, (req, res) => {
+  journey.push(`${req.params[0]} ${JSON.stringify(req.body ?? {})}`);
+  res.json({ journeyId: 'journey_mock', receipt: { status: 'JOURNEY_RECEIPT_VALID', message: 'mock' } });
+});
 app.get('/api/init', async (req, res) => {
   const name = user(req);
   const init = await getInit(store, { username: name, day: dayKey(), today: dayKey(), now: Date.now() });

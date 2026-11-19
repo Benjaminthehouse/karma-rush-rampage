@@ -14,6 +14,7 @@ import { createFx } from './fx';
 import { h, type Btn } from './games/common';
 import { settings } from './settings';
 import { sfx } from './sfx';
+import { track } from './track';
 import { voice } from './voice';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -72,7 +73,7 @@ function setPads(labels: [string, string, string], actions?: ((() => void) | nul
 
 const held = [false, false, false];
 /** Shown on the menu so a tester can tell which build they are looking at. */
-const BUILD = 14;
+const BUILD = 15;
 let dayLine = '';
 /** The menu's status line, with the audio state so "no sound" can be told apart by cause. */
 function paintStatus() {
@@ -283,10 +284,10 @@ function menu() {
           : 'Log in to get on the leaderboard';
   setChoices([
     ['PRACTICE', 'A random five or any single game. Nothing at stake'],
-    [played ? 'YOUR RESULT' : 'DAILY RUN', dailySub],
+    [played ? 'YOUR RESULT' : 'TODAY’S RUSH', dailySub],
     ['LIVE PARTY', 'Race everyone on this post, in sync'],
   ]);
-  setPads(['PRACTICE', played ? 'RESULT' : 'DAILY RUN', 'PARTY'], [practiceMenu, daily, lobby]);
+  setPads(['PRACTICE', played ? 'RESULT' : 'RUSH!', 'PARTY'], [practiceMenu, daily, lobby]);
   document.querySelector('.choice[data-pad="1"]')?.classList.toggle('primary', !played);
 }
 
@@ -389,12 +390,16 @@ async function solo(kind: 'daily' | 'practice', lineup: Round[], rivals: Rival[]
     held: () => held,
     // Demo mode for practice runs only: `?autoplay=1` lets a bot play.
     autoplay: kind === 'practice' && params.has('autoplay') ? { press, release } : undefined,
+    onRound: (done) => kind === 'daily' && track.round(done.length, lineup.length, lineup[done.length - 1].id, done[done.length - 1]),
   });
+  if (kind === 'daily') track.start();
+  else track.did('practice_start');
   const mine = match;
   const rounds = await mine.done;
   if (match !== mine) return;
   match = null;
   const total = rounds.reduce((a, b) => a + b, 0);
+  if (kind === 'daily') track.end(total, total >= 2800);
 
   if (kind === 'practice') {
     final({ kind: 'PRACTICE RUN', lineup, rounds, total, boardTitle: 'This run', board: standings(myName(), rounds, rivals, rounds.length) });
@@ -407,7 +412,7 @@ async function solo(kind: 'daily' | 'practice', lineup: Round[], rivals: Rival[]
     } catch {
       /* the run still shows for this visit */
     }
-    final({ kind: `DAILY RUN · ${prettyDay(init.day)}`, lineup, rounds, total, badges: ['Demo: scores stay on this device'], boardTitle: 'You vs the house bots', board: standings(myName(), rounds, rivals, rounds.length) });
+    final({ kind: `TODAY’S RUSH · ${prettyDay(init.day)}`, lineup, rounds, total, badges: ['Demo: scores stay on this device'], boardTitle: 'You vs the house bots', board: standings(myName(), rounds, rivals, rounds.length) });
     return;
   }
   let board: LbEntry[] = init?.leaderboard ?? [];
@@ -426,7 +431,7 @@ async function solo(kind: 'daily' | 'practice', lineup: Round[], rivals: Rival[]
     console.error(err);
     toast('Could not save your score. Check your connection.');
   }
-  final({ kind: `DAILY RUN · ${prettyDay(init?.day ?? '')}`, lineup, rounds, total, badges, boardTitle: 'Leaderboard', board: leaderboard(board), social: !!init?.myRun });
+  final({ kind: `TODAY’S RUSH · ${prettyDay(init?.day ?? '')}`, lineup, rounds, total, badges, boardTitle: 'Leaderboard', board: leaderboard(board), social: !!init?.myRun });
 }
 
 const dailyLineup = (): Round[] => (init ? roundsFromIds(init.day, init.lineup) : []);
@@ -439,7 +444,7 @@ function daily() {
     if (init.rank) badges.push(`#${init.rank} of ${fmt(init.players)}`);
     if (init.streak > 0) badges.push(`${init.streak}-day streak`);
     final({
-      kind: `DAILY RUN · ${prettyDay(init.day)}`,
+      kind: `TODAY’S RUSH · ${prettyDay(init.day)}`,
       lineup,
       rounds: init.myRun.rounds,
       total: init.myRun.total,
@@ -560,6 +565,7 @@ for (const key of ['share', 'flair', 'join'] as const) {
     try {
       const res = await api[key]();
       socialDone[key] = res.ok;
+      if (res.ok) track.did(`result_${key}`);
       toast(res.message);
       if (res.ok) {
         sfx.named('coin');
@@ -643,6 +649,7 @@ function lobby() {
 }
 
 async function startParty() {
+  track.did('party_start');
   try {
     takeParty(await api.partyStart({ guest }));
   } catch (err) {
@@ -727,6 +734,7 @@ api.init().then(
   (res) => {
     init = res;
     skew = res.now - Date.now();
+    track.ready();
     if (screen !== 'menu') return;
     // Already played today: open on the result card, with its next steps, not the menu.
     if (res.myRun && !params.has('menu')) daily();
@@ -736,6 +744,7 @@ api.init().then(
     // No server behind this build: run as a self-contained demo.
     console.warn('no game server, running offline', err);
     offline = true;
+    track.disable();
     init = offlineInit();
     if (screen === 'menu') menu();
     toast('Demo mode: scores stay on this device.');

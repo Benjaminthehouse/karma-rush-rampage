@@ -1,4 +1,5 @@
 import express, { type Request, type Response } from 'express';
+import { telemetryRouter } from '@devvit/analytics/server/reddit';
 import { context, createServer, getServerPort, realtime, reddit, redis } from '@devvit/web/server';
 import {
   feedChannel,
@@ -221,6 +222,8 @@ router.post(
 );
 
 app.use(router);
+// Devvit Journeys: the client's journey events arrive on /api/telemetry/*.
+app.use(telemetryRouter);
 
 const server = createServer(app);
 server.on('error', (err) => console.error(`server error; ${err.stack}`));

@@ -18,6 +18,7 @@
     "login": "devvit login"
   },
   "dependencies": {
+    "@devvit/analytics": "0.15.4",
     "@devvit/web": "0.15.4",
     "devvit": "0.15.4",
     "express": "^5.2.1"

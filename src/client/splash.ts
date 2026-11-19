@@ -3,6 +3,7 @@ import { feedChannel, type FeedMessage, type InitResponse } from '../shared/api'
 import { GAME_META, MAX_TOTAL, prettyDay, roundsFromIds } from '../shared/daily';
 import { api, fmt } from './api';
 import { h } from './games/common';
+import { track } from './track';
 
 const $ = (id: string) => document.getElementById(id)!;
 
@@ -33,7 +34,7 @@ function render(init: InitResponse) {
   if (init.myRun) bits.push(`You scored ${fmt(init.myRun.total)}${init.rank ? ` · #${init.rank}` : ''}`);
   if (init.streak > 0) bits.push(`${init.streak}-day streak`);
   $('s-me').textContent = bits.join(' · ');
-  $('s-play').textContent = init.myRun ? 'MY RESULT · PLAY MORE' : 'PLAY TODAY’S RUN';
+  $('s-play').textContent = init.myRun ? 'MY RESULT · PLAY MORE' : 'PLAY TODAY’S RUSH!';
 }
 
 async function load() {
@@ -47,12 +48,16 @@ async function load() {
   }
 }
 
-$('s-play').addEventListener('click', (e) => requestExpandedMode(e as MouseEvent, 'game'));
+$('s-play').addEventListener('click', (e) => {
+  track.did('splash_play');
+  requestExpandedMode(e as MouseEvent, 'game');
+});
 // Coming back from the expanded game: refresh the board.
 window.addEventListener('focus', () => void load());
 
 void load().then((init) => {
   if (!init) return;
+  track.ready();
   try {
     connectRealtime<FeedMessage>({
       channel: feedChannel(init.day),

@@ -53,6 +53,13 @@ The comment, flair and join actions run from the player's own account
 (`permissions.reddit.asUser` in `devvit.json`); if Reddit refuses a comment as the
 user, the app posts it on their behalf.
 
+### Journey events
+
+A scored daily run is one Devvit Journey (`src/client/track.ts`, using
+`@devvit/analytics` and `permissions.journeys`): it starts with the run, reports
+progress after each round, and ends with the total. Posting a score, joining,
+wearing flair, starting a party and practice runs are recorded as interactions.
+
 ## The mini-games
 
 Each game lives in three small files and is registered automatically. See
