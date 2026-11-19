@@ -1,0 +1,2 @@
+.g-flair .pill { font-size: 3em; font-weight: 900; letter-spacing: 0.06em; background: var(--bg); border: 3px solid var(--line); border-radius: 99px; padding: 0.15em 0.7em; }
+.g-flair .pill.empty { font-size: 1.5em; color: var(--dim); }

@@ -9,7 +9,7 @@
   <body>
     <div id="app">
       <main>
-        <section id="menu" class="screen">
+        <section id="menu" class="screen ui">
           <div class="logo"><span>KARMA</span><span>MASH</span></div>
           <p class="tag" id="menu-day">Five rounds. Three buttons. One shot a day.</p>
           <div class="chips" id="menu-lineup"></div>
@@ -27,7 +27,7 @@
           <p class="me" id="menu-me"></p>
         </section>
 
-        <section id="lobby" class="screen" hidden>
+        <section id="lobby" class="screen ui" hidden>
           <h2>Live Party</h2>
           <p class="tag" id="lobby-status">Finding the lobby…</p>
           <ol class="standings" id="lobby-players"></ol>
@@ -38,16 +38,17 @@
           <header class="hud">
             <div id="pips"></div>
             <div id="hud-title"></div>
-            <div id="hud-score">0</div>
+            <div class="hud-right"><span id="combo"></span><span id="hud-score">0</span></div>
           </header>
           <div id="timebar"><i></i></div>
-          <div class="arena">
+          <div class="arena" id="arena">
             <div id="stage"></div>
-            <div id="card" hidden></div>
+            <div id="card" class="ui" hidden></div>
+            <div id="fx" class="fx-layer"></div>
           </div>
         </section>
 
-        <section id="final" class="screen" hidden>
+        <section id="final" class="screen ui" hidden>
           <div class="eyebrow" id="final-kind"></div>
           <div class="total"><b id="final-total">0</b><span>/ 5,000</span></div>
           <div class="badges" id="final-badges"></div>
@@ -56,14 +57,19 @@
           <ol class="standings" id="final-board"></ol>
         </section>
 
-        <button id="mute" aria-label="Toggle sound"></button>
+        <div id="settings">
+          <button data-set="sound"></button>
+          <button data-set="voice"></button>
+          <button data-set="fx"></button>
+        </div>
+        <div id="fxg" class="fx-layer"></div>
         <div id="toast" hidden></div>
       </main>
 
       <footer id="pads">
-        <button class="pad c-red" data-pad="0"><span></span><kbd>A</kbd></button>
-        <button class="pad c-green" data-pad="1"><span></span><kbd>S</kbd></button>
-        <button class="pad c-blue" data-pad="2"><span></span><kbd>D</kbd></button>
+        <button class="pad c-red" data-pad="0"><kbd>A</kbd><span></span></button>
+        <button class="pad c-green" data-pad="1"><kbd>S</kbd><span></span></button>
+        <button class="pad c-blue" data-pad="2"><kbd>D</kbd><span></span></button>
       </footer>
     </div>
     <script type="module" src="./main.ts"></script>

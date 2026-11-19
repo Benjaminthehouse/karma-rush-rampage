@@ -9,6 +9,8 @@ export type InitResponse = {
   day: string;
   /** True when `day` is the current UTC day, i.e. the run counts for the streak. */
   isToday: boolean;
+  /** Game ids of this day's five rounds, fixed the first time the day is opened. */
+  lineup: string[];
   myRun: { rounds: number[]; total: number } | null;
   streak: number;
   best: number;

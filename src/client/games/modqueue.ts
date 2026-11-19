@@ -1,4 +1,5 @@
-import { h, pick, pulse, randBtn, type Btn, type GameFactory } from './common';
+import './modqueue.css';
+import { COLOR, h, pick, pulse, randBtn, clamp1000, type GameFactory } from './common';
 
 // 0 = spam (remove), 1 = wholesome (approve), 2 = flame war (lock)
 const ITEMS: string[][] = [
@@ -30,8 +31,9 @@ const ITEMS: string[][] = [
 const TAG = ['SPAM', 'NICE', 'FIGHT'];
 const DONE = ['REMOVED', 'APPROVED', 'LOCKED'];
 
-export const modqueue: GameFactory = ({ root, rng, level, good, bad }) => {
-  const n = 8 + Math.floor(level / 2);
+export const create: GameFactory = ({ root, rng, level, good, bad }) => {
+  const par = 15 + level;
+  const n = 34;
   const queue = Array.from({ length: n }, () => {
     const type = randBtn(rng);
     return { type, text: pick(rng, ITEMS[type]) };
@@ -42,12 +44,11 @@ export const modqueue: GameFactory = ({ root, rng, level, good, bad }) => {
 
   const wrap = h('div', 'g-modqueue');
   const card = h('div', 'report');
-  const tag = h('span', 'report-tag');
-  const text = h('div', 'report-text');
+  const tag = h('span', 'tag');
+  const text = h('div', 'text');
   card.append(tag, text);
-  const stamp = h('div', 'stamp');
   const left = h('div', 'g-note');
-  wrap.append(card, stamp, left);
+  wrap.append(card, left);
   root.append(wrap);
 
   function show() {
@@ -63,29 +64,26 @@ export const modqueue: GameFactory = ({ root, rng, level, good, bad }) => {
     pulse(card, 'pop-in');
     tag.textContent = TAG[q.type];
     text.textContent = q.text;
-    left.textContent = `${n - idx} in queue`;
+    left.textContent = `${right} handled`;
   }
   show();
 
   return {
-    press(b: Btn) {
+    press(b) {
       const q = queue[idx];
       if (!q) return;
-      const ok = b === q.type;
-      if (ok) {
+      if (b === q.type) {
         right++;
-        good();
+        good(card, DONE[b]);
       } else {
         wrong++;
-        bad();
+        bad(card, 'WRONG CALL');
       }
-      stamp.textContent = ok ? DONE[b] : 'WRONG CALL';
-      stamp.className = `stamp ${ok ? `s-${b}` : 's-bad'}`;
-      pulse(stamp, 'stamp-in');
       idx++;
       show();
     },
     tick() {},
-    score: () => Math.max(0, Math.round((1000 * (right - wrong / 2)) / n)),
+    score: () => clamp1000((1000 * (right - wrong)) / par),
+    hint: () => queue[idx]?.type ?? null,
   };
 };

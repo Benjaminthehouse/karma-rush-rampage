@@ -1,7 +1,9 @@
-import { COLOR, COLOR_NAME, h, pulse, randBtn, shuffled, type Btn, type GameFactory } from './common';
+import './peak.css';
+import { COLOR, COLOR_NAME, clamp1000, h, pulse, randBtn, shuffled, type Btn, type GameFactory } from './common';
 
-export const peak: GameFactory = ({ root, rng, level, good, bad }) => {
-  const n = 5;
+export const create: GameFactory = ({ root, rng, level, good, bad }) => {
+  const par = 6 + Math.floor(level / 2);
+  const n = 24;
   const sweep = 1150 - level * 90; // ms for the marker to cross once
   const targets = Array.from({ length: n }, () => {
     const order = shuffled(rng, [0, 1, 2] as Btn[]);
@@ -11,6 +13,7 @@ export const peak: GameFactory = ({ root, rng, level, good, bad }) => {
   });
   let idx = 0;
   let hits = 0;
+  let misses = 0;
   let pos = 0;
   let pausedUntil = 0;
 
@@ -36,7 +39,7 @@ export const peak: GameFactory = ({ root, rng, level, good, bad }) => {
       z.className = `zone c-${COLOR[tg.order[i]]}`;
       z.style.flexBasis = `${tg.widths[i] * 100}%`;
     });
-    note.textContent = `${hits} landed · ${n - idx} to go`;
+    note.textContent = `${hits} posts landed`;
   }
   show();
 
@@ -51,25 +54,30 @@ export const peak: GameFactory = ({ root, rng, level, good, bad }) => {
   }
 
   return {
-    press(b: Btn, t: number) {
+    press(b, t) {
       const tg = targets[idx];
       if (!tg || t < pausedUntil) return;
       if (b === tg.want && zoneAt(pos) === tg.want) {
         hits++;
-        good();
+        good(marker, 'POSTED');
       } else {
+        misses++;
         pulse(track, 'shake');
-        bad();
+        bad(marker, b === tg.want ? 'BAD TIMING' : 'WRONG COLOUR');
       }
       idx++;
       pausedUntil = t + 250;
       show();
     },
-    tick(t: number) {
+    tick(t) {
       const phase = (t / sweep) % 2;
       pos = phase < 1 ? phase : 2 - phase;
       marker.style.left = `${pos * 100}%`;
     },
-    score: () => Math.round((1000 * hits) / n),
+    score: () => clamp1000((1000 * (hits - misses / 2)) / par),
+    hint(t) {
+      const tg = targets[idx];
+      return tg && t >= pausedUntil && zoneAt(pos) === tg.want ? tg.want : null;
+    },
   };
 };

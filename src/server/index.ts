@@ -9,7 +9,7 @@ import {
   type PartyScore,
   type SubmitRequest,
 } from '../shared/api';
-import { GAME_META, dayKey, lineupFor, prettyDay } from '../shared/daily';
+import { GAME_META, dayKey, prettyDay } from '../shared/daily';
 import {
   cleanRounds,
   getInit,
@@ -110,18 +110,23 @@ router.post(
 
 // ------------------------------------------------------------- daily posts
 
+async function dayLineupTitles(day: string): Promise<string[]> {
+  const init = await getInit(store, { username: null, day, today: day, now: Date.now() });
+  return init.lineup.map((id) => GAME_META[id]?.title ?? id);
+}
+
 async function createDailyPost(): Promise<{ id: string; created: boolean }> {
   const day = dayKey();
   const existing = await redis.get(`post:${day}`);
   if (existing) return { id: existing, created: false };
-  const games = lineupFor(day).map((r) => GAME_META[r.id].title);
+  const games = (await dayLineupTitles(day));
   const post = await reddit.submitCustomPost({
     subredditName: context.subredditName,
     title: `Karma Mash — ${prettyDay(day)}: ${games.join(' · ')}`,
     entry: 'default',
     postData: { day },
     textFallback: {
-      text: `Today's Karma Mash: ${games.join(', ')}. Five 7-second button-mashing rounds, one shot at the daily leaderboard. Open this post on new Reddit or the app to play.`,
+      text: `Today's Karma Mash: ${games.join(', ')}. Five rapid-fire three-button rounds, one shot at the daily leaderboard. Open this post on new Reddit or the app to play.`,
     },
   });
   await redis.set(`post:${day}`, post.id);

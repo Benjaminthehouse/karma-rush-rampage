@@ -1,6 +1,6 @@
 import { connectRealtime, requestExpandedMode } from '@devvit/web/client';
 import { feedChannel, type FeedMessage, type InitResponse } from '../shared/api';
-import { GAME_META, MAX_TOTAL, lineupFor, prettyDay } from '../shared/daily';
+import { GAME_META, MAX_TOTAL, prettyDay, roundsFromIds } from '../shared/daily';
 import { api, fmt } from './api';
 import { h } from './games/common';
 
@@ -25,7 +25,7 @@ function board(init: InitResponse) {
 function render(init: InitResponse) {
   $('s-day').textContent = `${prettyDay(init.day)} · ${fmt(init.players)} played`;
   $('s-lineup').replaceChildren(
-    ...lineupFor(init.day).map((r) => h('span', 'chip', GAME_META[r.id].title))
+    ...roundsFromIds(init.day, init.lineup).map((r) => h('span', 'chip', GAME_META[r.id].title))
   );
   $('s-board-title').textContent = init.isToday ? 'Today’s top mashers' : `Top mashers · ${prettyDay(init.day)}`;
   board(init);

@@ -77,6 +77,25 @@ async function userStats(store: Store, name: string | null, today: string) {
   return { streak: alive ? Number(u.streak) || 0 : 0, best: Number(u.best) || 0 };
 }
 
+/**
+ * A day's lineup is frozen the first time anyone opens it, so shipping new
+ * mini-games later never reshuffles a day that already has scores.
+ */
+async function dayLineup(store: Store, day: string): Promise<string[]> {
+  const saved = await store.hGet('lineups', day);
+  if (saved) {
+    try {
+      const ids = JSON.parse(saved);
+      if (Array.isArray(ids) && ids.length === ROUNDS) return ids.map(String);
+    } catch {
+      /* fall through and re-roll */
+    }
+  }
+  const ids = lineupFor(day).map((r) => r.id);
+  await store.hSet('lineups', { [day]: JSON.stringify(ids) });
+  return ids;
+}
+
 export async function getInit(
   store: Store,
   p: { username: string | null; day: string; today: string; now: number }
@@ -89,6 +108,7 @@ export async function getInit(
     username: p.username,
     day: p.day,
     isToday: p.day === p.today,
+    lineup: await dayLineup(store, p.day),
     myRun: rounds ? { rounds, total: sum(rounds) } : null,
     ...stats,
     leaderboard: await top(store, p.day),

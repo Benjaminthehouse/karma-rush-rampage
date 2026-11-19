@@ -1,9 +1,12 @@
+import './copypasta.css';
 import { COLOR, h, pulse, randBtn, ratio, type Btn, type GameFactory } from './common';
 
-export const copypasta: GameFactory = ({ root, rng, level, good, bad }) => {
-  const len = 14 + level * 2;
+const PAGE = 21;
+
+export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
+  const par = 32 + level * 3;
   const seq: Btn[] = [];
-  while (seq.length < len) {
+  while (seq.length < PAGE * 5) {
     const b = randBtn(rng);
     // Never three of the same in a row, so it reads as a pattern rather than a mash.
     if (seq.length >= 2 && seq[seq.length - 1] === b && seq[seq.length - 2] === b) continue;
@@ -11,11 +14,12 @@ export const copypasta: GameFactory = ({ root, rng, level, good, bad }) => {
   }
   let idx = 0;
   let lockedUntil = 0;
+  let page = -1;
 
   const wrap = h('div', 'g-copypasta');
   const grid = h('div', 'pasta');
-  const cells = seq.map((b) => {
-    const c = h('i', `cell c-${COLOR[b]}`);
+  const cells = Array.from({ length: PAGE }, () => {
+    const c = h('i', 'cell');
     grid.append(c);
     return c;
   });
@@ -24,28 +28,39 @@ export const copypasta: GameFactory = ({ root, rng, level, good, bad }) => {
   root.append(wrap);
 
   function show() {
+    const now = Math.floor(idx / PAGE);
+    if (now !== page) {
+      page = now;
+      cells.forEach((c, i) => (c.className = `cell c-${COLOR[seq[page * PAGE + i]]}`));
+      pulse(grid, 'pop-in');
+    }
     cells.forEach((c, i) => {
-      c.classList.toggle('done', i < idx);
-      c.classList.toggle('next', i === idx);
+      c.classList.toggle('done', page * PAGE + i < idx);
+      c.classList.toggle('next', page * PAGE + i === idx);
     });
-    note.textContent = idx >= len ? 'Pasted!' : `${idx} / ${len}`;
+    note.textContent = `${idx} pasted`;
   }
   show();
 
   return {
-    press(b: Btn, t: number) {
-      if (idx >= len || t < lockedUntil) return;
+    press(b, t) {
+      if (idx >= seq.length || t < lockedUntil) return;
       if (b === seq[idx]) {
+        good(cells[idx % PAGE]);
         idx++;
-        if (idx === len) good();
+        if (idx % PAGE === 0) {
+          fx.pop(grid, 'PASTE IT AGAIN!', 'gold');
+          fx.sound('coin');
+        }
       } else {
         lockedUntil = t + 350;
         pulse(grid, 'shake');
-        bad();
+        bad(cells[idx % PAGE]);
       }
       show();
     },
     tick() {},
-    score: () => ratio(idx, len),
+    score: () => ratio(idx, par),
+    hint: (t) => (idx < seq.length && t >= lockedUntil ? seq[idx] : null),
   };
 };

@@ -1,24 +1,31 @@
 // Runs one match: five rounds on a fixed timeline (intro → play → result).
 // The timeline is driven by a clock supplied by the caller, so a solo run and a
-// synced party match are the same code with a different start time.
+// synced party match are the same code with a different start time. Everything
+// timed inside a phase (announcer words, score count-up) is a cue checked against
+// that clock, never a timer, so nothing can fire after the phase is over.
 import type { Rival } from '../shared/api';
-import { GAME_META, MAX_ROUND_SCORE, mulberry32, timeline, type Phase, type Round } from '../shared/daily';
+import { GAME_META, MAX_ROUND_SCORE, TIMING, mulberry32, timeline, type Phase, type Round } from '../shared/daily';
 import { fmt } from './api';
-import { GAMES } from './games';
-import { COLOR, h, type Btn, type GameInst } from './games/common';
-import { sfx } from './sfx';
+import { createFx } from './fx';
+import { COLOR, clamp1000, h, type Btn, type FxColor, type GameInst } from './games/common';
+import { GAMES } from './games/registry.gen';
+import { music, sfx } from './sfx';
+import { voice } from './voice';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
-export type Match = { done: Promise<number[]>; press(b: Btn): void; stop(): void; refresh(): void };
+export type Match = {
+  done: Promise<number[]>;
+  press(b: Btn): void;
+  release(b: Btn): void;
+  stop(): void;
+  /** Re-render standings when fresher rival scores arrive. */
+  refresh(): void;
+};
 
-export function rating(score: number): string {
-  if (score >= 950) return 'PERFECT!';
-  if (score >= 700) return 'GREAT';
-  if (score >= 400) return 'NOT BAD';
-  if (score > 0) return 'OOF';
-  return 'ZERO KARMA';
-}
+const TIERS = ['ZERO KARMA', 'OOF', 'NOT BAD', 'GREAT!', 'PERFECT!'];
+const tier = (score: number) => (score >= 950 ? 4 : score >= 700 ? 3 : score >= 400 ? 2 : score > 0 ? 1 : 0);
+export const rating = (score: number) => TIERS[tier(score)];
 
 /** Standings after `through` rounds; a rival with no score yet for a round shows as still playing. */
 export function standings(me: string, mine: number[], rivals: Rival[], through: number): HTMLElement {
@@ -35,8 +42,9 @@ export function standings(me: string, mine: number[], rivals: Rival[], through: 
   ].sort((a, b) => b.total - a.total);
   const list = h('ol', 'standings');
   const max = Math.max(1, through * MAX_ROUND_SCORE);
-  rows.slice(0, 6).forEach((r) => {
+  rows.slice(0, 6).forEach((r, i) => {
     const li = h('li', r.you ? 'you' : '');
+    li.style.setProperty('--i', String(i));
     const bar = h('i');
     bar.style.width = `${Math.max(2, (r.total / max) * 100)}%`;
     const name = h('span', 'who', r.you ? `${r.name} (you)` : r.name);
@@ -46,6 +54,8 @@ export function standings(me: string, mine: number[], rivals: Rival[], through: 
   });
   return list;
 }
+
+type Cue = { at: number; run: () => void };
 
 export function runMatch(o: {
   lineup: Round[];
@@ -57,86 +67,228 @@ export function runMatch(o: {
   onRound?: (rounds: number[]) => void;
 }): Match {
   const phases = timeline(o.lineup);
+  const arena = $('arena');
   const stage = $('stage');
   const card = $('card');
   const bar = $('timebar').firstElementChild as HTMLElement;
   const pips = $('pips');
+  const comboEl = $('combo');
+  const fx = createFx(arena, $('fx'));
   const scores: number[] = [];
+  const down = [false, false, false];
   let p = -1;
   let inst: GameInst | null = null;
+  let cues: Cue[] = [];
+  let combo = 0;
   let raf = 0;
   let stopped = false;
   let lastCount = 0;
+  let rushing = false;
   let finish!: (s: number[]) => void;
   const done = new Promise<number[]>((r) => (finish = r));
 
+  const total = () => scores.reduce((a, b) => a + b, 0);
+
   function hud() {
     pips.replaceChildren(
-      ...o.lineup.map((_, i) => {
-        const cls = i < scores.length ? 'done' : i === scores.length ? 'now' : '';
-        return h('i', cls);
-      })
+      ...o.lineup.map((_, i) => h('i', i < scores.length ? 'done' : i === scores.length ? 'now' : ''))
     );
-    $('hud-score').textContent = fmt(scores.reduce((a, b) => a + b, 0));
+    $('hud-score').textContent = fmt(total());
   }
 
-  function showCard(...kids: (HTMLElement | string)[]) {
+  function setCombo(n: number) {
+    combo = n;
+    comboEl.textContent = n >= 3 ? `×${n}` : '';
+    comboEl.dataset.heat = String(Math.min(3, Math.floor(n / 5)));
+    if (n >= 3) {
+      comboEl.classList.remove('bump');
+      void comboEl.offsetWidth;
+      comboEl.classList.add('bump');
+    }
+  }
+
+  function showCard(kind: string, ...kids: (HTMLElement | string)[]) {
+    card.className = `ui card-${kind}`;
     card.replaceChildren(...kids);
     card.hidden = false;
-    card.classList.remove('pop-in');
-    void card.offsetWidth;
-    card.classList.add('pop-in');
   }
 
-  function enter(ph: Phase) {
-    const round = o.lineup[ph.round];
+  // ---- phase: intro. The announcer dictates the command one word at a time.
+  function intro(ph: Phase, round: Round) {
     const meta = GAME_META[round.id];
-    if (ph.type === 'intro') {
-      stage.replaceChildren();
-      bar.style.width = '100%';
-      $('hud-title').textContent = meta.title;
-      const legend = h('div', 'legend');
-      meta.labels.forEach((l, i) => legend.append(h('span', `c-${COLOR[i]}`, l)));
-      showCard(
-        h('div', 'eyebrow', `ROUND ${ph.round + 1} OF ${o.lineup.length}`),
-        h('h2', '', meta.title),
-        h('p', '', meta.how),
-        legend
-      );
-      o.setPads(meta.labels);
-      hud();
-    } else if (ph.type === 'play') {
-      card.hidden = true;
-      stage.replaceChildren();
-      stage.className = '';
-      sfx.go();
-      inst = GAMES[round.id]({
+    stage.replaceChildren();
+    stage.className = '';
+    fx.clear();
+    bar.style.width = '100%';
+    bar.parentElement!.classList.remove('rush');
+    setCombo(0);
+    $('hud-title').textContent = meta.title;
+    o.setPads(meta.labels);
+    hud();
+
+    const words = meta.shout.split(/\s+/).filter(Boolean);
+    const shout = h('div', `shout n${Math.min(6, words.length)}`);
+    const spans = words.map((w, i) => {
+      const s = h('span', `c${i % 3}`, w);
+      shout.append(s);
+      return s;
+    });
+    const how = h('p', 'how', meta.how);
+    const legend = h('div', 'legend');
+    meta.labels.forEach((l, i) => {
+      const chip = h('span', `c-${COLOR[i]}`, l);
+      legend.append(chip);
+    });
+    showCard('intro', h('div', 'eyebrow', `ROUND ${ph.round + 1} OF ${o.lineup.length} · ${meta.title}`), shout, how, legend);
+
+    const lead = 450;
+    const cadence = Math.max(220, Math.min(420, (TIMING.intro - lead - 1200) / words.length));
+    cues.push({
+      at: 150,
+      run: () => {
+        sfx.whoosh();
+        voice.say(meta.say ?? meta.shout);
+      },
+    });
+    spans.forEach((s, i) =>
+      cues.push({
+        at: lead + i * cadence,
+        run: () => {
+          s.classList.add('in');
+          sfx.slam(i);
+          fx.lights((['red', 'green', 'blue'] as FxColor[])[i % 3]);
+        },
+      })
+    );
+    cues.push({
+      at: lead + words.length * cadence + 120,
+      run: () => {
+        how.classList.add('in');
+        legend.classList.add('in');
+      },
+    });
+  }
+
+  // ---- phase: play.
+  function play(round: Round) {
+    const meta = GAME_META[round.id];
+    card.hidden = true;
+    stage.replaceChildren();
+    stage.className = '';
+    down.fill(false);
+    rushing = false;
+    sfx.go();
+    fx.flash('white');
+    music.start(round.seed, round.level);
+    const factory = GAMES[round.id];
+    try {
+      inst = factory({
         root: stage,
         rng: mulberry32(round.seed),
         level: round.level,
         duration: meta.duration,
-        good: () => sfx.good(),
-        bad: () => sfx.bad(),
+        down,
+        good(at, text) {
+          setCombo(combo + 1);
+          sfx.good(combo);
+          fx.burst(at ?? null, 'gold', 6);
+          fx.lights('green');
+          if (text) fx.pop(at ?? null, text, 'gold');
+          if (combo % 10 === 0 || combo === 5) {
+            sfx.milestone();
+            fx.banner(`COMBO ×${combo}!`);
+            fx.flash('gold');
+          }
+        },
+        bad(at, text) {
+          setCombo(0);
+          sfx.bad();
+          fx.shake();
+          fx.lights('red');
+          if (text) fx.pop(at ?? null, text, 'red');
+        },
+        fx: {
+          burst: fx.burst,
+          pop: fx.pop,
+          flash: fx.flash,
+          shake: fx.shake,
+          sound: (name) => sfx.named(name),
+        },
       });
-    } else {
-      const score = scores[ph.round] ?? 0;
-      sfx.result(score);
-      const res = h('div', 'round-score', `+${fmt(score)}`);
-      const box = h('div', 'standings-box');
-      box.append(standings(o.me, scores, o.rivals(), ph.round + 1));
-      showCard(h('div', 'eyebrow', meta.title), res, h('div', 'rating', rating(score)), box);
-      card.dataset.round = String(ph.round);
-      hud();
+    } catch (err) {
+      // One broken mini-game must never take the whole run down.
+      console.error(`mini-game ${round.id} failed to start`, err);
+      inst = null;
     }
   }
 
-  function leave(ph: Phase) {
-    if (ph.type !== 'play') return;
-    scores[ph.round] = inst ? inst.score() : 0;
+  function endPlay(ph: Phase) {
+    let score = 0;
+    try {
+      score = inst ? clamp1000(inst.score()) : 0;
+    } catch (err) {
+      console.error('score() failed', err);
+    }
+    scores[ph.round] = score;
     inst = null;
+    down.fill(false);
+    music.stop();
+    sfx.roundEnd();
     stage.className = 'frozen';
     bar.style.width = '0%';
+    bar.parentElement!.classList.remove('rush');
     o.onRound?.([...scores]);
+  }
+
+  // ---- phase: result. Score counts up, the verdict stamps in, then standings.
+  function result(ph: Phase, round: Round) {
+    const meta = GAME_META[round.id];
+    const score = scores[ph.round] ?? 0;
+    const tr = tier(score);
+    const num = h('div', 'round-score', '+0');
+    const verdict = h('div', `rating t${tr}`, TIERS[tr]);
+    const box = h('div', 'standings-box');
+    showCard('result', h('div', 'eyebrow', meta.title), num, verdict, box);
+    hud();
+    const COUNT = 700;
+    for (let i = 1; i <= 14; i++) {
+      cues.push({
+        at: 100 + (COUNT * i) / 14,
+        run: () => {
+          num.textContent = `+${fmt(Math.round((score * i) / 14))}`;
+          if (score > 0) sfx.tick();
+        },
+      });
+    }
+    cues.push({
+      at: 100 + COUNT + 120,
+      run: () => {
+        verdict.classList.add('in');
+        num.classList.add('landed');
+        sfx.result(tr - 1);
+        voice.say(TIERS[tr], { rate: 1.1, pitch: tr >= 3 ? 1.4 : 0.9 });
+        if (tr >= 3) {
+          fx.confetti(tr === 4 ? 90 : 45);
+          fx.flash('gold');
+        }
+        fx.lights(tr >= 2 ? 'gold' : 'red');
+      },
+    });
+    cues.push({
+      at: 100 + COUNT + 520,
+      run: () => {
+        box.replaceChildren(standings(o.me, scores, o.rivals(), ph.round + 1));
+        box.classList.add('in');
+      },
+    });
+  }
+
+  function enter(ph: Phase) {
+    cues = [];
+    const round = o.lineup[ph.round];
+    if (ph.type === 'intro') intro(ph, round);
+    else if (ph.type === 'play') play(round);
+    else result(ph, round);
   }
 
   function frame() {
@@ -147,8 +299,8 @@ export function runMatch(o: {
       const n = Math.ceil(-t / 1000);
       if (n !== lastCount) {
         lastCount = n;
-        sfx.tick();
-        showCard(h('div', 'eyebrow', 'GET READY'), h('div', 'count', String(n)));
+        sfx.count(n);
+        showCard('count', h('div', 'eyebrow', 'GET READY'), h('div', 'count', String(n)));
         o.setPads(['', '', '']);
         hud();
       }
@@ -156,7 +308,7 @@ export function runMatch(o: {
     }
     if (p < 0) enter(phases[(p = 0)]);
     while (p < phases.length && t >= phases[p].end) {
-      leave(phases[p]);
+      if (phases[p].type === 'play') endPlay(phases[p]);
       p++;
       if (p < phases.length) enter(phases[p]);
     }
@@ -166,33 +318,60 @@ export function runMatch(o: {
       return;
     }
     const ph = phases[p];
-    if (ph.type === 'play' && inst) {
-      inst.tick(t - ph.start);
-      bar.style.width = `${(1 - (t - ph.start) / (ph.end - ph.start)) * 100}%`;
+    const local = t - ph.start;
+    if (cues.length) {
+      const due = cues.filter((c) => c.at <= local);
+      cues = cues.filter((c) => c.at > local);
+      due.forEach((c) => c.run());
+    }
+    if (ph.type === 'play') {
+      const left = ph.end - t;
+      bar.style.width = `${(left / (ph.end - ph.start)) * 100}%`;
+      if (!rushing && left < 2000) {
+        rushing = true;
+        music.rush(true);
+        bar.parentElement!.classList.add('rush');
+      }
+      try {
+        inst?.tick(local);
+      } catch (err) {
+        console.error('tick() failed', err);
+        inst = null;
+      }
     }
   }
 
   function stop() {
     stopped = true;
     cancelAnimationFrame(raf);
+    music.stop();
+    voice.hush();
+    fx.clear();
     card.hidden = true;
   }
 
-  /** Re-renders the standings on the result card when fresher rival scores arrive. */
-  function refresh() {
+  function input(kind: 'press' | 'release', b: Btn) {
+    down[b] = kind === 'press';
     const ph = phases[p];
-    const box = card.querySelector('.standings-box');
-    if (ph?.type === 'result' && box) box.replaceChildren(standings(o.me, scores, o.rivals(), ph.round + 1));
+    if (ph?.type !== 'play' || !inst) return;
+    try {
+      if (kind === 'press') inst.press(b, o.clock() - ph.start);
+      else inst.release?.(b, o.clock() - ph.start);
+    } catch (err) {
+      console.error(`${kind}() failed`, err);
+    }
   }
 
   raf = requestAnimationFrame(frame);
   return {
     done,
     stop,
-    press(b: Btn) {
+    press: (b) => input('press', b),
+    release: (b) => input('release', b),
+    refresh() {
       const ph = phases[p];
-      if (ph?.type === 'play' && inst) inst.press(b, o.clock() - ph.start);
+      const box = card.querySelector('.standings-box.in');
+      if (ph?.type === 'result' && box) box.replaceChildren(standings(o.me, scores, o.rivals(), ph.round + 1));
     },
-    refresh,
   };
 }

@@ -1,9 +1,9 @@
-import { COLOR, arrow, h, pulse, randBtn, shuffled, type Btn, type GameFactory } from './common';
+import './dodge.css';
+import { COLOR, arrow, clamp1000, h, pulse, randBtn, shuffled, type Btn, type GameFactory } from './common';
 
-const FALL = 1300; // ms from the top of the lane to the player
-
-export const dodge: GameFactory = ({ root, rng, level, duration, good, bad }) => {
-  const gap = 760 - level * 55;
+export const create: GameFactory = ({ root, rng, level, duration, good, bad }) => {
+  const FALL = 1250 - level * 90; // ms from the top of the lane to the player
+  const gap = 800 - level * 80;
   const rows: { at: number; up: Btn; downs: Btn[]; els: HTMLElement[]; done: boolean }[] = [];
 
   const wrap = h('div', 'g-dodge');
@@ -17,10 +17,15 @@ export const dodge: GameFactory = ({ root, rng, level, duration, good, bad }) =>
   wrap.append(me);
   root.append(wrap);
 
+  let prevUp = 1;
   for (let at = FALL + 300; at < duration - 150; at += gap) {
-    const up = randBtn(rng);
+    // Never where the player already stands, so standing still catches nothing.
+    let up = randBtn(rng);
+    while (up === prevUp) up = randBtn(rng);
+    prevUp = up;
     const others = shuffled(rng, ([0, 1, 2] as Btn[]).filter((b) => b !== up));
-    const downs = level >= 2 && rng() < 0.3 + level * 0.12 ? others : others.slice(0, 1);
+    // Early rounds leave one safe lane; later every lane has something in it.
+    const downs = rng() < 0.45 + level * 0.14 ? others : others.slice(0, 1);
     const els: HTMLElement[] = [];
     const add = (lane: Btn, dir: 'up' | 'down') => {
       const el = arrow(dir, 'faller');
@@ -41,11 +46,11 @@ export const dodge: GameFactory = ({ root, rng, level, duration, good, bad }) =>
   place();
 
   return {
-    press(b: Btn) {
+    press(b) {
       lane = b;
       place();
     },
-    tick(t: number) {
+    tick(t) {
       for (const row of rows) {
         if (row.done) continue;
         const p = (t - (row.at - FALL)) / FALL;
@@ -59,11 +64,11 @@ export const dodge: GameFactory = ({ root, rng, level, duration, good, bad }) =>
           if (lane === row.up) {
             got++;
             pulse(me, 'bump');
-            good();
+            good(me, '+1');
           } else if (row.downs.includes(lane)) {
             hits++;
             pulse(me, 'shake');
-            bad();
+            bad(me, 'OUCH');
           }
           continue;
         }
@@ -73,6 +78,10 @@ export const dodge: GameFactory = ({ root, rng, level, duration, good, bad }) =>
         });
       }
     },
-    score: () => Math.max(0, Math.round((1000 * got) / rows.length) - 150 * hits),
+    score: () => clamp1000((1000 * got) / rows.length - 150 * hits),
+    hint() {
+      const next = rows.find((r) => !r.done);
+      return next && next.up !== lane ? next.up : null;
+    },
   };
 };

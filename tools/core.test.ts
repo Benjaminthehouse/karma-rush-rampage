@@ -1,7 +1,7 @@
 // Rules check for src/server/core.ts on an in-memory store: `npm test`.
 import assert from 'node:assert/strict';
 import { getInit, partyBeat, partyScore, partyStart, submitRun, type Store } from '../src/server/core';
-import { lineupFor, matchLength } from '../src/shared/daily';
+import { GAME_IDS, GAME_META, lineupFor, matchLength, roundsFromIds } from '../src/shared/daily';
 
 function memory(): Store {
   const hs = new Map<string, Map<string, string>>();
@@ -63,6 +63,21 @@ assert.equal(init.rivals.length, 3);
 assert.ok(init.rivals.some((x) => x.name === 'bob' && !x.bot));
 assert.ok(!init.rivals.some((x) => x.name === 'ann'));
 assert.deepEqual(init.myRun, { rounds: [1000, 500, 0, 250, 250], total: 2000 });
+
+// A day's lineup is frozen on first open: five known games, same on every later open.
+assert.equal(init.lineup.length, 5);
+assert.deepEqual((await getInit(s, { username: 'bob', day: d1, today: d2, now: 0 })).lineup, init.lineup);
+await s.hSet('lineups', { [d4]: JSON.stringify(['upvote', 'gone', 'peak', 'poll', 'flair']) });
+const old = (await getInit(s, { username: null, day: d4, today: d4, now: 0 })).lineup;
+assert.deepEqual(old, ['upvote', 'gone', 'peak', 'poll', 'flair'], 'stored ids are returned untouched');
+assert.equal(roundsFromIds(d4, old).filter((r) => GAME_META[r.id]).length, 5, 'unknown ids get a substitute');
+
+// Variety rule: with enough games, never two of the same kind back to back.
+for (const seed of ['a', 'b', 'c', 'd', 'e', 'f']) {
+  const kinds = lineupFor(seed).map((r) => GAME_META[r.id].kind);
+  assert.equal(new Set(lineupFor(seed).map((r) => r.id)).size, 5);
+  if (GAME_IDS.length >= 20) kinds.forEach((k, i) => i && assert.notEqual(k, kinds[i - 1], `seed ${seed}: ${kinds}`));
+}
 
 // Party: lobby → start → late joiner seated → scores → back to lobby when over.
 let now = 1_000_000;

@@ -6,6 +6,7 @@ import { build as viteBuild } from 'vite';
 import * as esbuild from 'esbuild';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { generate } from './gen-registry.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const watch = process.argv.includes('--watch');
@@ -42,6 +43,7 @@ const server = {
   logLevel: 'warning',
 };
 
+const ids = generate();
 await viteBuild(client);
 if (mock) {
   await esbuild.build({
@@ -53,4 +55,4 @@ if (mock) {
   if (watch) await (await esbuild.context(server)).watch();
   else await esbuild.build(server);
 }
-console.log(`built ${mock ? 'mock client' : 'client + server'}${watch ? ' (watching)' : ''}`);
+console.log(`built ${mock ? 'mock client' : 'client + server'} with ${ids.length} games${watch ? ' (watching)' : ''}`);

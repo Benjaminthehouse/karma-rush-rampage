@@ -1,4 +1,5 @@
-import { COLOR, arrow, h, pick, pulse, randBtn, ratio, type Btn, type GameFactory } from './common';
+import './upvote.css';
+import { COLOR, arrow, h, pick, pulse, randBtn, ratio, type GameFactory } from './common';
 
 const TITLES = [
   'My cat filed my taxes (correctly)',
@@ -13,22 +14,29 @@ const TITLES = [
   'Showerthought: stairs are just angry floors',
 ];
 
-export const upvote: GameFactory = ({ root, rng, level, good, bad }) => {
-  const needs = [5, 7, 8, 9].map((n) => n + Math.floor(level / 2));
-  const cards = needs.map((need) => ({ need, btn: randBtn(rng), title: pick(rng, TITLES) }));
-  const total = needs.reduce((a, b) => a + b, 0);
+export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
+  // More posts than anyone can clear; 1000 points means hitting the par press count.
+  const par = Math.round((duration / 1000) * (6.4 + level * 0.45));
+  let prev = -1;
+  const cards = Array.from({ length: 16 }, (_, i) => {
+    let btn = randBtn(rng);
+    while (btn === prev) btn = randBtn(rng);
+    prev = btn;
+    return { need: 5 + (i % 4) + Math.floor(level / 2), btn, title: pick(rng, TITLES) };
+  });
   let idx = 0;
   let votes = 0;
   let banked = 0;
+  let shown = -1;
 
   const wrap = h('div', 'g-upvote');
-  const card = h('div', 'post-card');
+  const card = h('div', 'card');
   const arr = arrow('up');
-  const body = h('div', 'post-body');
-  const title = h('div', 'post-title');
+  const body = h('div', 'body');
+  const title = h('div', 'title');
   const meter = h('div', 'meter');
   const fill = h('i');
-  const count = h('div', 'post-count');
+  const count = h('div', 'count');
   meter.append(fill);
   body.append(title, meter, count);
   card.append(arr, body);
@@ -36,11 +44,10 @@ export const upvote: GameFactory = ({ root, rng, level, good, bad }) => {
   wrap.append(card, left);
   root.append(wrap);
 
-  let shown = -1;
   function show() {
     const c = cards[idx];
     if (!c) {
-      card.className = 'post-card done';
+      card.className = 'card done';
       title.textContent = 'Front page cleared!';
       count.textContent = '';
       left.textContent = '';
@@ -48,39 +55,42 @@ export const upvote: GameFactory = ({ root, rng, level, good, bad }) => {
     }
     if (shown !== idx) {
       shown = idx;
-      card.className = `post-card c-${COLOR[c.btn]}`;
+      card.className = `card c-${COLOR[c.btn]}`;
       pulse(card, 'pop-in');
     }
     title.textContent = c.title;
     fill.style.width = `${(votes / c.need) * 100}%`;
     count.textContent = `${votes} / ${c.need}`;
-    left.textContent = `${cards.length - idx} post${cards.length - idx === 1 ? '' : 's'} to go`;
+    left.textContent = idx ? `${idx} on the front page` : 'Get it to the front page!';
   }
   show();
 
   return {
-    press(b: Btn) {
+    press(b) {
       const c = cards[idx];
       if (!c) return;
-      if (b === c.btn) {
-        votes++;
-        pulse(arr, 'bump');
-        if (votes >= c.need) {
-          banked += c.need;
-          votes = 0;
-          idx++;
-          good();
-        }
-      } else {
+      if (b !== c.btn) {
         votes = Math.max(0, votes - 2);
         show();
         pulse(card, 'shake');
-        bad();
+        bad(arr, '-2');
         return;
+      }
+      votes++;
+      pulse(arr, 'bump');
+      good(arr);
+      if (votes >= c.need) {
+        banked += c.need;
+        votes = 0;
+        idx++;
+        fx.pop(card, 'FRONT PAGE!', COLOR[c.btn]);
+        fx.burst(card, COLOR[c.btn], 16);
+        fx.sound('coin');
       }
       show();
     },
     tick() {},
-    score: () => ratio(banked + votes, total),
+    score: () => ratio(banked + votes, par),
+    hint: () => cards[idx]?.btn ?? null,
   };
 };

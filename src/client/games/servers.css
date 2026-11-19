@@ -1,0 +1,7 @@
+.g-servers .rack { display: flex; flex-direction: column; gap: 0.3em; width: min(100%, 17em); background: var(--bg); border: 3px solid var(--line); border-radius: 0.7em; padding: 0.5em; }
+.g-servers .unit { display: flex; align-items: center; gap: 0.35em; background: var(--panel-2); border-radius: 0.3em; padding: 0.35em 0.5em; }
+.g-servers .unit i { width: 0.5em; height: 0.5em; border-radius: 50%; background: var(--red); }
+.g-servers .host { font: 700 0.72em ui-monospace, monospace; color: var(--dim); white-space: nowrap; }
+.g-servers .unit.up .host { color: var(--green); }
+.g-servers .unit b { flex: 1; min-width: 1em; height: 0.3em; background: var(--line); border-radius: 99px; }
+.g-servers .unit.up i { background: var(--green); box-shadow: 0 0 0.5em var(--green); }

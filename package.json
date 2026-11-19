@@ -7,8 +7,10 @@
   "scripts": {
     "build": "node tools/build.mjs",
     "build:watch": "node tools/build.mjs --watch",
-    "check": "tsc --noEmit && tsc --noEmit -p tsconfig.client.json",
-    "test": "esbuild tools/core.test.ts --bundle --platform=node --format=esm --outfile=dist/core.test.mjs --log-level=warning && node dist/core.test.mjs",
+    "gen": "node tools/gen-registry.mjs",
+    "check": "npm run gen && tsc --noEmit && tsc --noEmit -p tsconfig.client.json",
+    "check:game": "node tools/game-check.mjs",
+    "test": "npm run gen && esbuild tools/core.test.ts --bundle --platform=node --format=esm --outfile=dist/core.test.mjs --log-level=warning && node dist/core.test.mjs",
     "mock": "MOCK=1 node tools/build.mjs && node dist/mock-server.cjs",
     "dev": "devvit playtest",
     "deploy": "npm run check && npm run build && devvit upload",

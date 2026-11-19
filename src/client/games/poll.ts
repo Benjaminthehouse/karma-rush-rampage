@@ -1,7 +1,9 @@
-import { COLOR, h, pulse, shuffled, type Btn, type GameFactory } from './common';
+import './poll.css';
+import { COLOR, clamp1000, h, pulse, shuffled, type Btn, type GameFactory } from './common';
 
-export const poll: GameFactory = ({ root, rng, level, good, bad }) => {
-  const n = level >= 3 ? 5 : 4;
+export const create: GameFactory = ({ root, rng, level, good, bad }) => {
+  const par = level >= 2 ? 10 : 9;
+  const n = 18;
   const margin = Math.max(1, 3 - Math.floor(level / 2));
   const polls = Array.from({ length: n }, () => {
     const [win, a, b] = shuffled(rng, [0, 1, 2] as Btn[]);
@@ -31,7 +33,7 @@ export const poll: GameFactory = ({ root, rng, level, good, bad }) => {
     box.replaceChildren();
     const p = polls[idx];
     if (!p) {
-      box.append(h('div', 'ballot-done', 'Polls closed!'));
+      box.append(h('div', 'closed', 'Polls closed!'));
       note.textContent = '';
       return;
     }
@@ -42,27 +44,27 @@ export const poll: GameFactory = ({ root, rng, level, good, bad }) => {
       box.append(dot);
     }
     pulse(box, 'pop-in');
-    note.textContent = `Poll ${idx + 1} of ${n} — most votes?`;
+    note.textContent = `Poll ${idx + 1} — most votes?`;
   }
   show();
 
   return {
-    press(b: Btn, t: number) {
+    press(b, t) {
       const p = polls[idx];
       if (!p || t < lockedUntil) return;
       if (b === p.win) {
         right++;
-        good();
+        good(box, 'CALLED IT');
       } else {
         wrong++;
         lockedUntil = t + 500;
-        pulse(wrap, 'shake');
-        bad();
+        bad(box, 'RECOUNT');
       }
       idx++;
       show();
     },
     tick() {},
-    score: () => Math.max(0, Math.round((1000 * (right - wrong / 2)) / n)),
+    score: () => clamp1000((1000 * (right - wrong)) / par),
+    hint: (t) => (polls[idx] && t >= lockedUntil ? polls[idx].win : null),
   };
 };
