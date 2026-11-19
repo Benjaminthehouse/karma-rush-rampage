@@ -98,8 +98,11 @@ On Reddit:
 npm run login                 # devvit login
 npx devvit playtest r/<your-test-subreddit>
 npm run deploy                # check + build + devvit upload
-npm run launch                # deploy + devvit publish (submits for review)
 ```
+
+For the hackathon, upload and playtest only. The organisers ask entrants not to
+submit the app for publishing (`devvit publish`) until the event is over; an
+uploaded, unpublished app qualifies.
 
 The first upload registers the app under your account. If the app name in
 `devvit.json` is taken, change it. Installing the app creates the first post; after

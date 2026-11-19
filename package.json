@@ -15,7 +15,6 @@
     "mock": "MOCK=1 node tools/build.mjs && node dist/mock-server.cjs",
     "dev": "devvit playtest",
     "deploy": "npm run check && npm run build && devvit upload",
-    "launch": "npm run deploy && devvit publish",
     "login": "devvit login"
   },
   "dependencies": {
