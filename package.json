@@ -1,0 +1,30 @@
+{
+  "name": "karma-mash",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "BSD-3-Clause",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "build:watch": "node tools/build.mjs --watch",
+    "check": "tsc --noEmit && tsc --noEmit -p tsconfig.client.json",
+    "test": "esbuild tools/core.test.ts --bundle --platform=node --format=esm --outfile=dist/core.test.mjs --log-level=warning && node dist/core.test.mjs",
+    "mock": "MOCK=1 node tools/build.mjs && node dist/mock-server.cjs",
+    "dev": "devvit playtest",
+    "deploy": "npm run check && npm run build && devvit upload",
+    "launch": "npm run deploy && devvit publish",
+    "login": "devvit login"
+  },
+  "dependencies": {
+    "@devvit/web": "0.15.4",
+    "devvit": "0.15.4",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.9.0",
+    "vite": "^7.0.0"
+  }
+}

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Karma Mash</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <main>
+        <section id="menu" class="screen">
+          <div class="logo"><span>KARMA</span><span>MASH</span></div>
+          <p class="tag" id="menu-day">Five rounds. Three buttons. One shot a day.</p>
+          <div class="chips" id="menu-lineup"></div>
+          <div class="choices">
+            <button class="choice c-green" data-pad="1">
+              <b id="menu-daily">DAILY RUN</b><small id="menu-daily-sub">Counts for today’s leaderboard</small>
+            </button>
+            <button class="choice c-blue" data-pad="2">
+              <b>LIVE PARTY</b><small>Race everyone on this post, in sync</small>
+            </button>
+            <button class="choice c-red" data-pad="0">
+              <b>PRACTICE</b><small>Random games, nothing at stake</small>
+            </button>
+          </div>
+          <p class="me" id="menu-me"></p>
+        </section>
+
+        <section id="lobby" class="screen" hidden>
+          <h2>Live Party</h2>
+          <p class="tag" id="lobby-status">Finding the lobby…</p>
+          <ol class="standings" id="lobby-players"></ol>
+          <p class="hint">Everyone here plays the same five games at the same moment.</p>
+        </section>
+
+        <section id="play" class="screen" hidden>
+          <header class="hud">
+            <div id="pips"></div>
+            <div id="hud-title"></div>
+            <div id="hud-score">0</div>
+          </header>
+          <div id="timebar"><i></i></div>
+          <div class="arena">
+            <div id="stage"></div>
+            <div id="card" hidden></div>
+          </div>
+        </section>
+
+        <section id="final" class="screen" hidden>
+          <div class="eyebrow" id="final-kind"></div>
+          <div class="total"><b id="final-total">0</b><span>/ 5,000</span></div>
+          <div class="badges" id="final-badges"></div>
+          <ul class="breakdown" id="final-rounds"></ul>
+          <h3 id="final-board-title"></h3>
+          <ol class="standings" id="final-board"></ol>
+        </section>
+
+        <button id="mute" aria-label="Toggle sound"></button>
+        <div id="toast" hidden></div>
+      </main>
+
+      <footer id="pads">
+        <button class="pad c-red" data-pad="0"><span></span><kbd>A</kbd></button>
+        <button class="pad c-green" data-pad="1"><span></span><kbd>S</kbd></button>
+        <button class="pad c-blue" data-pad="2"><span></span><kbd>D</kbd></button>
+      </footer>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

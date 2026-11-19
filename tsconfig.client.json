@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "customConditions": ["browser"], "types": [] },
+  "include": ["src/client", "src/shared", "tools/mock-devvit-client.ts"]
+}
