@@ -55,10 +55,14 @@ const KNOCK = 12; // what one spray takes off
 const FLARE = 78; // a hot take lights a calm thread this high: three sprays
 const GROW = 4; // a fire nobody hoses keeps growing, % per second: a fourth spray after two seconds
 const GRACE = 600; // ms after a fire goes out in which more sprays are only steam
-const ABUSE = 300; // ms of civil time a spray on a calm thread costs
+const ABUSE = 30; // points a spray on a calm thread costs
+/** Points for putting a fire out: 100 if it was out within `fast` ms of lighting, sliding to 30 by `slow`. */
+const awardFor = (fast: number, slow: number) => (burnMs: number) =>
+  Math.round(100 - 70 * Math.min(1, Math.max(0, (burnMs - fast) / (slow - fast))));
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
-  const par = duration * (0.6 - level * 0.0125); // ms of all-three-calm that earn 1000
+  // Later rounds want fires out sooner for full points.
+  const award = awardFor(350 - level * 25, 1600 - level * 150);
   const take = dealer(rng, TAKES);
   // The round opens with all three smouldering: one spray each.
   const heat = [0, 1, 2].map(() => 51 + rng() * 4);
@@ -71,6 +75,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     prev = lane;
     flares.push({ at, lane, take: take() });
   }
+  // Every fire is worth up to 100: the three that open the round and one per hot take.
+  // A fast player loses a few points on the opening three, fought one at a time.
+  const par = (3 + flares.length) * 92;
 
   // The scene: three dumpsters in an alley, the mod on the fire escape above
   // whichever one was hosed last, and the sign that says how it is going.
@@ -102,14 +109,14 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     note.append(text);
     el.append(perch, pit, note);
     row.append(el);
-    return { el, perch, pit, flame, fire, tip, jet, bin, note, text, outAt: -9999, ablaze: false };
+    return { el, perch, pit, flame, fire, tip, jet, bin, note, text, outAt: -9999, litAt: 0, ablaze: false };
   });
   lanes[1].perch.append(mod.el);
   const hud = h('div', 'hud');
   const bar = h('div', 'bar');
   const fill = h('i');
   bar.append(fill);
-  const clock = h('div', 'clock', 'CIVIL FOR ');
+  const clock = h('div', 'clock', 'FIRES OUT ');
   const secs = h('b');
   clock.append(secs);
   hud.append(bar, clock);
@@ -120,8 +127,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let last = 0;
   let aim: Btn = 1;
   let calm = false;
-  let civilMs = 0;
-  let streak = 0;
+  let points = 0;
+  let out = 0;
   let smugUntil = 0;
   let frame = -1;
 
@@ -130,6 +137,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   // Drawn with transforms and only when something changed: resizing three
   // flames and a meter every frame made phones stutter.
   const shown = { size: ['', '', ''], over: [false, false, false], fill: '', secs: '' };
+  const score = () => ratio(points, par);
   function draw() {
     lanes.forEach((l, i) => {
       // 0 when out; a fire one spray from out is still a third of the way up.
@@ -143,12 +151,12 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         l.el.classList.toggle('over', over(i));
       }
     });
-    const fillNow = Math.min(1, civilMs / par).toFixed(3);
+    const fillNow = Math.min(1, points / par).toFixed(3);
     if (fillNow !== shown.fill) {
       shown.fill = fillNow;
       fill.style.transform = `scaleX(${fillNow})`;
     }
-    const secsNow = `${(civilMs / 1000).toFixed(1)}s`;
+    const secsNow = String(out);
     if (secsNow !== shown.secs) {
       shown.secs = secsNow;
       secs.textContent = secsNow;
@@ -174,20 +182,22 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
           heat[b] = 0;
           l.outAt = t;
           l.text.textContent = '[removed]';
-          good(l.bin, 'REMOVED');
-          fx.sound('whoosh');
+          const won = award(t - l.litAt);
+          points += won;
+          out++;
+          good(l.bin, `+${won}`);
+          fx.sound(won >= 90 ? 'coin' : 'whoosh');
+          if (won >= 90) fx.burst(l.bin, 'gold', 14);
         }
       } else if (t - l.outAt < GRACE) {
         // Still hosing the one that just went out: steam, nothing else.
         fx.poof(l.bin);
         fx.sound('tick');
       } else {
-        civilMs = Math.max(0, civilMs - ABUSE);
-        streak = 0;
+        points = Math.max(0, points - ABUSE);
         smugUntil = t + 500;
         pulse(l.bin, 'shake');
-        bad(l.bin, 'MOD ABUSE!');
-        fx.pop(secs, '-0.3s', 'red');
+        bad(l.bin, `MOD ABUSE! -${ABUSE}`);
       }
       draw();
     },
@@ -197,6 +207,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       while (flares[next] && t >= flares[next].at) {
         const f = flares[next++];
         const l = lanes[f.lane];
+        // A take on a calm thread starts a new fire (and its clock); on a burning one it feeds the old fire.
+        if (!over(f.lane)) l.litAt = t;
         heat[f.lane] = over(f.lane) ? Math.min(100, heat[f.lane] + KNOCK * 2) : FLARE;
         l.text.textContent = f.take;
         pulse(l.note, 'pop-in');
@@ -214,7 +226,6 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       const now = !over(0) && !over(1) && !over(2);
       if (now !== calm) {
         calm = now;
-        streak = 0;
         signText.textContent = calm ? 'ALL CIVIL :)' : 'DUMPSTER FIRE!';
         setSprite(signL, calm ? 'check' : 'flame1', { px: 0.13 });
         setSprite(signR, calm ? 'check' : 'flame2', { px: 0.13 });
@@ -229,14 +240,6 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
           fx.sound('ding');
         }
       }
-      if (calm) {
-        civilMs += dt;
-        streak += dt;
-        if (streak >= 500) {
-          streak -= 500;
-          good(secs);
-        }
-      }
       mod.mood(t < smugUntil ? 'cool' : calm ? 'happy' : 'shock');
       const f = Math.floor(t / 110) % 2;
       if (f !== frame) {
@@ -245,7 +248,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       }
       draw();
     },
-    score: () => ratio(civilMs, par),
+    score,
     hint() {
       // Hose whatever is on fire, finishing the one you are on. Never a calm thread.
       if (over(0) && over(1) && over(2)) return [0, 1, 2];
