@@ -111,11 +111,15 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   /** The spike a hop from tile `p` would clear, if one is in reach. */
   const ahead = (p: number) => traps.find((s) => s.at > p && s.at - p <= REACH);
 
-  // The finish line is where a flawless runner gets with the par number of presses: 7.2 a second, 8 on the last round.
-  const parPresses = Math.round((duration / 1000) * (7.2 + level * 0.2));
+  // The finish line is where a flawless runner (every hop from as far back as it works) gets with the par
+  // number of presses. The pace barely rises with level: later rounds are harder because the spikes crowd in,
+  // and every hop taken a stride late already costs a press, so a real record run needs about 8 a second.
+  const parPresses = Math.round((duration / 1000) * (7.2 + level * 0.05));
   let finish = 0;
   for (let i = 0; i < parPresses; i++) finish = ahead(finish) ? ahead(finish)!.at + 1 : finish + 1;
   goal.style.left = `calc(var(--tile) * ${finish})`;
+  // Past the line it is open road: the victory lap is for showing off, not for face-planting on a record run.
+  while (traps.length && traps[traps.length - 1].at > finish) traps.pop()!.el.remove();
 
   const hype = dealer(rng, HYPE);
   const salt = dealer(rng, SALT);

@@ -13,7 +13,7 @@ const EARLY = 350; // ms at the very start in which the first stare does not bit
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   const tell = 600 - level * 40; // eyes shut while they swing to the next phone, which flashes: nothing is watched
-  const par = Math.round((duration / 1000) * (6.3 + level * 0.2));
+  const par = Math.round((duration / 1000) * (6.5 + level * 0.15));
   const doc = dealer(rng, DOCS);
   // The round opens mid-stare. Two stares in three land where the scrolling was (`follow`); the third on one of the other phones.
   const stares: { shut: number; from: number; to: number; follow: boolean; alt: number; doc: string }[] = [];

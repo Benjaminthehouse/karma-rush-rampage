@@ -294,7 +294,7 @@ body.fx-low #arena.playing { animation: none; }
 #arcade .shout { font-size: 2.3rem; }
 
 /* ---------- pixel look for the shell (menus, HUD, cards, pads, pop-ups) ---------- */
-.ui, #play > .hud, #pads, #settings, #toast, .fx-layer { font-family: 'Pixelify Sans', 'Trebuchet MS', system-ui, sans-serif; }
+.ui, #play > .hud, #pads, #settings, #toast, .fx-layer { font-family: 'Jersey 25', 'Trebuchet MS', system-ui, sans-serif; font-synthesis: none; letter-spacing: 0.02em; }
 .ui .logo span { font-style: normal; letter-spacing: 0.02em; -webkit-text-stroke: 0.16em var(--bg); text-shadow: 0.09em 0.11em 0 #000; }
 .ui .shout, .ui .count, .ui .round-score, .ui .rating, .ui .verdict, .ui h2, .ui .total b, .ui .choice b, .ui .play-btn { font-style: normal; }
 .ui .shout span { -webkit-text-stroke: 0.14em var(--bg); text-shadow: 0.07em 0.09em 0 #000; }
@@ -342,7 +342,7 @@ body.fx-low #card.card-intro::before, body.fx-low #card.card-count::before { opa
 #hud-score.live { color: #fff; text-shadow: 0 0 0.6rem var(--gold); }
 
 /* ---------- race track: everyone's score in this round, live ---------- */
-#race { position: relative; height: 1.5rem; margin: 0 0.9rem 0 0.2rem; background: #0b1020; box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line); font-family: 'Pixelify Sans', 'Trebuchet MS', system-ui, sans-serif; }
+#race { position: relative; height: 1.5rem; margin: 0 0.9rem 0 0.2rem; background: #0b1020; box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line); font-family: 'Jersey 25', 'Trebuchet MS', system-ui, sans-serif; }
 #race:empty { visibility: hidden; }
 #race i { position: absolute; top: 0.12rem; height: 1.26rem; min-width: 1.26rem; padding: 0 0.2rem; margin-left: -0.63rem; display: grid; place-items: center; font-style: normal; font-size: 0.72rem; font-weight: 700; line-height: 1; color: #0b1020; background: var(--dim); transition: left 0.12s linear; }
 #race i.you { background: var(--gold); z-index: 2; box-shadow: 0 0 0.6rem var(--gold); }
