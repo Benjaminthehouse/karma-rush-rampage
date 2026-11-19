@@ -83,7 +83,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let watched: Btn = on;
   let shown = '';
   let caught = false;
-  let dodging = false; // the eyes shut while heading for the phone being scrolled
+  let dodging = false; // the eyes are shut and heading for a phone in use
 
   /** Moves on to the stare for time `t`; each one picks its phone the moment the eyes shut. */
   function sync(t: number) {
@@ -133,6 +133,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         memes = Math.max(0, memes - FINE);
         lockedUntil = t + LOCK;
         bad(row, 'CAUGHT IN 4K');
+        fx.pop(count, `-${FINE}`, 'red');
         fx.flash('red');
         fx.sound('thud');
         show();
@@ -175,8 +176,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
           if (dodging && on !== watched) fx.pop(p.el, 'PHEW', 'white');
         } else {
           fx.sound('tick');
-          // The eyes are coming for the phone in your hand.
-          dodging = watched === on && t - p.lastAt < 600;
+          // The eyes are coming for a phone that was being scrolled a moment ago.
+          dodging = t - p.lastAt < 500;
           if (dodging) fx.pop(p.el, 'MOVE!', 'red');
         }
       }

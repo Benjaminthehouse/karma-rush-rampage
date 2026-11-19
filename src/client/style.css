@@ -352,3 +352,6 @@ body.fx-low #card.card-intro::before, body.fx-low #card.card-count::before { opa
 html, body { overscroll-behavior: none; -webkit-touch-callout: none; }
 #pads, #arena, #race, #timebar { touch-action: none; }
 #pads .pad { -webkit-user-select: none; user-select: none; }
+
+/* With FLASH off (or the OS asking for less motion), nothing on the stage blinks or loops forever. */
+body.fx-low #stage *, body.fx-low #stage *::before, body.fx-low #stage *::after { animation-iteration-count: 1 !important; }
