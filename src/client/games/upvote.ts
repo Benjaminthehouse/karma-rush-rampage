@@ -111,7 +111,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         lastBtn = b;
         graceEnd = t + GRACE;
         pulse(goal, 'bump');
-        fx.pop(shaft, 'FRONT PAGE!', 'gold');
+        fx.pop(tag, 'FRONT PAGE!', 'gold');
         fx.burst(goal, COLOR[p.btn], 24);
         fx.burst(goal, 'gold', 12);
         fx.sound('coin');

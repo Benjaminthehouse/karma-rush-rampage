@@ -31,7 +31,7 @@ const FLAME =
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   const spread = 5 + level * 0.5; // over the line a fire keeps growing, % per second
-  const par = duration * (0.76 - level * 0.02);
+  const par = duration * (0.7 - level * 0.01);
   const heat = [0, 1, 2].map(() => 52 + rng() * 6);
   // Hot takes land in one thread at a time, never the same thread twice running.
   const flares: { at: number; lane: Btn; take: string }[] = [];
@@ -107,7 +107,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       while (flares[next] && t >= flares[next].at) {
         const f = flares[next++];
         const l = lanes[f.lane];
-        heat[f.lane] = Math.min(heat[f.lane] + LEAP, FLOOR + LEAP + KNOCK);
+        heat[f.lane] = Math.max(heat[f.lane], Math.min(heat[f.lane] + LEAP, FLOOR + LEAP + KNOCK));
         l.take.textContent = f.take;
         pulse(l.take, 'pop-in');
         fx.pop(l.pit, 'HOT TAKE!', COLOR[f.lane]);

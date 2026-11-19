@@ -41,7 +41,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       z.className = `zone c-${COLOR[tg.order[i]]}`;
       z.style.flexBasis = `${tg.widths[i] * 100}%`;
     });
-    note.textContent = `${hits} posts landed`;
+    note.textContent = `${hits} ${hits === 1 ? 'post' : 'posts'} landed`;
   }
   show();
 

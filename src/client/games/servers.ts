@@ -40,7 +40,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       if (up === units.length) {
         // The last server is the win: make it land harder than the four before it.
         fx.flash('green');
-        fx.pop(rack, 'BACK ONLINE!', 'green');
+        fx.pop(rule, 'BACK ONLINE!', 'green');
         fx.sound('coin');
       } else fx.sound('ding');
     }
@@ -54,7 +54,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         if (t - complained > 400) {
           complained = t;
           pulse(rack, 'shake');
-          bad(rack, 'ALTERNATE!');
+          bad(rule, 'ALTERNATE!');
         }
         return;
       }

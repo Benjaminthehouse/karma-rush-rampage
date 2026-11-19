@@ -322,3 +322,20 @@ body.fx-low #arena.playing { animation: none; }
 .fx-layer > .spark { border-radius: 0; box-shadow: 0 0 0 1.5px #0b1020; }
 #arena { border-radius: 0.4rem; }
 #stage, #card, #fx { border-radius: 0.2rem; }
+
+/* ---------- loud announcer cards: a bright sunburst per round ---------- */
+#card.card-intro, #card.card-count { background: var(--r1, #2f9bff); }
+#card.card-intro::before, #card.card-count::before { opacity: 1; background: repeating-conic-gradient(from var(--spin), var(--r2, #1c6fe0) 0deg 12deg, #0000 12deg 24deg); }
+#card.hue0 { --r1: #2f9bff; --r2: #1c6fe0; }
+#card.hue1 { --r1: #ff5a8a; --r2: #d83a6e; }
+#card.hue2 { --r1: #22c98a; --r2: #12a56c; }
+#card.hue3 { --r1: #a45bff; --r2: #7f37de; }
+#card.hue4 { --r1: #ff8a3d; --r2: #e0661c; }
+#card.card-intro .eyebrow, #card.card-count .eyebrow { color: #0b1020; background: var(--gold); padding: 0.15rem 0.6rem; box-shadow: 0.2rem 0.25rem 0 #0b102066; }
+#card.card-intro .how { color: #fff; text-shadow: 0.08em 0.1em 0 #0b1020aa; font-size: 1.1rem; }
+.ui .shout span.c0 { color: var(--gold); }
+.ui .shout span.c1 { color: #fff; }
+.ui .shout span.c2 { color: #b9f3ff; }
+.ui .count { color: #fff; -webkit-text-stroke: 0.08em #0b1020; paint-order: stroke fill; }
+#card.card-result { background: #0b1020f2; }
+body.fx-low #card.card-intro::before, body.fx-low #card.card-count::before { opacity: 0.6; }

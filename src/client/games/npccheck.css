@@ -18,7 +18,7 @@
 /* NPC loops: two poses, swapped on the beat by the p1 class. */
 .g-npccheck .m-sway .body { transform: rotate(-10deg); }
 .g-npccheck .m-sway.p1 .body { transform: rotate(10deg); }
-.g-npccheck .m-bob.p1 .body { transform: translateY(-12%); }
+.g-npccheck .m-bob.p1 .body { transform: translateY(-15%); }
 .g-npccheck .m-jack.p1 .arm.l { transform: rotate(135deg); }
 .g-npccheck .m-jack.p1 .arm.r { transform: rotate(-135deg); }
 .g-npccheck .m-disco .arm.l { transform: rotate(105deg); }
@@ -30,7 +30,7 @@
 .g-npccheck .w-hop .body { animation: g-npccheck-hop 0.3s ease-in-out infinite; }
 .g-npccheck .w-hop .arm.l, .g-npccheck .found .fig .arm.l { transform: rotate(140deg); }
 .g-npccheck .w-hop .arm.r, .g-npccheck .found .fig .arm.r { transform: rotate(-140deg); }
-.g-npccheck .w-spin .body { animation: g-npccheck-spin 0.36s linear infinite; }
+.g-npccheck .w-spin .body { animation: g-npccheck-spin 0.44s ease-in-out infinite; }
 .g-npccheck .w-spin .arm.l { transform: rotate(110deg); }
 .g-npccheck .w-spin .arm.r { transform: rotate(-110deg); }
 .g-npccheck .w-crouch .body { animation: g-npccheck-crouch 0.24s ease-in-out infinite; }
@@ -39,7 +39,7 @@
 .g-npccheck .w-flail .arm.r { animation: g-npccheck-flail-r 0.16s ease-in-out infinite alternate; }
 .g-npccheck .w-zoom .body { animation: g-npccheck-zoom 0.42s ease-in-out infinite; }
 @keyframes g-npccheck-hop { 50% { transform: translateY(-15%); } }
-@keyframes g-npccheck-spin { 50% { transform: scaleX(-1); } }
+@keyframes g-npccheck-spin { 0%, 28% { transform: scaleX(1); } 50%, 78% { transform: scaleX(-1); } 100% { transform: scaleX(1); } }
 @keyframes g-npccheck-crouch { 50% { transform: scaleY(0.52); } }
 @keyframes g-npccheck-wiggle { 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
 @keyframes g-npccheck-flail-l { from { transform: rotate(100deg); } to { transform: rotate(175deg); } }

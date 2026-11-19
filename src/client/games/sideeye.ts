@@ -7,7 +7,7 @@ const LOLS = ['LOL', 'SAME', 'MOOD', 'SO TRUE', 'SAVED', 'I’M DEAD', 'TOO REAL
 const KINDS = 6; // meme tile designs in the css
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
-  const blink = 320 - level * 25; // eyes shut while they swing to the next phone: nothing is watched
+  const blink = 340 - level * 20; // eyes shut while they swing to the next phone: nothing is watched
   const par = Math.round((duration / 1000) * (6.8 + level * 0.4));
   // Two stares in three land where the scrolling was (`follow`); the third on one of the other phones.
   const stares: { shut: number; from: number; to: number; follow: boolean; alt: number; doc: string }[] = [];

@@ -33,7 +33,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   const post = h('div', 'post');
   const title = h('div', 'title');
   const box = h('div', 'box');
-  post.append(title, box);
+  // Verdicts and reaction times float up from just above the card, clear of its text.
+  const stamp = h('i', 'stamp');
+  post.append(title, box, stamp);
   const note = h('div', 'g-note');
   wrap.append(post, note);
   root.append(wrap);
@@ -61,13 +63,13 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         if (t < quiet) return;
         // Jumping the gun forfeits the upcoming post.
         pulse(post, 'shake');
-        bad(post, 'TOO SOON');
+        bad(stamp, 'TOO SOON');
         close('Removed: commenting on nothing');
         return;
       }
       if (!d) return;
       if (b !== d.btn) {
-        bad(post, 'WRONG COLOUR');
+        bad(stamp, 'WRONG COLOUR');
         close('You commented on the wrong post');
         return;
       }
@@ -75,7 +77,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       const share = Math.max(0.25, Math.min(1, 1 - (ms - fullMarks) / 600));
       earned += share;
       firsts++;
-      good(box, `${Math.round(ms)} ms`);
+      good(stamp, `${Math.round(ms)} ms`);
       if (share >= 1) fx.burst(post, COLOR[d.btn], 14);
       close('FIRST!');
     },
@@ -95,7 +97,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         box.textContent = `Hit ${COLOR_NAME[d.btn]}!`;
         fx.sound('ding');
       } else if (state === 'live' && t >= d.at + LIVE) {
-        bad(post, 'SECOND.');
+        bad(stamp, 'SECOND.');
         quiet = t + 250;
         idx++;
         waiting();

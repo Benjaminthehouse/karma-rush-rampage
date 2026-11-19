@@ -19,14 +19,18 @@ const LINES = [
 ];
 // What a real player blurts out when the spotlight lands on them.
 const CAUGHT = ['who, me?', 'LAG!!', 'hi mom', 'brb snack', 'gg', 'i was afk', 'nice spot', 'ok fine', 'one sec', 'wait what'];
-// Two-pose loops the NPCs step through on the beat.
-const IDLES = ['sway', 'bob', 'jack', 'disco', 'squat'];
-// Things only a human with a keyboard does.
-const WILDS = ['hop', 'spin', 'crouch', 'flail', 'zoom'];
+// Two-pose loops the NPCs step through on the beat. The calm ones never lift an arm.
+const CALM = ['sway', 'bob', 'squat'];
+const IDLES = [...CALM, 'jack', 'disco'];
+// Loops big enough to read even when the player is only half a pose late.
+const BOLD = ['sway', 'squat', 'jack'];
+// Things only a human with a keyboard does: some throw both arms up, some never lift one.
+const WAVERS = ['hop', 'spin', 'flail'];
+const SQUIRMERS = ['crouch', 'zoom'];
 
 // Drawn around the feet at 0,0 so the body sways, squats and spins about the floor.
 const FIGURE =
-  '<svg viewBox="-34 -126 68 130" aria-hidden="true"><g class="body">' +
+  '<svg viewBox="-34 -140 68 144" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><g class="body">' +
   '<line class="leg" x1="-6" y1="-44" x2="-8" y2="-4"/><line class="leg" x1="6" y1="-44" x2="8" y2="-4"/>' +
   '<g transform="translate(-12 -78)"><line class="arm l" x1="0" y1="0" x2="-10" y2="23"/></g>' +
   '<g transform="translate(12 -78)"><line class="arm r" x1="0" y1="0" x2="10" y2="23"/></g>' +
@@ -45,12 +49,15 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     const roll = rng();
     // The first trio always has the loud tell; later levels lean on timing alone.
     const wild = i === 0 || roll >= 0.2 + level * 0.18;
+    // How many poses the player trails the NPCs by: a whole one, or (hardest) half of one.
+    const lag = roll < (level - 2) * 0.12 ? 0.5 : 1;
+    // A loud tell has to read in one frame: arms up beside calm NPCs, or arms down beside dancing ones.
+    const waver = rng() < 0.7;
     return {
       real,
-      idle: pick(rng, IDLES),
-      wild: wild ? pick(rng, WILDS) : '',
-      // How many poses the player trails the NPCs by: a whole one, or (hardest) half of one.
-      lag: roll < (level - 2) * 0.12 ? 0.5 : 1,
+      idle: !wild ? pick(rng, lag < 1 ? BOLD : IDLES) : waver ? pick(rng, CALM) : 'disco',
+      wild: !wild ? '' : pick(rng, waver ? WAVERS : SQUIRMERS),
+      lag,
       flip: rng() < 0.5 ? 1 : 0,
       line: pick(rng, LINES),
       caught: pick(rng, CAUGHT),
@@ -89,7 +96,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
 
   function progress() {
     fill.style.width = `${score() / 10}%`;
-    note.textContent = right ? `${right} real players found` : 'Two are NPCs. One is real.';
+    note.textContent = right ? `${right} real player${right === 1 ? '' : 's'} found` : 'Two are NPCs. One is real.';
   }
 
   function show(t: number) {

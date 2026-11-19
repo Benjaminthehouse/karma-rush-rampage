@@ -79,11 +79,23 @@ function pulsePad(b: Btn) {
 
 // Each finger holds the pad it landed on until it lifts, so chords and holds work on touch.
 const fingers = new Map<number, Btn>();
-document.addEventListener('pointerdown', (e) => {
+const stageEl = $('stage');
+
+/** Which pad a pointer event means: a pad or menu card, or (mid-round) a third of the stage. */
+function padAt(e: PointerEvent): Btn | null {
   const el = (e.target as HTMLElement).closest<HTMLElement>('[data-pad]');
-  if (!el) return;
+  if (el) return Number(el.dataset.pad) as Btn;
+  // Things on the stage look tappable, so let them be: left, middle and right
+  // thirds of the stage are the red, green and blue pads.
+  if (screen !== 'play' || !stageEl.contains(e.target as Node)) return null;
+  const r = stageEl.getBoundingClientRect();
+  return Math.max(0, Math.min(2, Math.floor(((e.clientX - r.left) / r.width) * 3))) as Btn;
+}
+
+document.addEventListener('pointerdown', (e) => {
+  const b = padAt(e);
+  if (b === null) return;
   e.preventDefault();
-  const b = Number(el.dataset.pad) as Btn;
   fingers.set(e.pointerId, b);
   press(b);
 });

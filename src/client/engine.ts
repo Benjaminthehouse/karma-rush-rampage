@@ -114,7 +114,8 @@ export function runMatch(o: {
   }
 
   function showCard(kind: string, ...kids: (HTMLElement | string)[]) {
-    card.className = `ui card-${kind}`;
+    // Each round's announcer card gets its own loud colour pair.
+    card.className = `ui card-${kind} hue${Math.max(0, p < 0 ? 0 : phases[Math.min(p, phases.length - 1)].round) % 5}`;
     card.replaceChildren(...kids);
     card.hidden = false;
   }
