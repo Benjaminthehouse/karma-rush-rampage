@@ -286,3 +286,8 @@ body.fx-low #pads .pad.glow { animation: none; }
 body.fx-low #arena.playing { animation: none; }
 /* Keep the settings row clear of the last list row. */
 #menu, #lobby, #final { padding-bottom: 2.6rem; }
+/* ---------- arcade: browse and practise any single mini-game ---------- */
+#arcade { justify-content: center; text-align: center; }
+#arcade-back { position: absolute; top: 0.5rem; left: 0.6rem; background: #0b1020aa; border: 1px solid var(--line); border-radius: 0.4rem; color: var(--ink); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; padding: 0.3rem 0.6rem; }
+#arcade .shout span { opacity: 1; }
+#arcade .shout { font-size: 2.3rem; }

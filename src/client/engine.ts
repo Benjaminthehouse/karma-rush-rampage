@@ -6,6 +6,7 @@
 import type { Rival } from '../shared/api';
 import { GAME_META, MAX_ROUND_SCORE, TIMING, mulberry32, timeline, type Phase, type Round } from '../shared/daily';
 import { fmt } from './api';
+import { createBot } from './bot';
 import { createFx } from './fx';
 import { COLOR, clamp1000, h, type Btn, type FxColor, type GameInst } from './games/common';
 import { GAMES } from './games/registry.gen';
@@ -66,6 +67,8 @@ export function runMatch(o: {
   setPads: (labels: [string, string, string]) => void;
   /** Light a pad for a beat (the announcer's words chase across the pads). */
   pulsePad?: (b: Btn) => void;
+  /** Demo mode: a bot plays by following each game's hint(). Practice only. */
+  autoplay?: { press: (b: Btn) => void; release: (b: Btn) => void };
   onRound?: (rounds: number[]) => void;
 }): Match {
   const phases = timeline(o.lineup);
@@ -86,6 +89,7 @@ export function runMatch(o: {
   let stopped = false;
   let lastCount = 0;
   let rushing = false;
+  let bot: ReturnType<typeof createBot> | null = null;
   let finish!: (s: number[]) => void;
   const done = new Promise<number[]>((r) => (finish = r));
 
@@ -188,6 +192,7 @@ export function runMatch(o: {
     arena.style.setProperty('--beat', `${60 / music.bpm(round.level)}s`);
     arena.classList.add('playing');
     const factory = GAMES[round.id];
+    bot = o.autoplay ? createBot(meta.think ?? 380, meta.kind !== 'mash') : null;
     try {
       inst = factory({
         root: stage,
@@ -342,6 +347,7 @@ export function runMatch(o: {
       }
       try {
         inst?.tick(local);
+        if (inst && bot && o.autoplay) bot(inst, local, o.autoplay.press, o.autoplay.release);
       } catch (err) {
         console.error('tick() failed', err);
         inst = null;

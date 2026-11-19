@@ -11,6 +11,7 @@
     "check": "npm run gen && tsc --noEmit && tsc --noEmit -p tsconfig.client.json",
     "check:game": "node tools/game-check.mjs",
     "test": "npm run gen && esbuild tools/core.test.ts --bundle --platform=node --format=esm --outfile=dist/core.test.mjs --log-level=warning && node dist/core.test.mjs",
+    "smoke": "MOCK=1 node tools/build.mjs && node tools/smoke.mjs",
     "mock": "MOCK=1 node tools/build.mjs && node dist/mock-server.cjs",
     "dev": "devvit playtest",
     "deploy": "npm run check && npm run build && devvit upload",

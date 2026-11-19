@@ -18,7 +18,7 @@ import { voice } from './voice';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
-type Screen = 'menu' | 'lobby' | 'play' | 'final';
+type Screen = 'menu' | 'arcade' | 'lobby' | 'play' | 'final';
 let screen: Screen = 'menu';
 let init: InitResponse | null = null;
 let match: Match | null = null;
@@ -111,6 +111,9 @@ document.addEventListener('keydown', (e) => {
   e.preventDefault();
   press(b);
 });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && (screen === 'arcade' || screen === 'lobby' || screen === 'final')) menu();
+});
 document.addEventListener('keyup', (e) => {
   const b = KEYS[e.key.toLowerCase()];
   // Several keys map to one pad; only release when none of them is still down.
@@ -119,7 +122,7 @@ document.addEventListener('keyup', (e) => {
 
 function show(next: Screen) {
   screen = next;
-  for (const id of ['menu', 'lobby', 'play', 'final'] as const) $(id).hidden = id !== next;
+  for (const id of ['menu', 'arcade', 'lobby', 'play', 'final'] as const) $(id).hidden = id !== next;
 }
 
 let toastTimer = 0;
@@ -169,18 +172,106 @@ function menu() {
     $('menu-lineup').replaceChildren(
       ...dailyLineup().map((r) => h('span', 'chip', GAME_META[r.id].title))
     );
-    $('menu-daily').textContent = played ? 'YOUR RESULT' : 'DAILY RUN';
-    $('menu-daily-sub').textContent = played
+    $('menu-me').textContent = init.streak > 0 ? `${init.streak}-day streak · best ${fmt(init.best)}` : '';
+  }
+  const dailySub = !init
+    ? 'Counts for today’s leaderboard'
+    : played
       ? `${fmt(init.myRun!.total)} points${init.rank ? ` · #${init.rank} of ${fmt(init.players)}` : ''}`
       : init.username
         ? 'Counts for today’s leaderboard'
         : 'Log in to get on the leaderboard';
-    $('menu-me').textContent = init.streak > 0 ? `${init.streak}-day streak · best ${fmt(init.best)}` : '';
+  setChoices([
+    ['PRACTICE', 'A random five or any single game. Nothing at stake'],
+    [played ? 'YOUR RESULT' : 'DAILY RUN', dailySub],
+    ['LIVE PARTY', 'Race everyone on this post, in sync'],
+  ]);
+  setPads(['PRACTICE', played ? 'RESULT' : 'DAILY RUN', 'PARTY'], [practiceMenu, daily, lobby]);
+}
+
+/** The three menu cards mirror the pads: index 0 red, 1 green, 2 blue. */
+function setChoices(cards: [string, string][]) {
+  cards.forEach(([title, sub], b) => {
+    const el = document.querySelector<HTMLElement>(`.choice[data-pad="${b}"]`)!;
+    el.querySelector('b')!.textContent = title;
+    el.querySelector('small')!.textContent = sub;
+  });
+}
+
+/** PRACTICE opens a choice: a random five, or the arcade to pick one game. */
+function practiceMenu() {
+  show('menu');
+  setChoices([
+    ['BACK', 'To the main menu'],
+    ['RANDOM FIVE', 'Five surprise games in a row'],
+    ['ARCADE', `Pick any of the ${GAME_IDS.length} games and practise it`],
+  ]);
+  setPads(['BACK', 'RANDOM 5', 'ARCADE'], [menu, practice, arcade]);
+  $('menu-count').textContent = 'Practice never touches the leaderboard';
+}
+
+// ----------------------------------------------------------------- arcade
+
+let arcadeAt = 0;
+const best: Record<string, number> = (() => {
+  try {
+    return JSON.parse(localStorage.getItem('km_best') ?? '{}') ?? {};
+  } catch {
+    return {};
   }
-  setPads(['PRACTICE', played ? 'RESULT' : 'DAILY RUN', 'PARTY'], [practice, daily, lobby]);
+})();
+
+function arcade() {
+  show('arcade');
+  const ids = [...GAME_IDS].sort((a, b) => GAME_META[a].title.localeCompare(GAME_META[b].title));
+  arcadeAt = (arcadeAt + ids.length) % ids.length;
+  const id = ids[arcadeAt];
+  const meta = GAME_META[id];
+  $('arcade-pos').textContent = `${arcadeAt + 1} / ${ids.length} · ${meta.kind.toUpperCase()}`;
+  $('arcade-title').textContent = meta.title;
+  $('arcade-shout').replaceChildren(...meta.shout.split(/\s+/).map((w, i) => h('span', `c${i % 3}`, w)));
+  $('arcade-how').textContent = meta.how;
+  $('arcade-legend').replaceChildren(...meta.labels.map((l, i) => h('span', `c-${['red', 'green', 'blue'][i]}`, l)));
+  $('arcade-best').textContent = best[id] !== undefined ? `Your best: ${fmt(best[id])}` : 'Not played yet';
+  const step = (d: number) => () => {
+    arcadeAt += d;
+    arcade();
+  };
+  setPads(['◀ PREV', 'PLAY', 'NEXT ▶'], [step(-1), () => void arcadePlay(id), step(1)]);
+}
+$('arcade-back').addEventListener('click', () => menu());
+
+async function arcadePlay(id: string) {
+  show('play');
+  const seed = Math.floor(Math.random() * 2 ** 31);
+  const startAt = Date.now() + TIMING.countdown;
+  match = runMatch({
+    lineup: [{ id, level: 2, seed }],
+    clock: () => Date.now() - startAt,
+    me: myName(),
+    rivals: () => [],
+    setPads,
+    pulsePad,
+    autoplay: params.has('autoplay') ? { press, release } : undefined,
+  });
+  const mine = match;
+  const [score] = await mine.done;
+  if (match !== mine) return;
+  match = null;
+  if (score > (best[id] ?? -1)) {
+    best[id] = score;
+    try {
+      localStorage.setItem('km_best', JSON.stringify(best));
+    } catch {
+      /* ignore */
+    }
+  }
+  arcade();
 }
 
 // ------------------------------------------------------------- solo modes
+
+const params = new URLSearchParams(location.search);
 
 async function solo(kind: 'daily' | 'practice', lineup: Round[], rivals: Rival[]) {
   show('play');
@@ -192,6 +283,8 @@ async function solo(kind: 'daily' | 'practice', lineup: Round[], rivals: Rival[]
     rivals: () => rivals,
     setPads,
     pulsePad,
+    // Demo mode for practice runs only: `?autoplay=1` lets a bot play.
+    autoplay: kind === 'practice' && params.has('autoplay') ? { press, release } : undefined,
   });
   const mine = match;
   const rounds = await mine.done;
@@ -250,7 +343,7 @@ function practice() {
   const seed = `practice-${Math.random().toString(36).slice(2)}`;
   const rivals: Rival[] = botRounds(seed).map((b) => ({ ...b, bot: true }));
   // Dev aid: `?games=upvote,dodge` forces the practice lineup.
-  const forced = (new URLSearchParams(location.search).get('games') ?? '').split(',').filter((g) => GAME_META[g]);
+  const forced = (params.get('games') ?? '').split(',').filter((g) => GAME_META[g]);
   const lineup = lineupFor(seed).map((r, i) => (forced[i] ? { ...r, id: forced[i] } : r));
   void solo('practice', lineup, rivals);
 }
