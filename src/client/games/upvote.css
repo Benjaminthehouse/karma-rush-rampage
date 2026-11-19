@@ -1,11 +1,10 @@
 .g-upvote { justify-content: flex-start !important; padding: 0 !important; gap: 0 !important; align-items: stretch !important; }
 .g-upvote .goal { flex: none; display: flex; align-items: center; justify-content: center; gap: 0.5em; background: var(--gold); color: #0b1020; font-size: 1.25em; letter-spacing: 0.08em; padding: 0.3em 0; border-bottom: 0.2em solid #0b1020; box-shadow: 0 0.25em 0 #0b102033; }
-.g-upvote .shaft { flex: 1; min-height: 0; position: relative; overflow: hidden; }
-.g-upvote .cloud { position: absolute; opacity: 0.95; animation: g-upvote-drift 6s linear infinite; }
-.g-upvote .cloud.c0 { left: 6%; }
-.g-upvote .cloud.c1 { left: 58%; animation-duration: 8s; }
-.g-upvote .cloud.c2 { left: 24%; animation-duration: 5s; }
-@keyframes g-upvote-drift { from { transform: translateX(-1.2em); } 50% { transform: translateX(1.2em); } to { transform: translateX(-1.2em); } }
+.g-upvote .shaft { flex: 1; min-height: 0; position: relative; overflow: hidden; container-type: size; background: #c75e4b; }
+/* The sky: 200x300 pixel art drawn at least two shafts tall (wider on desktop), centred, bottom first.
+   Climbing slides it down by up to its height less one shaft, so the top of the climb shows space. */
+.g-upvote .sky { --climb: 0; position: absolute; left: 50%; bottom: 0; height: max(200cqh, 150cqw); aspect-ratio: 2 / 3; background: url('./art/upvote-bg.png') center / 100% 100% no-repeat; image-rendering: pixelated; transform: translate(-50%, calc(var(--climb) * (100% - 100cqh))); transition: transform 0.16s cubic-bezier(0.3, 1.5, 0.5, 1); will-change: transform; }
+.g-upvote .sky.drop { transition-duration: 0.32s; transition-timing-function: cubic-bezier(0.5, 0, 0.3, 1); }
 /* The post rides from the bottom of the shaft (climb 0) to just under the banner (climb 1). */
 /* The rail is as tall as the shaft, so a percentage of its own height is a percentage of the climb. */
 .g-upvote .rail { --climb: 0; position: absolute; inset: 0; pointer-events: none; transform: translateY(calc(var(--climb) * -1 * (100% - 10.4em))); transition: transform 0.12s cubic-bezier(0.3, 1.7, 0.5, 1); will-change: transform; }
@@ -13,4 +12,4 @@
 .g-upvote .lift .rx-post { width: 100%; min-height: 6em; box-shadow: 0 -0.22em 0 0 #0b1020, 0 0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, 0 0 0 0.5em var(--c), 0.5em 0.9em 0 0 #0b102044; }
 .g-upvote .tag { display: flex; align-items: center; gap: 0.5em; background: #0b1020; color: var(--gold); font-size: 0.9em; padding: 0.15em 0.5em; }
 .g-upvote .puff { position: absolute; left: 50%; bottom: -0.6em; width: 0; height: 0; }
-.g-upvote .tally { position: absolute; left: 0; right: 0; bottom: 0.15em; text-align: center; font-size: 0.75em; color: #0b1020; opacity: 0.8; pointer-events: none; }
+.g-upvote .tally { position: absolute; left: 0; right: 0; bottom: 0.15em; text-align: center; font-size: 0.75em; color: #fdeee2; text-shadow: 0.08em 0.08em 0 #0b1020; pointer-events: none; }

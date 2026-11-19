@@ -40,16 +40,14 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let lastBtn = -1;
   let graceEnd = 0;
 
-  // The scene: open sky, a FRONT PAGE banner at the top, and a post that climbs to it.
+  // The scene: a sky two screens tall, from the city at dawn up to deep space, that scrolls
+  // under the post as it climbs; a FRONT PAGE banner waits at the top.
   const wrap = h('div', 'g-upvote scene-sky');
   const goal = h('div', 'goal');
   goal.append(sprite('crown', { px: 0.16 }), h('span', '', 'FRONT PAGE'), sprite('crown', { px: 0.16 }));
   const shaft = h('div', 'shaft');
-  [18, 46, 74].forEach((top, i) => {
-    const cloud = sprite('cloud', { px: 0.22 + i * 0.05, flip: i === 1 }, `cloud c${i}`);
-    cloud.style.top = `${top}%`;
-    shaft.append(cloud);
-  });
+  const sky = h('div', 'sky');
+  shaft.append(sky);
   const lift = h('div', 'lift');
   const op = person({ tone: 'gold', kind: 'cat', px: 0.2 });
   const tag = h('div', 'tag');
@@ -81,6 +79,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     const climb = votes / full;
     card.votes(p.base + votes * 12);
     rail.style.setProperty('--climb', String(climb));
+    sky.style.setProperty('--climb', String(climb));
+    // Back on the ground (a new post, or votes lost): the sky sweeps down more slowly.
+    sky.classList.toggle('drop', votes === 0);
     rank.textContent = `#${Math.max(1, Math.round(99 - climb * 98))} in HOT`;
     if (climb > 0.6) op.mood('happy');
     const line = fronts ? `${fronts} on the front page` : 'Pump it to the top!';

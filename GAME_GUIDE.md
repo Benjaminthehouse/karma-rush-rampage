@@ -222,3 +222,18 @@ without its id.
 
 Then play it for real: `npm run mock`, open
 `http://localhost:5199/game.html?u=you&games=banhammer`, choose PRACTICE.
+
+## Drawn art
+
+Hand-made art for a game lives in `art/<id>/` (the source files) and, ready for the
+game, in `src/client/games/art/<id>-*.png`. Reference it from the game's CSS with
+`url('./art/<id>-name.png')`; every build bundles it.
+
+Pixel art that arrives as an SVG of squares on a grid is converted to a 1x PNG and
+scaled up crisply with `image-rendering: pixelated`:
+
+```bash
+node tools/pixelize.cjs art/upvote/upvote-bg.svg src/client/games/art/upvote-bg.png 8
+```
+
+The last number is the size of one art pixel in SVG units.

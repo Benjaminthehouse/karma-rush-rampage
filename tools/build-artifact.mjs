@@ -34,8 +34,9 @@ await viteBuild({
 const html = fs.readFileSync(path.join(out, 'game.html'), 'utf8');
 const body = /<body>([\s\S]*?)<\/body>/.exec(html)[1].replace(/<script\b[^>]*><\/script>/g, '');
 const asset = (name) => path.join(out, 'assets', name);
-const css = fs.readFileSync(asset('game.css'), 'utf8').replace(/url\((['"]?)\.\/([^'")]+\.woff2?)\1\)/g, (_, _q, file) => {
-  const type = file.endsWith('.woff2') ? 'font/woff2' : 'font/woff';
+const TYPES = { woff2: 'font/woff2', woff: 'font/woff', png: 'image/png', webp: 'image/webp', jpg: 'image/jpeg', svg: 'image/svg+xml' };
+const css = fs.readFileSync(asset('game.css'), 'utf8').replace(/url\((['"]?)\.\/([^'")]+\.(woff2?|png|webp|jpg|svg))\1\)/g, (_, _q, file, ext) => {
+  const type = TYPES[ext];
   return `url(data:${type};base64,${fs.readFileSync(asset(file)).toString('base64')})`;
 });
 const js = fs.readFileSync(asset('game.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
