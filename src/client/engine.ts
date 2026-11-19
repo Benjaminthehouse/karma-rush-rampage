@@ -13,6 +13,9 @@ import { GAMES } from './games/registry.gen';
 import { music, sfx } from './sfx';
 import { voice } from './voice';
 
+/** Speech engines take about this long to start a word, so each one is asked for early. */
+const VOICE_LEAD = 90;
+
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
 export type Match = {
@@ -198,14 +201,25 @@ export function runMatch(o: {
     showCard('intro', h('div', 'eyebrow', `ROUND ${ph.round + 1} OF ${o.lineup.length} · ${meta.title}`), shout, how, legend);
 
     const lead = 450;
-    const cadence = Math.max(220, Math.min(420, (TIMING.intro - lead - 1200) / words.length));
+    // Slow enough for a spoken word to fit in each beat.
+    const cadence = Math.max(300, Math.min(460, (TIMING.intro - lead - 900) / words.length));
     cues.push({
       at: 150,
       run: () => {
         sfx.whoosh();
-        voice.say(meta.say ?? meta.shout);
       },
     });
+    // The voice says each word as it lands: one short utterance per word, started a touch
+    // early because speech takes a moment to begin. A `say` spelling is used word for word
+    // when it has the same number of words as the shout.
+    const said = (meta.say ?? '').split(/\s+/).filter(Boolean);
+    const spoken = said.length === words.length ? said : words;
+    spoken.forEach((w, i) =>
+      cues.push({
+        at: Math.max(0, lead + i * cadence - VOICE_LEAD),
+        run: () => voice.say(w.replace(/[^\p{L}\p{N}'’%-]/gu, ''), { rate: 1.35, pitch: 1.15 }),
+      })
+    );
     spans.forEach((s, i) =>
       cues.push({
         at: lead + i * cadence,
