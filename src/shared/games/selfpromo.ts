@@ -3,10 +3,10 @@ import { defineGame } from '../meta';
 export default defineGame({
   id: 'selfpromo',
   title: 'Shameless Plug',
-  shout: 'PLUG YOUR APP! FREEZE FOR MODS!',
-  how: 'Spam your vibecoded app while the mod naps. Stop the moment they look.',
+  shout: 'PLUG IN COLOUR! FREEZE FOR MODS!',
+  how: 'Spam your app with the card’s colour while the mod naps. Stop when they look.',
   labels: ['POST', 'POST', 'POST'],
   duration: 8000,
   kind: 'mash',
-  think: 200,
+  think: 250,
 });

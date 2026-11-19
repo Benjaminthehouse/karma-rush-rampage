@@ -1,5 +1,5 @@
 import './selfpromo.css';
-import { dealer, h, person, postCard, pulse, randInt, ratio, setSprite, sprite, type GameFactory } from './common';
+import { COLOR, dealer, h, padDots, person, postCard, pulse, randBtn, randInt, ratio, setSprite, sprite, type Btn, type GameFactory } from './common';
 
 const PITCHES = [
   'I vibecoded this in a weekend!',
@@ -14,6 +14,8 @@ const PITCHES = [
 const SUBS = ['r/ShipIt', 'r/VibeCoders', 'r/RoastMyApp', 'r/WeekendApps', 'r/IndieBuilds', 'r/JustLaunched'];
 const MOOD = { nap: 'sleep', warn: 'wink', watch: 'angry' } as const;
 const SIGN = { nap: 'zed', warn: 'quest', watch: 'bang' } as const;
+const PER_CARD = 3; // plugs of one pitch before the next card, in a new colour
+const GRACE = 300; // ms after a card changes in which presses on its old colour are forgiven
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   // The mod alternates between napping and watching. `warn` is the tell before they look.
@@ -30,10 +32,21 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     spans.push({ from: at, to: at + look, watch: true });
     at += look;
   }
-  const par = Math.round((awayMs / 1000) * (6.2 + level * 0.3));
+  // A beat is lost at every colour change, so the par rate sits a little under pure mashing.
+  const par = Math.round((awayMs / 1000) * (5.4 + level * 0.3));
   const pitch = dealer(rng, PITCHES);
   const subName = dealer(rng, SUBS);
-  const pitches = Array.from({ length: 30 }, () => ({ text: pitch(), sub: subName() }));
+  let prev = -1;
+  const pitches = Array.from({ length: 40 }, () => {
+    let btn = randBtn(rng);
+    while (btn === prev) btn = randBtn(rng);
+    prev = btn;
+    return { text: pitch(), sub: subName(), btn };
+  });
+  let card_ = 0; // which pitch is on screen
+  let onCard = 0; // plugs of it so far
+  let lastBtn: Btn | -1 = -1;
+  let graceEnd = 0;
 
   let posts = 0;
   let lockedUntil = 0;
@@ -50,7 +63,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   const you = h('div', 'you');
   const horn = sprite('megaphone', { px: 0.32 }, 'horn');
   const card = postCard({ sub: '', user: 'totally_not_an_ad', title: '', tone: 'blue' });
-  you.append(horn, card.el);
+  const dots = h('span', 'which');
+  you.append(horn, card.el, dots);
   const note = h('div', 'count');
   wrap.append(desk, pile, you, note);
   root.append(wrap);
@@ -61,9 +75,18 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     return s.watch ? 'watch' : s.to - t <= warn ? 'warn' : 'nap';
   };
 
+  const cur = () => pitches[card_ % pitches.length];
+  let shownCard = -1;
   function show() {
-    const p = pitches[Math.floor(posts / 3) % pitches.length];
-    card.set({ sub: p.sub, title: p.text, comments: 0 });
+    const p = cur();
+    if (shownCard !== card_) {
+      shownCard = card_;
+      card.set({ sub: p.sub, title: p.text, comments: 0 });
+      card.tone(COLOR[p.btn]);
+      dots.replaceChildren(padDots(p.btn));
+      you.className = `you c-${COLOR[p.btn]}`;
+      if (card_) pulse(card.el, 'pop-in');
+    }
     card.votes(Math.max(1, posts));
     // One little window in the feed for every plug that is still up.
     while (pile.childElementCount < Math.min(posts, 48)) pile.append(sprite('window', { px: 0.09 }, 'plug'));
@@ -73,7 +96,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   show();
 
   return {
-    press(_b, t) {
+    press(b, t) {
       if (t < lockedUntil) return;
       if (stateAt(t) === 'watch') {
         posts = Math.max(0, posts - 4);
@@ -85,7 +108,23 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         show();
         return;
       }
+      // Posting anything at all while the mod looks is caught above; the colour only matters while they nap.
+      if (b !== cur().btn) {
+        // Nobody stops mashing the instant the card changes.
+        if (b === lastBtn && t < graceEnd) return;
+        posts = Math.max(0, posts - 1);
+        pulse(card.el, 'shake');
+        bad(card.el, 'WRONG SUB');
+        show();
+        return;
+      }
       posts++;
+      if (++onCard >= PER_CARD) {
+        onCard = 0;
+        card_++;
+        lastBtn = b;
+        graceEnd = t + GRACE;
+      }
       pulse(horn, 'bump');
       show();
       fx.poof(pile.lastElementChild);
@@ -110,6 +149,6 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       if (now === 'nap') fx.sound('whoosh');
     },
     score: () => ratio(posts, par),
-    hint: (t) => (t >= lockedUntil && !spanAt(t).watch ? 1 : null),
+    hint: (t) => (t >= lockedUntil && !spanAt(t).watch ? cur().btn : null),
   };
 };
