@@ -1,5 +1,5 @@
 import './fridaydeploy.css';
-import { COLOR, h, pick, pulse, randBtn, ratio, type GameFactory } from './common';
+import { COLOR, dealer, h, padDots, person, pulse, randBtn, ratio, sprite, type GameFactory } from './common';
 
 const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY'];
 const GO = [
@@ -27,13 +27,17 @@ const FEELS = ['(feels like a Friday)', '(basically Friday)', '(Friday eve!)'];
 const HOTFIX = ['(but it is only a hotfix)', '(hotfix, totally safe)', '(the boss says ship it)'];
 const SAFE = ['LOG OFF. TOUCH GRASS.', 'IT CAN WAIT.', 'MONDAY PROBLEM.', 'LAPTOP CLOSED.', 'WEEKEND SAVED.'];
 const OUTAGE = ['enjoy your weekend', 'the pager knows where you live', 'the rollback failed too', 'status page: also down', 'see you on Saturday'];
-const ROCKET =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 15h5L12 23z" fill="#ffcf3f"/><path d="M7.5 11 4 17l4.5-1.5zM16.5 11 20 17l-4.5-1.5z" fill="currentColor"/><path d="M12 1c4 3 5.5 8.5 4.5 14h-9C6.5 9.5 8 4 12 1z" fill="#f4f6ff" stroke="#0b1020" stroke-width="1.2"/><circle cx="12" cy="8.5" r="2" fill="#0b1020"/></svg>';
+const DOWN = 650; // ms prod stays down (and your hands stay off) after a Friday deploy
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const par = 12 + Math.round(level / 2);
   // A Friday page tempts for longer than a reflex takes, then leaves on its own.
   const linger = 650 - level * 15;
+  const weekday = dealer(rng, DAYS);
+  const go = dealer(rng, GO);
+  const bait = dealer(rng, BAIT);
+  const feels = dealer(rng, FEELS);
+  const hotfix = dealer(rng, HOTFIX);
   let lastFriday = true;
   const pages = Array.from({ length: 80 }, () => {
     // Never two Fridays in a row, so the round keeps moving.
@@ -41,18 +45,20 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     lastFriday = friday;
     // From level 2 the sparkle stops being a tell: a calm Friday hotfix, a tempting Thursday.
     const decoy = level >= 2 && rng() < 0.3;
-    const day = friday ? 'FRIDAY' : decoy ? 'THURSDAY' : pick(rng, DAYS);
-    const cap = pick(rng, decoy ? (friday ? HOTFIX : FEELS) : friday ? BAIT : GO);
+    const day = friday ? 'FRIDAY' : decoy ? 'THURSDAY' : weekday();
+    const cap = (decoy ? (friday ? hotfix : feels) : friday ? bait : go)();
     return { friday, btn: randBtn(rng), day, cap, shiny: friday !== decoy };
   });
   let idx = -1; // flip() turns to the next page
   let shownAt = 0;
-  let lockedUntil = 0; // prod is down until then
+  let downUntil = 0;
   let deploys = 0;
   let dodged = 0;
   let outages = 0;
 
-  const wrap = h('div', 'g-fridaydeploy');
+  // The scene: a tear-off calendar on the office wall. On the desk under it sit you,
+  // the rockets you have shipped, and the prod server.
+  const wrap = h('div', 'g-fridaydeploy scene-office');
   const cal = h('div', 'cal');
   const sheet = h('div', 'sheet');
   const day = h('div', 'day');
@@ -60,25 +66,34 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   day.append(word);
   const cap = h('div', 'cap');
   const btn = h('div', 'btn');
-  btn.innerHTML = `${ROCKET}<span>DEPLOY</span>`;
+  const which = h('span', 'which');
+  btn.append(sprite('rocket', { px: 0.12 }), h('span', '', 'DEPLOY'), which, sprite('spark', { px: 0.22 }, 'glint'), sprite('spark', { px: 0.22 }, 'glint'));
   sheet.append(h('div', 'head', 'TODAY IS'), day, cap, btn);
-  const rocket = h('i', 'rocket');
-  rocket.innerHTML = ROCKET;
+  const rocket = sprite('rocket', { px: 0.26 }, 'rocket');
   const outage = h('div', 'outage');
   const sorry = h('span');
-  outage.append(h('b', '', 'PROD IS DOWN'), sorry, h('i', 'pager', 'BZZT BZZT'));
+  const pager = h('div', 'pager');
+  pager.append(sprite('phone', { px: 0.13 }), h('span', '', 'BZZT BZZT'));
+  outage.append(h('b', '', 'PROD IS DOWN'), sorry, pager);
   cal.append(sheet, rocket, outage);
-  const meter = h('div', 'meter big');
-  const fill = h('i');
-  meter.append(fill);
-  const note = h('div', 'g-note');
-  wrap.append(cal, meter, note);
+  const desk = h('div', 'desk');
+  const dev = person({ tone: 'purple', px: 0.2 });
+  const shipped = h('div', 'shipped');
+  const pile = h('div', 'pile');
+  const note = h('div', 'note');
+  shipped.append(pile, note);
+  const server = h('div', 'server');
+  server.append(sprite('flame1', { px: 0.2 }, 'fire'), sprite('server', { px: 0.22 }));
+  desk.append(dev.el, shipped, server);
+  wrap.append(cal, desk);
   root.append(wrap);
 
   const page = () => pages[idx % pages.length];
 
   function tally() {
-    fill.style.width = `${Math.min(100, (deploys / par) * 100)}%`;
+    // One little rocket on the desk for every deploy that is still live.
+    while (pile.childElementCount < Math.min(deploys, 24)) pile.append(sprite('rocket', { px: 0.09 }));
+    while (pile.childElementCount > deploys) pile.lastElementChild?.remove();
     note.textContent = `${deploys} shipped to prod`;
   }
 
@@ -86,62 +101,68 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     idx++;
     shownAt = t;
     const p = page();
-    cal.className = 'cal';
+    wrap.className = 'g-fridaydeploy scene-office';
     word.textContent = p.day;
     word.style.setProperty('--n', String(p.day.length));
     cap.textContent = p.cap;
     btn.className = `btn c-${COLOR[p.btn]}${p.shiny ? ' shiny' : ''}`;
-    pulse(sheet, 'flip');
+    which.replaceChildren(padDots(p.btn));
+    pulse(sheet, 'pop-in');
     tally();
   }
   flip(0);
 
   return {
     press(b, t) {
-      if (lockedUntil) return;
+      if (downUntil) return;
       const p = page();
       if (p.friday) {
         deploys = Math.max(0, deploys - 2);
-        lockedUntil = t + 650;
+        downUntil = t + DOWN;
         sorry.textContent = OUTAGE[outages++ % OUTAGE.length];
-        cal.className = 'cal down';
+        wrap.className = 'g-fridaydeploy scene-danger';
+        dev.mood('dead');
+        fx.poof(pile);
         tally();
-        bad(meter, '-2 ROLLED BACK');
+        bad(shipped, '-2 ROLLED BACK');
         fx.flash('red');
         fx.sound('power');
         return;
       }
       if (b !== p.btn) {
         deploys = Math.max(0, deploys - 1);
+        dev.mood('shock');
         tally();
         pulse(cal, 'shake');
         bad(btn, 'WRONG BUTTON');
         return;
       }
       deploys++;
-      rocket.className = `rocket c-${COLOR[p.btn]}`;
+      dev.mood('happy');
       pulse(rocket, 'fly');
+      fx.poof(btn);
       good(btn);
       fx.sound('whoosh');
       if (deploys % 5 === 0) {
-        fx.pop(meter, `${deploys} SHIPPED!`, 'gold');
-        fx.burst(meter, 'gold', 16);
+        fx.pop(shipped, `${deploys} SHIPPED!`, 'gold');
+        fx.burst(pile, 'gold', 16);
         fx.sound('coin');
       }
       flip(t);
     },
     tick(t) {
-      if (lockedUntil) {
-        if (t < lockedUntil) return;
-        lockedUntil = 0;
+      if (downUntil) {
+        if (t < downUntil) return;
+        downUntil = 0;
         flip(t);
       } else if (page().friday && t - shownAt >= linger) {
-        fx.pop(note, SAFE[dodged++ % SAFE.length], 'green');
+        dev.mood('cool');
+        fx.pop(shipped, SAFE[dodged++ % SAFE.length], 'green');
         fx.sound('ding');
         flip(t);
       }
     },
     score: () => ratio(deploys, par),
-    hint: () => (lockedUntil || page().friday ? null : page().btn),
+    hint: () => (downUntil || page().friday ? null : page().btn),
   };
 };

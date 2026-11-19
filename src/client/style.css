@@ -339,3 +339,4 @@ body.fx-low #arena.playing { animation: none; }
 .ui .count { color: #fff; -webkit-text-stroke: 0.08em #0b1020; paint-order: stroke fill; }
 #card.card-result { background: #0b1020f2; }
 body.fx-low #card.card-intro::before, body.fx-low #card.card-count::before { opacity: 0.6; }
+#hud-score.live { color: #fff; text-shadow: 0 0 0.6rem var(--gold); }

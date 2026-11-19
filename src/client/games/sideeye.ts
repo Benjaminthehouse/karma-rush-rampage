@@ -3,7 +3,7 @@ import { COLOR, h, pick, pulse, randBtn, randInt, ratio, shuffled, type Btn, typ
 
 // What a watched phone suddenly has on screen.
 const DOCS = ['Q3 REPORT', 'BUDGET v7', 'TIMESHEET', 'INBOX (0)', 'KPI DECK', 'SYNERGY', 'ROADMAP', 'FINAL_v2', 'AGENDA', 'ORG CHART'];
-const LOLS = ['LOL', 'SAME', 'MOOD', 'SO TRUE', 'SAVED', 'I’M DEAD', 'TOO REAL', 'NICE', 'SENDING THIS', 'HA'];
+const LOLS = ['LOL', 'SAME', 'MOOD', 'SO TRUE', 'SAVED', 'I’M DEAD', 'TOO REAL', 'NICE', 'OOF', 'HA'];
 const KINDS = 6; // meme tile designs in the css
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
@@ -91,7 +91,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         memes = Math.max(0, memes - 5);
         lockedUntil = t + 600;
         pulse(p.el, 'shake');
-        bad(p.el, 'CAUGHT IN 4K');
+        bad(row, 'CAUGHT IN 4K');
         fx.flash('red');
         fx.sound('thud');
         show();

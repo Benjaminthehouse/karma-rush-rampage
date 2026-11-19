@@ -89,6 +89,8 @@ export function runMatch(o: {
   let stopped = false;
   let lastCount = 0;
   let rushing = false;
+  let shownScore = -1;
+  const scoreEl = $('hud-score');
   let bot: ReturnType<typeof createBot> | null = null;
   let finish!: (s: number[]) => void;
   const done = new Promise<number[]>((r) => (finish = r));
@@ -99,7 +101,9 @@ export function runMatch(o: {
     pips.replaceChildren(
       ...o.lineup.map((_, i) => h('i', i < scores.length ? 'done' : i === scores.length ? 'now' : ''))
     );
-    $('hud-score').textContent = fmt(total());
+    shownScore = total();
+    scoreEl.textContent = fmt(shownScore);
+    scoreEl.classList.remove('live');
   }
 
   function setCombo(n: number) {
@@ -350,6 +354,15 @@ export function runMatch(o: {
       try {
         inst?.tick(local);
         if (inst && bot && o.autoplay) bot(inst, local, o.autoplay.press, o.autoplay.release);
+        // The score in the corner climbs live, so the round total is never a surprise.
+        if (inst) {
+          const live = total() + clamp1000(inst.score());
+          if (live !== shownScore) {
+            shownScore = live;
+            scoreEl.textContent = fmt(live);
+            if (live > 0) scoreEl.classList.add('live');
+          }
+        }
       } catch (err) {
         console.error('tick() failed', err);
         inst = null;

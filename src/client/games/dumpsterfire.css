@@ -11,7 +11,7 @@
 /* The top half is the danger zone; its lower edge is the line. */
 .g-dumpsterfire .pit::before { content: ''; position: absolute; inset: 0 0 50%; border-bottom: 0.16em dashed var(--ink); background: repeating-linear-gradient(135deg, #ffffff12 0 0.45em, #0000 0.45em 0.9em); }
 .g-dumpsterfire .lane.over .pit::before { background-color: color-mix(in srgb, var(--c) 24%, transparent); }
-.g-dumpsterfire .zone { position: absolute; top: 0.7em; left: 0; right: 0; z-index: 1; text-align: center; font-size: 0.7em; font-weight: 900; color: var(--dim); opacity: 0.55; }
+.g-dumpsterfire .zone { position: absolute; top: 0.7em; left: 0; right: 0; z-index: 1; text-align: center; font-size: 0.7em; font-weight: 900; color: var(--dim); opacity: 0.7; }
 .g-dumpsterfire .lane.over .zone { color: var(--ink); opacity: 1; animation: g-dumpsterfire-alarm 0.26s steps(2) infinite; }
 
 .g-dumpsterfire .flame { position: absolute; left: 50%; bottom: 0; translate: -50% 0; aspect-ratio: 0.62; max-width: 92%; transform-origin: 50% 100%; transition: height 0.09s ease-out; }

@@ -21,7 +21,7 @@ const TAKES = [
 const LINE = 50; // a thread is under control below this
 const FLOOR = 20; // a hosed thread never quite goes out
 const KNOCK = 12; // what one spray takes off
-const LEAP = 60; // a hot take lifts embers three sprays over the line
+const LEAP = 60; // a hot take lifts embers to 80: three sprays to get back under the line
 const COOL = 16; // under the line a fire dies down by itself, % per second
 
 const FLAME =
@@ -31,7 +31,7 @@ const FLAME =
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   const spread = 5 + level * 0.5; // over the line a fire keeps growing, % per second
-  const par = duration * (0.7 - level * 0.01);
+  const par = duration * (0.7 - level * 0.01); // ms of all-three-calm that earn 1000
   const heat = [0, 1, 2].map(() => 52 + rng() * 6);
   // Hot takes land in one thread at a time, never the same thread twice running.
   const flares: { at: number; lane: Btn; take: string }[] = [];
@@ -117,7 +117,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       lanes.forEach((l, i) => {
         heat[i] = over(i) ? Math.min(100, heat[i] + (spread * dt) / 1000) : Math.max(FLOOR, heat[i] - (COOL * dt) / 1000);
         const ablaze = heat[i] >= 100;
-        if (ablaze && !l.ablaze) bad(l.flame, 'Y’ALL CAN’T BEHAVE');
+        if (ablaze && !l.ablaze) bad(row, 'Y’ALL CAN’T BEHAVE');
         l.ablaze = ablaze;
       });
       const now = !over(0) && !over(1) && !over(2);
