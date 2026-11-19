@@ -1,6 +1,6 @@
 // Builds a self-contained static demo of the game (no server: it runs in
 // offline mode) laid out for publishing as a single page plus asset files.
-//   node tools/build-artifact.mjs   →  dist/artifact/page.html + dist/artifact/assets/*
+//   node tools/build-artifact.mjs   →  dist/artifact/page.html (one file, everything inlined)
 import { build as viteBuild } from 'vite';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -28,23 +28,31 @@ await viteBuild({
   },
 });
 
-// The host wraps the page in its own document, so keep only what goes inside it.
+// The host wraps the page in its own document, so keep only what goes inside it,
+// and inline everything (styles, fonts, script) so the page is one file with no
+// companions: the most widely supported form.
 const html = fs.readFileSync(path.join(out, 'game.html'), 'utf8');
-const head = /<head>([\s\S]*?)<\/head>/.exec(html)[1];
-const body = /<body>([\s\S]*?)<\/body>/.exec(html)[1];
-const tags = [...head.matchAll(/<(?:link|script)\b[^>]*(?:rel="(?:stylesheet|modulepreload)"|type="module")[^>]*>(?:<\/script>)?/g)].map((m) => m[0]);
+const body = /<body>([\s\S]*?)<\/body>/.exec(html)[1].replace(/<script\b[^>]*><\/script>/g, '');
+const asset = (name) => path.join(out, 'assets', name);
+const css = fs.readFileSync(asset('game.css'), 'utf8').replace(/url\((['"]?)\.\/([^'")]+\.woff2?)\1\)/g, (_, _q, file) => {
+  const type = file.endsWith('.woff2') ? 'font/woff2' : 'font/woff';
+  return `url(data:${type};base64,${fs.readFileSync(asset(file)).toString('base64')})`;
+});
+const js = fs.readFileSync(asset('game.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
 const page = `<title>Karma Rush Rampage</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-${tags.filter((t) => t.startsWith('<link')).join('\n')}
 <style>
+${css}
   /* One-screen app inside the host page: fill it, and keep the side gutters clear. */
   html, body { height: 100%; }
   #app { height: 100%; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 </style>
 ${body.trim()}
-${tags.filter((t) => t.startsWith('<script')).join('\n')}
+<script type="module">
+${js}
+</script>
 `;
 fs.writeFileSync(path.join(out, 'page.html'), page);
 fs.rmSync(path.join(out, 'game.html'));
-const files = fs.readdirSync(path.join(out, 'assets'));
-console.log(`artifact: ${ids.length} games, page.html + ${files.length} asset files (${Math.round(files.reduce((n, f) => n + fs.statSync(path.join(out, 'assets', f)).size, 0) / 1024)} KB)`);
+fs.rmSync(path.join(out, 'assets'), { recursive: true });
+console.log(`artifact: ${ids.length} games in one file, ${Math.round(page.length / 1024)} KB`);

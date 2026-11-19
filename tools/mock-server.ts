@@ -79,6 +79,8 @@ app.post('/api/party/score', async (req, res) => {
   if (!(Number(req.body?.live) > 0)) send(partyChannel(POST), { t: 'sync' });
 });
 
+// Opening the bare address lands in the game, logged in as a default player.
+app.get('/', (req, res) => res.redirect(user(req) ? '/game.html' : '/game.html?u=player'));
 app.use(express.static(path.resolve(process.cwd(), 'dist/mock-client')));
 const port = Number(process.env.PORT) || 5199;
 app.listen(port, () => console.log(`mock Karma Rush Rampage on http://localhost:${port}/splash.html?u=alice`));
