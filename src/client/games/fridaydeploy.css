@@ -1,41 +1,45 @@
-.g-fridaydeploy { gap: 0.7em !important; }
+.g-fridaydeploy { justify-content: space-between !important; gap: 0.7em !important; padding: 1.1em 0.8em 0.5em !important; }
 
-/* A tear-off desk calendar: the top sheet over a stack of pages. */
-.g-fridaydeploy .cal { position: relative; width: min(100%, 18em); margin-top: 0.6em; padding-bottom: 0.7em; flex: 1 1 auto; max-height: 21.5em; display: flex; flex-direction: column; }
-.g-fridaydeploy .sheet { flex: 1; background: var(--ink); color: var(--bg); border-radius: 0.9em; padding: 0 0.7em 0.9em; display: flex; flex-direction: column; align-items: center; gap: 0.3em; box-shadow: 0 0.35em 0 #c3cae6, 0 0.7em 0 #8f9ac6; transform-origin: 50% 0; }
-.g-fridaydeploy .sheet.flip { animation: g-fridaydeploy-flip 0.13s ease-out; }
-.g-fridaydeploy .head { position: relative; align-self: stretch; margin: 0 -0.875em; padding: 0.4em 0; border-radius: 1.1em 1.1em 0 0; background: #36427a; color: var(--ink); font-size: 0.8em; font-weight: 900; letter-spacing: 0.3em; text-align: center; }
-.g-fridaydeploy .head::before, .g-fridaydeploy .head::after { content: ''; position: absolute; top: -0.7em; width: 0.6em; height: 1.5em; border-radius: 0.3em; background: #c3cae6; border: 0.15em solid var(--bg); }
+/* A tear-off calendar on the wall: the top sheet over the pages still to come. */
+.g-fridaydeploy .cal { position: relative; width: min(100%, 18em); flex: 1 1 auto; max-height: 21em; display: flex; flex-direction: column; padding-bottom: 1.1em; }
+.g-fridaydeploy .sheet { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.3em; padding: 0 0.7em 1.1em; background: #fff; color: #0b1020; box-shadow: 0 -0.2em 0 0 #0b1020, -0.2em 0 0 0 #0b1020, 0.2em 0 0 0 #0b1020, 0 0.2em 0 0 #0b1020, 0 0.55em 0 0 #c4cbe4, -0.2em 0.55em 0 0 #0b1020, 0.2em 0.55em 0 0 #0b1020, 0 0.75em 0 0 #0b1020, 0.5em 1.1em 0 0 #0b102044; }
+.g-fridaydeploy .head { position: relative; align-self: stretch; margin: 0 -0.875em; padding: 0.3em 0; background: var(--purple); color: #fff; border-bottom: 0.25em solid #0b1020; font-size: 0.8em; letter-spacing: 0.3em; text-align: center; }
+.g-fridaydeploy .head::before, .g-fridaydeploy .head::after { content: ''; position: absolute; top: -0.9em; width: 0.6em; height: 1.5em; background: #c4cbe4; box-shadow: 0 0 0 0.2em #0b1020; }
 .g-fridaydeploy .head::before { left: 20%; }
 .g-fridaydeploy .head::after { right: 20%; }
-.g-fridaydeploy .day { flex: 1 1 3.7em; display: grid; place-items: center; }
-.g-fridaydeploy .day b { font-size: calc(20.5em / var(--n, 6)); font-weight: 900; line-height: 1; white-space: nowrap; }
-.g-fridaydeploy .cap { min-height: 2.5em; display: grid; place-items: center; font-size: 1em; font-weight: 800; line-height: 1.2; text-align: center; color: #4b5687; }
+.g-fridaydeploy .day { flex: 1 1 3.4em; display: grid; place-items: center; }
+.g-fridaydeploy .day b { font-size: calc(24em / var(--n, 6)); line-height: 1; white-space: nowrap; }
+.g-fridaydeploy .cap { min-height: 2.3em; display: grid; place-items: center; line-height: 1.1; text-align: center; color: #3a4370; }
 
-/* The button to press is the colour of this one. */
-.g-fridaydeploy .btn { position: relative; width: 100%; flex: 1 1 2.5em; max-height: 3.6em; margin-top: 0.2em; display: flex; align-items: center; justify-content: center; gap: 0.3em; border-radius: 0.7em; background: var(--c); box-shadow: 0 0.25em 0 var(--cd); color: #071022; font-size: 1.35em; font-weight: 900; letter-spacing: 0.1em; }
-.g-fridaydeploy .btn svg { width: 1.4em; height: 1.4em; }
-.g-fridaydeploy .btn.shiny { background: linear-gradient(110deg, #0000 38%, #fffc 50%, #0000 62%) 100% 0 / 280% 100%, var(--c); box-shadow: 0 0.25em 0 var(--cd), 0 0 0.9em 0.15em var(--gold); animation: g-fridaydeploy-tempt 0.45s ease-in-out infinite alternate; }
-.g-fridaydeploy .btn.shiny::before, .g-fridaydeploy .btn.shiny::after { content: ''; position: absolute; width: 1.4em; height: 1.4em; background: var(--gold); filter: drop-shadow(0 0 0.08em #6b4d00); clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation: g-fridaydeploy-twinkle 0.4s ease-in-out infinite alternate; }
-.g-fridaydeploy .btn.shiny::before { left: -0.4em; top: -0.65em; }
-.g-fridaydeploy .btn.shiny::after { right: -0.4em; bottom: -0.6em; animation-delay: 0.2s; }
+/* The button to press is the colour of this one; the dots say left, middle or right. */
+.g-fridaydeploy .btn { position: relative; width: 100%; flex: 1 1 2.3em; max-height: 3.2em; display: flex; align-items: center; justify-content: center; gap: 0.35em; background: var(--c); color: #0b1020; font-size: 1.4em; letter-spacing: 0.06em; box-shadow: 0 -0.14em 0 0 #0b1020, -0.14em 0 0 0 #0b1020, 0.14em 0 0 0 #0b1020, 0 0.14em 0 0 #0b1020, 0 0.42em 0 0 var(--cd), -0.14em 0.42em 0 0 #0b1020, 0.14em 0.42em 0 0 #0b1020, 0 0.56em 0 0 #0b1020; }
+.g-fridaydeploy .which { display: flex; padding: 0.22em 0.25em; background: #fff; box-shadow: 0 0 0 0.1em #0b1020; font-size: 0.95em; }
+.g-fridaydeploy .glint { position: absolute; left: -0.5em; top: -0.6em; visibility: hidden; }
+.g-fridaydeploy .glint + .glint { left: auto; top: auto; right: -0.5em; bottom: -0.5em; animation-delay: 0.2s; }
+.g-fridaydeploy .btn.shiny { background: linear-gradient(110deg, #0000 40%, #fff 40% 52%, #0000 52%) 120% 0 / 300% 100% no-repeat, var(--c); animation: g-fridaydeploy-tempt 0.5s steps(5) infinite; }
+.g-fridaydeploy .btn.shiny .glint { visibility: visible; animation: g-fridaydeploy-twinkle 0.4s steps(2) infinite; }
 
-.g-fridaydeploy .rocket { position: absolute; left: 50%; bottom: 1.8em; width: 3.4em; height: 3.4em; margin-left: -1.7em; color: var(--c); opacity: 0; pointer-events: none; }
-.g-fridaydeploy .rocket svg { width: 100%; height: 100%; display: block; }
-.g-fridaydeploy .rocket.fly { animation: g-fridaydeploy-fly 0.42s ease-in; }
-.g-fridaydeploy .meter i { background: var(--gold); }
+.g-fridaydeploy .rocket { position: absolute; left: 50%; bottom: 2.2em; margin-left: -1.17em; opacity: 0; pointer-events: none; }
+.g-fridaydeploy .rocket.fly { animation: g-fridaydeploy-fly 0.4s steps(8); }
 
-/* PROD IS DOWN covers the page while the pager buzzes. */
-.g-fridaydeploy .outage { position: absolute; inset: 0 0 0.7em; padding: 0.6em; border-radius: 0.9em; background: var(--red); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5em; text-align: center; visibility: hidden; }
-.g-fridaydeploy .cal.down .btn { visibility: hidden; }
-.g-fridaydeploy .cal.down .outage { visibility: visible; animation: g-fridaydeploy-siren 0.2s steps(2) infinite; }
-.g-fridaydeploy .outage b { font-size: 2.9em; font-weight: 900; font-style: italic; line-height: 0.95; }
-.g-fridaydeploy .outage span { font-weight: 800; }
-.g-fridaydeploy .pager { padding: 0.35em 0.8em; border-radius: 0.4em; background: var(--bg); border: 0.15em solid #fff; color: var(--gold); font-style: normal; font-size: 0.9em; font-weight: 900; letter-spacing: 0.1em; animation: g-fridaydeploy-buzz 0.07s linear infinite alternate; }
+/* PROD IS DOWN: the stage goes red and this covers the page while the pager buzzes. */
+.g-fridaydeploy .outage { position: absolute; inset: 0 0 1.1em; padding: 0.6em; background: #0b1020; color: #fff; box-shadow: 0 0 0 0.25em var(--gold); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6em; text-align: center; visibility: hidden; }
+.g-fridaydeploy.scene-danger .outage { visibility: visible; }
+.g-fridaydeploy .outage b { font-size: 3em; line-height: 0.95; color: var(--gold); }
+.g-fridaydeploy .pager { display: flex; align-items: center; gap: 0.5em; animation: g-fridaydeploy-buzz 0.08s steps(2) infinite; }
 
-@keyframes g-fridaydeploy-flip { from { transform: perspective(40em) rotateX(-55deg); opacity: 0.4; } }
-@keyframes g-fridaydeploy-tempt { to { transform: scale(1.05); background-position: 0 0, 0 0; } }
-@keyframes g-fridaydeploy-twinkle { from { transform: scale(0.4); opacity: 0.5; } to { transform: scale(1.15) rotate(45deg); opacity: 1; } }
-@keyframes g-fridaydeploy-fly { from { opacity: 1; transform: scale(0.7); } to { opacity: 0; transform: translateY(-13em) scale(1.3); } }
-@keyframes g-fridaydeploy-siren { 50% { background: #7d0f1c; } }
-@keyframes g-fridaydeploy-buzz { from { transform: translateX(-0.12em) rotate(-3deg); } to { transform: translateX(0.12em) rotate(3deg); } }
+/* The desk: you, what you have shipped, and the prod server. */
+.g-fridaydeploy .desk { flex: none; width: min(100%, 22em); display: flex; align-items: flex-end; gap: 0.5em; }
+.g-fridaydeploy .shipped { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.25em; }
+.g-fridaydeploy .pile { min-height: 2.7em; display: flex; flex-wrap: wrap-reverse; justify-content: center; gap: 0.12em; }
+.g-fridaydeploy .note { background: #0b1020; color: var(--gold); font-size: 0.85em; padding: 0.1em 0.6em; }
+.g-fridaydeploy .server { position: relative; flex: none; display: flex; }
+.g-fridaydeploy .fire { position: absolute; left: 50%; bottom: 82%; margin-left: -1em; visibility: hidden; }
+.g-fridaydeploy.scene-danger .fire { visibility: visible; animation: g-fridaydeploy-burn 0.16s steps(2) infinite; }
+.g-fridaydeploy.scene-danger .server { animation: g-fridaydeploy-buzz 0.08s steps(2) infinite; }
+
+@keyframes g-fridaydeploy-tempt { 50% { transform: scale(1.04); } to { background-position: -60% 0, 0 0; } }
+@keyframes g-fridaydeploy-twinkle { 50% { transform: scale(0.5) rotate(45deg); } }
+@keyframes g-fridaydeploy-fly { from { opacity: 1; } to { opacity: 0; transform: translateY(-12em); } }
+@keyframes g-fridaydeploy-buzz { 50% { transform: translateX(0.14em); } }
+@keyframes g-fridaydeploy-burn { 50% { transform: scaleX(-1) scaleY(1.15); } }
