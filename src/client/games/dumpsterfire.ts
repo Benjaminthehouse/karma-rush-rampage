@@ -1,5 +1,5 @@
 import './dumpsterfire.css';
-import { COLOR, dealer, defineSprite, h, person, pulse, randBtn, randInt, ratio, setSprite, sprite, type Btn, type GameFactory } from './common';
+import { COLOR, dealer, defineSprite, h, pulse, randBtn, randInt, ratio, setSprite, sprite, type Btn, type GameFactory } from './common';
 
 const TAKES = [
   'well, ACTUALLY',
@@ -92,7 +92,11 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   const orb = sprite('moon', { px: 0.3 });
   sky.append(orb);
   const row = h('div', 'lanes');
-  const mod = person({ tone: 'gold', hat: 'mod', mood: 'shock', px: 0.17 });
+  // The mod bear (shared art): dozing while all is civil, furious while anything burns,
+  // one eye open just after a needless spray.
+  const mod = h('div', 'bear angry');
+  for (const m of ['sleep', 'peep', 'angry']) mod.append(h('i', m));
+  let mood = 'angry';
   const lanes = ([0, 1, 2] as Btn[]).map((i) => {
     const el = h('div', `lane c-${COLOR[i]}`);
     const perch = h('div', 'perch');
@@ -111,7 +115,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     row.append(el);
     return { el, perch, pit, flame, fire, tip, jet, bin, note, text, outAt: -9999, litAt: 0, ablaze: false };
   });
-  lanes[1].perch.append(mod.el);
+  lanes[1].perch.append(mod);
   const hud = h('div', 'hud');
   const bar = h('div', 'bar');
   const fill = h('i');
@@ -168,8 +172,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     press(b, t) {
       const l = lanes[b];
       aim = b;
-      if (mod.el.parentElement !== l.perch) l.perch.append(mod.el);
-      pulse(mod.el, 'bump');
+      if (mod.parentElement !== l.perch) l.perch.append(mod);
+      pulse(mod, 'bump');
       // The water reaches down to the top of the flame as it stands right now.
       l.pit.style.setProperty('--size', over(b) ? ((heat[b] - 30) / 70).toFixed(2) : '0');
       pulse(l.jet, 'on');
@@ -240,7 +244,12 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
           fx.sound('ding');
         }
       }
-      mod.mood(t < smugUntil ? 'cool' : calm ? 'happy' : 'shock');
+      const m = t < smugUntil ? 'peep' : calm ? 'sleep' : 'angry';
+      if (m !== mood) {
+        mood = m;
+        mod.classList.remove('sleep', 'peep', 'angry');
+        mod.classList.add(m);
+      }
       const f = Math.floor(t / 110) % 2;
       if (f !== frame) {
         frame = f;

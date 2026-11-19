@@ -19,9 +19,9 @@
 /* The mod bear: three drawings stacked, one visible. */
 .g-selfpromo .bear { position: relative; width: 7.5em; aspect-ratio: 614 / 575; }
 .g-selfpromo .bear i { position: absolute; inset: 0; background: center / contain no-repeat; visibility: hidden; }
-.g-selfpromo .bear i.sleep { background-image: url('./art/selfpromo-mod-sleep.svg'); }
-.g-selfpromo .bear i.peep { background-image: url('./art/selfpromo-mod-peep.svg'); }
-.g-selfpromo .bear i.angry { background-image: url('./art/selfpromo-mod-angry.svg'); }
+.g-selfpromo .bear i.sleep { background-image: url('./art/modbear-sleep.svg'); }
+.g-selfpromo .bear i.peep { background-image: url('./art/modbear-peep.svg'); }
+.g-selfpromo .bear i.angry { background-image: url('./art/modbear-angry.svg'); }
 .g-selfpromo .bear.sleep i.sleep, .g-selfpromo .bear.peep i.peep, .g-selfpromo .bear.angry i.angry { visibility: visible; }
 /* The plate stays readable when the angry bear leans in. */
 .g-selfpromo .plate { position: relative; z-index: 1; }
