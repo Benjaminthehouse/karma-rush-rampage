@@ -34,9 +34,9 @@ function label(n: number): string {
 const snap = (v: number) => (v < 1000 ? Math.round(v) : Math.round(v / 100) * 100);
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
-  // A flawless set is worth 5, and a quick reader clears five and a bit. The par stays put:
+  // A flawless set is worth 5 and a quick reader clears five of them. The par stays put:
   // later rounds are already slower to read (closer scores, 999 against 1.0k, minus signs).
-  const par = 26;
+  const par = 23;
   const spread = 1.1 - level * 0.22; // how many powers of ten the three scores may sit apart
   const post = dealer(rng, POSTS);
   const face = dealer(rng, FACES);

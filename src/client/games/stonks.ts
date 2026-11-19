@@ -151,7 +151,8 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
       losing = 0;
       mood = 'happy';
     } else if (swing < 0) {
-      if (losing++ % 3 === 0) bad(cols[cold].sign, pumps[pumpIndex(t)].bag);
+      // A hair late letting go costs its money quietly; the buzzer is for a real bag.
+      if ((losing || swing <= -3) && losing++ % 3 === 0) bad(cols[cold].sign, pumps[pumpIndex(t)].bag);
       mood = 'dead';
     } else losing = 0;
 

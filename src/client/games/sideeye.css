@@ -1,15 +1,24 @@
 .g-sideeye { justify-content: flex-start !important; align-items: stretch !important; gap: 0 !important; padding: 0 !important; color: #0b1020; }
 
-/* The boss peeks over the desk. */
-.g-sideeye .boss { flex: none; display: flex; flex-direction: column; align-items: center; padding-top: 0.9em; }
-.g-sideeye .head { position: relative; display: flex; gap: 0.7em; padding: 2.1em 1em 0.5em; background: var(--gold); box-shadow: 0 -0.25em 0 0 #0b1020, -0.25em 0 0 0 #0b1020, 0.25em 0 0 0 #0b1020, inset -0.5em 0 0 0 #c98a10; transform-origin: 50% 100%; }
-.g-sideeye.caught .head { transform: scale(1.1); }
-.g-sideeye .hair { position: absolute; left: 0; right: 0; top: 0; height: 0.8em; background: #6e3f1c; box-shadow: 0 0.25em 0 0 #0b1020, inset 0 0.25em 0 0 #b0703c; }
+/* The boss peeks over the desk. On a tall stage there is room for a bigger boss. */
+.g-sideeye .boss { flex: none; font-size: clamp(1em, 3.9cqh, 1.35em); display: flex; flex-direction: column; align-items: center; padding-top: 1.3em; }
+.g-sideeye .head { position: relative; display: flex; gap: 1.1em; padding: 2.4em 1.3em 0.8em; background: var(--gold); box-shadow: 0 -0.25em 0 0 #0b1020, -0.25em 0 0 0 #0b1020, 0.25em 0 0 0 #0b1020; transform-origin: 50% 100%; }
+.g-sideeye.caught .head { transform: scale(1.08); }
+/* Ears. */
+.g-sideeye .head::before, .g-sideeye .head::after { content: ''; position: absolute; top: 2.9em; width: 0.7em; height: 1.7em; background: #c98a10; box-shadow: 0 0 0 0.25em #0b1020; }
+.g-sideeye .head::before { right: calc(100% + 0.25em); }
+.g-sideeye .head::after { left: calc(100% + 0.25em); }
+/* Hair in two steps, so the head is not a box. */
+.g-sideeye .hair { position: absolute; left: 0; right: 0; top: 0; height: 1.1em; background: #6e3f1c; box-shadow: 0 0.25em 0 0 #0b1020; }
+.g-sideeye .hair::before { content: ''; position: absolute; left: 1.2em; right: 1.2em; bottom: 100%; height: 0.7em; background: #6e3f1c; box-shadow: 0 -0.25em 0 0 #0b1020, -0.25em 0 0 0 #0b1020, 0.25em 0 0 0 #0b1020, inset 0 0.25em 0 0 #b0703c; }
+.g-sideeye .nose { position: absolute; left: 50%; bottom: 0; width: 0.6em; height: 1.3em; margin-left: -0.3em; background: #c98a10; box-shadow: 0 -0.25em 0 0 #0b1020; }
 .g-sideeye .socket { position: relative; }
-.g-sideeye .brow { position: absolute; left: 0; right: 0; top: -0.85em; height: 0.5em; background: #0b1020; transform: translateY(calc(var(--sus, 0) * 0.3em)); }
+/* Nicks the four corners off each eye. */
+.g-sideeye .socket::after { content: ''; position: absolute; inset: -0.25em; --g: linear-gradient(var(--gold), var(--gold)); --k: linear-gradient(#0b1020, #0b1020); background: var(--g) 0 0, var(--g) 100% 0, var(--g) 0 100%, var(--g) 100% 100%, var(--k) 0.25em 0.25em, var(--k) calc(100% - 0.25em) 0.25em, var(--k) 0.25em calc(100% - 0.25em), var(--k) calc(100% - 0.25em) calc(100% - 0.25em); background-size: 0.25em 0.25em; background-repeat: no-repeat; }
+.g-sideeye .brow { position: absolute; left: -0.25em; right: -0.25em; top: -1em; height: 0.5em; background: #0b1020; transform: translateY(calc(var(--sus, 0) * 0.3em)); }
 .g-sideeye .socket:first-of-type .brow { transform: translateY(calc(var(--sus, 0) * -0.3em)); }
-.g-sideeye.caught .brow { transform: translateY(0.35em) rotate(-12deg); }
-.g-sideeye.caught .socket:first-of-type .brow { transform: translateY(0.35em) rotate(12deg); }
+.g-sideeye.caught .brow { transform: translateY(0.3em) rotate(-10deg); }
+.g-sideeye.caught .socket:first-of-type .brow { transform: translateY(0.3em) rotate(10deg); }
 .g-sideeye .eye { position: relative; width: 5em; height: 3.6em; background: #f4f6ff; box-shadow: 0 0 0 0.25em #0b1020; overflow: hidden; }
 .g-sideeye .pupil { position: absolute; left: 50%; top: 50%; width: 2em; height: 2em; margin: -1em 0 0 -1em; background: #0b1020; transition: transform 0.08s steps(2); }
 .g-sideeye .pupil::after { content: ''; position: absolute; left: 0.3em; top: 0.3em; width: 0.6em; height: 0.6em; background: #f4f6ff; }
@@ -26,7 +35,7 @@
 
 /* Under the desk it is dark, and the phones glow. */
 .g-sideeye .under { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 0.5em; padding: 0.9em 0.6em 0.5em; background: #151c33; }
-.g-sideeye .phones { flex: 1; min-height: 0; width: 100%; display: flex; justify-content: space-around; }
+.g-sideeye .phones { flex: 1; min-height: 0; width: 100%; display: flex; justify-content: space-around; padding-bottom: 0.9em; }
 .g-sideeye .phone { position: relative; width: 29%; max-width: 8.5em; max-height: 17em; display: flex; flex-direction: column; padding: 0.7em 0.3em 0.9em; background: var(--c); box-shadow: 0 -0.22em 0 0 #0b1020, 0 0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, 0 0.6em 0 0 var(--cd), -0.22em 0.6em 0 0 #0b1020, 0.22em 0.6em 0 0 #0b1020, 0 0.82em 0 0 #0b1020; }
 .g-sideeye .phone::before { content: ''; position: absolute; left: 38%; right: 38%; top: 0.25em; height: 0.2em; background: #0b1020; }
 .g-sideeye .feed, .g-sideeye .doc { flex: 1; min-height: 0; box-shadow: 0 0 0 0.16em #0b1020; overflow: hidden; }
@@ -56,7 +65,8 @@
 @keyframes g-sideeye-next { 50% { background: #f4f6ff; } }
 .g-sideeye.caught .phones { filter: grayscale(1) brightness(0.6); }
 
-.g-sideeye .bar { flex: none; width: calc(100% - 0.4em); max-width: 22em; height: 0.9em; background: #0b1020; box-shadow: 0 0 0 0.2em #0b1020, 0 0 0 0.36em #2c3763; }
+.g-sideeye .hud { flex: none; width: 100%; max-width: 24em; display: flex; align-items: center; gap: 0.8em; padding: 0 0.4em; }
+.g-sideeye .bar { flex: 1; min-width: 0; height: 0.9em; background: #0b1020; box-shadow: 0 0 0 0.2em #0b1020, 0 0 0 0.36em #2c3763; }
 .g-sideeye .bar i { display: block; height: 100%; width: 0; background: var(--green); box-shadow: inset 0 0.25em 0 0 #9df5bd; }
 .g-sideeye .tally { flex: none; color: #f4f6ff; font-size: 0.8em; letter-spacing: 0.06em; line-height: 1; white-space: nowrap; }
-.g-sideeye .tally b { font-size: 1.5em; color: var(--gold); font-variant-numeric: tabular-nums; }
+.g-sideeye .tally b { display: inline-block; min-width: 1.3em; text-align: right; font-size: 1.5em; color: var(--gold); font-variant-numeric: tabular-nums; }

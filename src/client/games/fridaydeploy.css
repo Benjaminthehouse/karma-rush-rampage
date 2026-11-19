@@ -22,7 +22,7 @@
 
 .g-fridaydeploy .rocket { position: absolute; right: 0.9em; bottom: 2.6em; opacity: 0; pointer-events: none; }
 .g-fridaydeploy .rocket.fly { animation: g-fridaydeploy-fly 0.4s steps(8); }
-.g-fridaydeploy .puff { position: absolute; right: 2.1em; bottom: 2.6em; }
+.g-fridaydeploy .puff { position: absolute; right: 2.1em; bottom: 1.2em; }
 
 /* PROD IS DOWN: the stage goes red and this covers the page while the pager buzzes. */
 .g-fridaydeploy .outage { position: absolute; inset: 0 0 1.1em; padding: 0.6em; background: #0b1020; color: #fff; box-shadow: 0 0 0 0.25em var(--gold), 0 0 0 0.45em #0b1020, 0.9em 0.9em 0 0 #0b102055; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6em; text-align: center; visibility: hidden; }

@@ -26,10 +26,11 @@ export const voice = {
   /** Call from a user gesture once; mobile browsers refuse speech before that. */
   unlock() {
     if (!synth || unlocked) return;
-    unlocked = true;
     try {
       const u = new SpeechSynthesisUtterance(' ');
       u.volume = 0;
+      // Only count it once the browser really accepted an utterance.
+      u.onstart = u.onend = () => (unlocked = true);
       synth.speak(u);
     } catch {
       /* ignore */

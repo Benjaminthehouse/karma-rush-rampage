@@ -190,9 +190,32 @@ const NAMED: Record<string, () => void> = {
   boing: () => tone({ f: 180, to: 520, dur: 0.2, type: 'triangle', vol: 0.14 }),
 };
 
+// iPhones mute Web Audio while the ring switch is on silent, but not media
+// playback. A looping silent clip moves the page into the media category, so the
+// game is heard either way. Started once, from a gesture.
+let unmuted = false;
+function unmuteIos() {
+  if (unmuted || !/iPad|iPhone|iPod/.test(navigator.userAgent) && !(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return;
+  try {
+    const clip = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+    clip.loop = true;
+    clip.setAttribute('playsinline', '');
+    void clip.play().then(
+      () => (unmuted = true),
+      () => undefined
+    );
+  } catch {
+    /* sound may stay tied to the ring switch */
+  }
+}
+
 export const sfx = {
   /** Call from a user gesture so the audio context may start. */
-  unlock: () => void audio(),
+  unlock: () => {
+    if (!settings.get('sound')) return;
+    void audio();
+    unmuteIos();
+  },
   press(b: number) {
     tone({ f: [392, 494, 587][b], dur: 0.07, type: 'triangle', vol: 0.12 });
     noise({ dur: 0.02, vol: 0.03, f: 3500 });

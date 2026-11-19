@@ -72,16 +72,38 @@ function setPads(labels: [string, string, string], actions?: ((() => void) | nul
 
 const held = [false, false, false];
 
+// Mobile browsers only let sound and speech start from an "activation" gesture, and a
+// finger landing is not one: a finger lifting, a click or a key press is.
+for (const type of ['pointerup', 'touchend', 'click', 'keydown'] as const) {
+  document.addEventListener(
+    type,
+    () => {
+      sfx.unlock();
+      voice.unlock();
+    },
+    { passive: true }
+  );
+}
+
+/** A short buzz on phones that support it. */
+function buzz(ms: number) {
+  if (!settings.get('fx')) return;
+  try {
+    navigator.vibrate?.(ms);
+  } catch {
+    /* not supported, or not allowed in this frame */
+  }
+}
+
 function press(b: Btn) {
-  // First gesture unlocks audio and speech on mobile browsers.
   sfx.unlock();
-  voice.unlock();
   if (held[b]) return;
   held[b] = true;
   const el = padEls[b];
   el.classList.remove('ripple');
   void el.offsetWidth;
   el.classList.add('down', 'ripple');
+  buzz(8);
   if (screen === 'play') {
     sfx.press(b);
     match?.press(b);

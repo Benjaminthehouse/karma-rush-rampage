@@ -98,6 +98,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let served = 0;
   let shown = 0;
   let nextAt = 0;
+  let liveAt = 0; // a fresh microwave ignores presses for a blink, so a late double tap cannot open it
   let beepAt = 0;
   let rings = 0;
   let ninjas = 0;
@@ -143,10 +144,11 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   wrap.append(house, kitchen, racket);
   root.append(wrap);
 
-  function serve() {
+  function serve(t: number) {
     cur = next;
     if (!cur) return;
     state = 'live';
+    liveAt = t + 120;
     shown = cur.from;
     digits.textContent = `0:0${shown}`;
     oven.className = `oven c-${COLOR[cur.btn]}`;
@@ -155,7 +157,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     counter.textContent = cur.label;
     pulse(oven, 'pop-in');
   }
-  serve();
+  serve(0);
 
   /** This microwave is done: line up the next one, or close the kitchen if none fits before the bell. */
   function rest(t: number, ms: number) {
@@ -195,7 +197,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
 
   return {
     press(b, t) {
-      if (!cur || state !== 'live') return;
+      if (!cur || state !== 'live' || t < liveAt) return;
       const n = numberAt(cur, t);
       if (n === 0) return; // too late: the next frame beeps
       if (b !== cur.btn) {
@@ -234,7 +236,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
           state = 'open';
           wrap.className = 'g-microwave scene-night';
         }
-        if (next) serve();
+        if (next) serve(t);
         return;
       }
       const n = numberAt(cur, t);

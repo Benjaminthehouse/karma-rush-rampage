@@ -96,6 +96,15 @@ export function createFx(arena: HTMLElement, layer: HTMLElement) {
       const el = spawn('flash', 0, 0);
       el.style.background = HEX[color];
     },
+    /** A short vibration on phones that support it. */
+    buzz(ms: number) {
+      if (!full()) return;
+      try {
+        navigator.vibrate?.(ms);
+      } catch {
+        /* not supported, or not allowed in this frame */
+      }
+    },
     shake() {
       if (!full()) return;
       arena.classList.remove('shake');

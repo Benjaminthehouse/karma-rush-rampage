@@ -38,6 +38,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     socket.append(h('i', 'brow'), eye);
     head.append(socket);
   }
+  head.append(h('i', 'nose'));
   const desk = h('div', 'desk');
   desk.append(h('span', 'plate', 'THE BOSS'));
   boss.append(head, desk);
@@ -60,15 +61,17 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     warn.append(sprite('eye', { px: 0.2 }), sprite('bang', { px: 0.3 }));
     el.append(feed, sheet, warn);
     row.append(el);
-    return { el, feed, tiles, title, skip: randInt(rng, 0, MEMES.length - 1), lastAt: -1000 };
+    return { el, feed, tiles, title, warn, skip: randInt(rng, 0, MEMES.length - 1), lastAt: -1000 };
   });
+  const hud = h('div', 'hud');
   const bar = h('div', 'bar');
   const fill = h('i');
   bar.append(fill);
   const tally = h('div', 'tally');
   const count = h('b');
-  tally.append(count, ' MEMES SCROLLED');
-  under.append(row, bar, tally);
+  tally.append(count, ' MEMES');
+  hud.append(bar, tally);
+  under.append(row, hud);
   wrap.append(boss, under);
   root.append(wrap);
 
@@ -80,6 +83,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let watched: Btn = on;
   let shown = '';
   let caught = false;
+  let dodging = false; // the eyes shut while heading for the phone being scrolled
 
   /** Moves on to the stare for time `t`; each one picks its phone the moment the eyes shut. */
   function sync(t: number) {
@@ -116,7 +120,13 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         return;
       }
       const s = sync(t);
-      if (t >= s.from && b === watched) {
+      if (b === watched) {
+        // Flagged while the eyes are shut: the screen is covered, there is nothing to scroll.
+        if (t < s.from) {
+          pulse(p.warn, 'bump');
+          fx.sound('tick');
+          return;
+        }
         pulse(p.el, 'shake');
         // Nobody is fined for mashing before they have had time to look.
         if (!cur && t < EARLY) return;
@@ -161,12 +171,13 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         if (open) {
           p.title.textContent = s.doc;
           fx.sound('zap');
-          // Scrolled it right up to the moment the eyes opened.
-          if (s.from - p.lastAt < 150) fx.pop(p.el, 'PHEW', 'white');
+          // Got off the phone the eyes were coming for.
+          if (dodging && on !== watched) fx.pop(p.el, 'PHEW', 'white');
         } else {
           fx.sound('tick');
           // The eyes are coming for the phone in your hand.
-          if (watched === on && t - p.lastAt < 600) fx.pop(p.el, 'MOVE!', 'red');
+          dodging = watched === on && t - p.lastAt < 600;
+          if (dodging) fx.pop(p.el, 'MOVE!', 'red');
         }
       }
       const now = t < lockedUntil;

@@ -258,6 +258,7 @@ export function runMatch(o: {
           setCombo(0);
           sfx.bad();
           fx.shake();
+          fx.buzz(35);
           fx.lights('red');
           if (text) fx.pop(at ?? null, text, 'red');
         },

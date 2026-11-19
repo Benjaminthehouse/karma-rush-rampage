@@ -28,6 +28,8 @@ const HOTFIX = ['(it is only a hotfix)', '(hotfix, totally safe)', '(the boss sa
 const SAFE = ['LOG OFF. TOUCH GRASS.', 'IT CAN WAIT.', 'MONDAY PROBLEM.', 'LAPTOP CLOSED.', 'WEEKEND SAVED.'];
 const OUTAGE = ['enjoy your weekend', 'the pager knows where you live', 'the rollback failed too', 'status page: also down', 'see you on Saturday'];
 const DOWN = 650; // ms prod stays down (and your hands stay off) after a Friday deploy
+const GRACE = 150; // ms a fresh page ignores presses: nobody reads that fast, so it was a double tap
+const NAG = 1400; // ms a weekday page waits before it asks out loud
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   // A Friday page tempts for longer than a reflex takes, then leaves on its own.
@@ -65,6 +67,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   }
   let idx = -1; // flip() turns to the next page
   let shownAt = 0;
+  let nagged = false;
   let downUntil = 0;
   let deploys = 0;
   let dodged = 0;
@@ -116,6 +119,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   function flip(t: number) {
     idx++;
     shownAt = t;
+    nagged = false;
     const p = page();
     wrap.className = 'g-fridaydeploy scene-office';
     word.textContent = p.day;
@@ -126,7 +130,15 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     pulse(sheet, 'pop-in');
     tally();
   }
-  flip(0);
+  flip(-GRACE); // the first page is live from the first frame
+
+  /** The Friday page leaves on its own: that is the win. */
+  function dodge(t: number) {
+    dev.mood('cool');
+    fx.pop(pile, SAFE[dodged++ % SAFE.length], 'green');
+    fx.sound('ding');
+    flip(t);
+  }
 
   return {
     press(b, t) {
@@ -137,6 +149,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         return;
       }
       const p = page();
+      if (p.friday && t - shownAt >= linger) return dodge(t); // it was already leaving
+      if (t - shownAt < GRACE) return;
       if (p.friday) {
         lost.textContent = deploys ? `-${Math.min(2, deploys)} ROLLED BACK` : 'NOTHING LEFT TO ROLL BACK';
         deploys = Math.max(0, deploys - 2);
@@ -178,11 +192,14 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         downUntil = 0;
         dev.mood('sad');
         flip(t);
-      } else if (page().friday && t - shownAt >= linger) {
-        dev.mood('cool');
-        fx.pop(pile, SAFE[dodged++ % SAFE.length], 'green');
-        fx.sound('ding');
-        flip(t);
+      } else if (page().friday) {
+        if (t - shownAt >= linger) dodge(t);
+      } else if (!nagged && t - shownAt >= NAG) {
+        // Nothing ships itself: a weekday page waits, and after a while it says so.
+        nagged = true;
+        pulse(day, 'bump');
+        fx.pop(btn, 'SHIP IT!', 'white');
+        fx.sound('tick');
       }
     },
     score: () => ratio(deploys, par),
