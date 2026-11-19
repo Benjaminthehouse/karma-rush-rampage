@@ -238,6 +238,18 @@ const live = { running: false, t: 0, error: '' };
       if (cs.overflow !== 'visible' && (el.scrollWidth > el.clientWidth + 2 || el.scrollHeight > el.clientHeight + 2))
         issues.push(`text ${label} is clipped by its container (${el.className || el.tagName})`);
     }
+    // In-flow blocks must fit: the stage clips whatever sticks out.
+    if (wrap) {
+      for (const el of wrap.querySelectorAll<HTMLElement>('*')) {
+        const cs = getComputedStyle(el);
+        if (cs.display === 'none' || cs.visibility === 'hidden' || cs.position === 'absolute' || Number(cs.opacity) < 0.05) continue;
+        if (el.closest('[style*="position: absolute"]') || (el.offsetParent && el.offsetParent !== wrap && getComputedStyle(el.offsetParent).position === 'absolute')) continue;
+        const r = el.getBoundingClientRect();
+        if (!r.width || !r.height) continue;
+        const out = Math.max(box.left - r.left, r.right - box.right, box.top - r.top, r.bottom - box.bottom);
+        if (out > 3) issues.push(`element .${String(el.className).split(' ')[0] || el.tagName.toLowerCase()} sticks ${Math.round(out)}px outside the stage and is cut off`);
+      }
+    }
     const warn: string[] = [];
     if (wrap && (wrap.scrollWidth > wrap.clientWidth + 3 || wrap.scrollHeight > wrap.clientHeight + 3))
       warn.push(`wrapper content overflows by ${wrap.scrollWidth - wrap.clientWidth}x${wrap.scrollHeight - wrap.clientHeight}px; check nothing important is cut off`);

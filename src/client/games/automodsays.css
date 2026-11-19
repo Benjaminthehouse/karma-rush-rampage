@@ -1,0 +1,8 @@
+.g-automodsays .bubble { width: min(100%, 22em); border-radius: 1em; border: 0.2em solid var(--line); background: var(--panel-2); padding: 0.9em 1em; display: flex; flex-direction: column; gap: 0.6em; }
+.g-automodsays .who { display: flex; align-items: center; gap: 0.5em; font-weight: 900; }
+.g-automodsays .shield { width: 1.7em; height: 1.9em; flex: none; background: var(--dim); border-radius: 50%; }
+.g-automodsays .bubble.real { border-color: var(--green); }
+.g-automodsays .bubble.real .shield { background: var(--green); border-radius: 0; clip-path: polygon(50% 0, 100% 16%, 100% 58%, 50% 100%, 0 58%, 0 16%); }
+.g-automodsays .bubble.fake .name { color: var(--dim); }
+.g-automodsays .order { font-size: 1.9em; font-weight: 900; text-align: center; }
+.g-automodsays .order b { text-decoration: underline; text-underline-offset: 0.15em; }

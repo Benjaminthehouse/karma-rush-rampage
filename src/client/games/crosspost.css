@@ -1,0 +1,6 @@
+.g-crosspost .post { width: min(100%, 22em); background: var(--panel-2); border: 0.16em solid var(--line); border-radius: 0.8em; padding: 0.7em 0.9em; font-weight: 800; font-size: 1.15em; text-align: center; }
+.g-crosspost .subs { display: flex; gap: 0.5em; width: 100%; }
+.g-crosspost .sub { flex: 1; min-width: 0; text-align: center; font-weight: 900; font-size: 0.85em; padding: 1.5em 0.1em; border-radius: 0.8em; border: 0.18em dashed var(--line); color: var(--dim); background: var(--bg); }
+.g-crosspost .sub.lit { border: 0.18em solid var(--c); color: #071022; background: var(--c); box-shadow: 0 0 1.4em var(--c); animation: g-crosspost-lit 0.5s ease-in-out infinite; }
+.g-crosspost .sub.half { filter: brightness(1.5); }
+@keyframes g-crosspost-lit { 50% { transform: translateY(-0.25em); } }

@@ -1,0 +1,5 @@
+.g-commentchain .thread { width: 100%; display: flex; flex-direction: column; gap: 0.3em; min-height: 12.5em; }
+.g-commentchain .reply { background: var(--panel-2); border-left: 0.35em solid var(--line); border-radius: 0.5em; padding: 0.35em 0.6em; font-weight: 800; font-size: 0.9em; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.55; }
+.g-commentchain .reply.lit { opacity: 1; background: var(--c); border-left-color: var(--ink); color: #071022; box-shadow: 0 0 1.2em var(--c); transform: scale(1.04); }
+.g-commentchain .reply.done { opacity: 1; background: color-mix(in srgb, var(--c) 45%, var(--panel-2)); border-left-color: var(--c); color: var(--ink); }
+.g-commentchain .reply.hidden { opacity: 0.3; color: transparent; }

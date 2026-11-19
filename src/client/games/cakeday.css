@@ -1,0 +1,8 @@
+.g-cakeday { flex-direction: row !important; flex-wrap: wrap; padding: 0 !important; gap: 0 !important; align-items: stretch !important; align-content: stretch; overflow: hidden; }
+.g-cakeday .lane { flex: 1; min-width: 0; height: 100%; position: relative; border-left: 0.1em dashed var(--line); }
+.g-cakeday .lane:first-child { border-left: 0; }
+.g-cakeday .flame { position: absolute; left: 50%; width: 1.8em; height: 2.4em; margin-left: -0.9em; background: var(--c); border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%; box-shadow: 0 0 1em var(--c); }
+.g-cakeday .candle { position: absolute; left: 50%; bottom: 3.2em; width: 0.9em; height: 4.2em; margin-left: -0.45em; border-radius: 0.3em; background: repeating-linear-gradient(135deg, var(--ink) 0 0.4em, var(--c) 0.4em 0.8em); }
+.g-cakeday .candle::before { content: ''; position: absolute; left: -0.95em; right: -0.95em; top: -0.5em; height: 0.25em; background: var(--ink); opacity: 0.7; border-radius: 1em; }
+.g-cakeday .candle.lit::after { content: ''; position: absolute; left: -0.25em; top: -1.7em; width: 1.4em; height: 1.7em; background: var(--gold); border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%; box-shadow: 0 0 1.2em var(--gold); }
+.g-cakeday .cake { position: absolute; left: 0; right: 0; bottom: 0; height: 3.2em; background: #ff7ac8; border-top: 0.5em solid var(--ink); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1em; letter-spacing: 0.1em; color: #071022; }

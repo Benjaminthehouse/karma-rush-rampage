@@ -101,6 +101,8 @@ The checker enforces these.
 6. CSS: every selector starts with `.g-<id>`; keyframes are named `g-<id>-*`; sizes
    in `em`, never `rem` or `px` for layout; no `position: fixed`.
 7. All text is at least 11px on a 360x640 phone and stays inside the stage.
+   Hide things with `opacity`, `visibility` or `display`, never by parking them
+   off-stage: anything positioned outside the stage counts as cut off.
 
 ## Design rules
 

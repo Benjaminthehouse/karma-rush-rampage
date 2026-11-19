@@ -148,8 +148,9 @@ main > .screen {
 @keyframes hit { from { box-shadow: 0 0 2.6rem var(--hit), inset 0 0 0 0.2rem var(--hit); } to { box-shadow: 0 0 1.4rem #3f8cff33; } }
 #arena.shake { animation: spin 5s linear infinite, shake 0.22s; }
 #stage, #card, #fx { position: absolute; inset: 0.28rem; border-radius: 0.85rem; overflow: hidden; }
-#stage { display: flex; background: var(--panel); font-size: clamp(1rem, 5.2cqw, 1.7rem); }
-#stage > div { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.8em; padding: 0.9rem; position: relative; }
+/* Type scales with whichever stage dimension is tighter, so games size everything in em. */
+#stage { display: flex; background: var(--panel); font-size: clamp(0.8rem, min(5.2cqw, 4.3cqh), 1.7rem); }
+#stage > div { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.8em; padding: 0.9rem; position: relative; }
 #stage.frozen { filter: saturate(0.3) brightness(0.45); }
 #fx { pointer-events: none; }
 

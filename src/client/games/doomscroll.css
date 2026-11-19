@@ -1,0 +1,9 @@
+.g-doomscroll .order { display: flex; align-items: center; gap: 0.4em; }
+.g-doomscroll .order.back { flex-direction: row-reverse; }
+.g-doomscroll .order i { width: 2.2em; height: 2.2em; border-radius: 0.5em; background: var(--c); opacity: 0.4; box-shadow: inset 0 -0.3em 0 var(--cd); }
+.g-doomscroll .order i.next { opacity: 1; outline: 0.2em solid var(--ink); outline-offset: 0.1em; transform: scale(1.1); }
+.g-doomscroll .way { font-size: 2em; font-weight: 900; color: var(--gold); line-height: 1; }
+.g-doomscroll .phone { width: min(100%, 15em); height: 12em; border: 0.25em solid var(--ink); border-radius: 1.2em; background: var(--bg); padding: 0.5em; display: flex; flex-direction: column; gap: 0.35em; overflow: hidden; }
+.g-doomscroll .card { flex: none; background: var(--panel-2); border-radius: 0.5em; padding: 0.55em 0.6em; font-weight: 800; font-size: 0.8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g-doomscroll .g-doomscroll-roll { animation: g-doomscroll-roll 0.09s ease-out; }
+@keyframes g-doomscroll-roll { from { transform: translateY(1.6em); } }

@@ -1,0 +1,10 @@
+.g-ninetynine { align-items: stretch !important; }
+.g-ninetynine .row { display: grid; grid-template-columns: 1fr auto; gap: 0.2em 0.6em; align-items: center; }
+.g-ninetynine .step { font-weight: 800; font-size: 0.85em; color: var(--dim); }
+.g-ninetynine .pct { font-weight: 900; font-variant-numeric: tabular-nums; text-align: right; min-width: 3.4em; }
+.g-ninetynine .track { grid-column: 1 / -1; position: relative; height: 2.2em; border-radius: 0.6em; background: var(--bg); border: 0.14em solid var(--line); overflow: hidden; }
+.g-ninetynine .track i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--c); }
+.g-ninetynine .track b { position: absolute; right: 0; top: 0; bottom: 0; width: 7%; background: repeating-linear-gradient(135deg, var(--gold) 0 0.3em, #0000 0.3em 0.6em); }
+.g-ninetynine .row.stopped .track { border-color: var(--c); }
+.g-ninetynine .row.crashed .track i { background: var(--dim); }
+.g-ninetynine .row.crashed .pct { color: var(--red); }

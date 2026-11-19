@@ -1,0 +1,10 @@
+.g-sixfingers .row { display: flex; gap: 0.4em; width: 100%; }
+.g-sixfingers .slot { flex: 1; min-width: 0; height: 10.5em; background: var(--panel-2); border: 0.16em solid var(--line); border-radius: 0.8em; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.g-sixfingers .hand { width: 78%; height: 78%; display: flex; flex-direction: column; }
+.g-sixfingers .fingers { flex: 1.3; display: flex; align-items: flex-end; justify-content: center; gap: 4%; }
+.g-sixfingers .fingers i { flex: 1; max-width: 17%; background: var(--tint); border-radius: 1em 1em 0 0; }
+.g-sixfingers .hand b { flex: 1; background: var(--tint); border-radius: 0.5em 0.5em 1.2em 1.2em; }
+.g-sixfingers .gold { --tint: var(--gold); }
+.g-sixfingers .pink { --tint: #ff9fd6; }
+.g-sixfingers .teal { --tint: #6fe3d6; }
+.g-sixfingers .ink { --tint: #d6dcf5; }

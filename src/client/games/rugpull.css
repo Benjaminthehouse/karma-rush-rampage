@@ -1,0 +1,13 @@
+.g-rugpull { flex-direction: row !important; flex-wrap: wrap; align-items: stretch !important; align-content: center; gap: 0.5em !important; }
+.g-rugpull .col { flex: 1; min-width: 0; height: 13em; background: var(--panel-2); border: 0.16em solid var(--line); border-radius: 0.8em; padding: 0.5em 0.3em; display: flex; flex-direction: column; align-items: center; gap: 0.3em; }
+.g-rugpull .name { font-weight: 900; font-size: 0.8em; color: var(--dim); }
+.g-rugpull .chart { flex: 1; width: 62%; display: flex; align-items: flex-end; background: var(--bg); border-radius: 0.4em; overflow: hidden; }
+.g-rugpull .chart i { display: block; width: 100%; background: var(--c); border-radius: 0.3em 0.3em 0 0; }
+.g-rugpull .col b { font-weight: 900; font-size: 0.85em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.g-rugpull .col.shaky { border-color: var(--gold); animation: g-rugpull-shake 0.09s linear infinite; }
+.g-rugpull .col.shaky .chart i { background: var(--gold); }
+.g-rugpull .col.sold { border-color: var(--green); opacity: 0.75; }
+.g-rugpull .col.rugged { border-color: var(--red); opacity: 0.6; }
+.g-rugpull .col.rugged .chart i { background: var(--red); }
+.g-rugpull .g-note { flex-basis: 100%; }
+@keyframes g-rugpull-shake { 25% { transform: translateX(-0.12em) rotate(-1deg); } 75% { transform: translateX(0.12em) rotate(1deg); } }

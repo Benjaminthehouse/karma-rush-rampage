@@ -1,0 +1,15 @@
+.g-selfpromo .mod { position: relative; width: 6.2em; height: 6.6em; background: var(--green); border: 0.22em solid var(--bg); clip-path: polygon(50% 0, 100% 16%, 100% 58%, 50% 100%, 0 58%, 0 16%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3em; transition: background 0.1s, transform 0.12s; }
+.g-selfpromo .eyes { display: flex; gap: 0.7em; }
+.g-selfpromo .eyes i { width: 1.25em; height: 0.2em; background: var(--bg); border-radius: 1em; transition: height 0.08s; }
+.g-selfpromo .badge { font-size: 0.7em; font-weight: 900; letter-spacing: 0.12em; color: var(--bg); }
+.g-selfpromo .mark { position: absolute; top: 0.5em; left: 0; right: 0; text-align: center; font-size: 0.75em; font-weight: 900; color: var(--bg); }
+.g-selfpromo .mod.warn { background: var(--gold); transform: rotate(-5deg); }
+.g-selfpromo .mod.warn .eyes i:last-child { height: 0.75em; }
+.g-selfpromo .mod.watch { background: var(--red); transform: scale(1.18); animation: g-selfpromo-glare 0.2s steps(2) infinite; }
+.g-selfpromo .mod.watch .eyes i { height: 1.25em; background: var(--ink); box-shadow: inset 0 0 0 0.36em var(--bg); border-radius: 50%; }
+.g-selfpromo .mod.watch .mark { font-size: 1.1em; top: 0.2em; }
+@keyframes g-selfpromo-glare { 50% { filter: brightness(1.35); } }
+.g-selfpromo .post { width: min(100%, 24em); background: var(--panel-2); border: 0.18em solid var(--line); border-radius: 0.9em; padding: 0.7em 0.9em; display: flex; flex-direction: column; gap: 0.25em; align-items: flex-start; }
+.g-selfpromo .sub { font-size: 0.75em; font-weight: 800; color: var(--dim); }
+.g-selfpromo .title { font-size: 1.15em; font-weight: 800; line-height: 1.15; min-height: 2.3em; }
+.g-selfpromo .link { font-size: 0.8em; font-weight: 800; color: var(--blue); }
