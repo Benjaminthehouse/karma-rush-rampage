@@ -168,27 +168,28 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       if (t < lockedUntil || pos >= TRACK - VIEW) return;
       const s = ahead(pos);
       if (b === 1) {
-        if (!s) {
-          // Nothing to clear: a hop on the spot costs a beat. Either leg may lead off again afterwards.
+        foot = -1; // either leg may lead off after a hop, even a wasted one
+        if (!s && wonAt < 0) {
+          // Nothing to clear: a hop on the spot costs a beat.
           lockedUntil = t + 300;
-          foot = -1;
           who.mood('shock');
           act('g-anypercent-whiff');
           bad(callout, 'TOO EARLY');
           return;
         }
-        pos = s.at + 1;
-        foot = -1;
-        heat = Math.min(1, heat + 0.4);
-        s.el.classList.add('done');
         who.mood('happy');
         act('g-anypercent-hop');
         fx.poof(shadow);
-        good(runner);
-        fx.pop(s.spike, signed(behind(t)), behind(t) < 0 ? 'gold' : 'white');
-        fx.burst(s.spike, 'gold', 10);
+        good(runner, s ? undefined : 'GG'); // on the victory lap a hop is a flip for the fans, not a mistake
         fx.sound('boing');
-        say(hype());
+        if (s) {
+          pos = s.at + 1;
+          heat = Math.min(1, heat + 0.4);
+          s.el.classList.add('done');
+          fx.pop(s.spike, signed(behind(t)), behind(t) < 0 ? 'gold' : 'white');
+          fx.burst(s.spike, 'gold', 10);
+          say(hype());
+        }
       } else {
         if (b === foot) {
           who.mood('shock');

@@ -139,4 +139,9 @@ without written approval, so the game is not called "Reddit" anything.
 - The Devvit side (Redis, Realtime, scheduler, post creation) is type-checked against
   `@devvit/web` 0.15.4 and `devvit.json` validates against its schema, but it has not
   been run on Reddit yet. Playtest before submitting.
-- Sound and speech were verified to run without errors, not auditioned by ear.
+- Sound and speech were verified to run without errors and the mix was measured
+  for clipping, but nobody has listened to it. Touch input was tested on emulated
+  phones, not real ones.
+- The look is a placeholder: two games (Upvote Crisis, Shameless Plug) and a few
+  later ones use the pixel kit, the rest an earlier flat style. A design pass is planned.
+- The folder is still called `karma-mash`; the app itself is Karma Rush Rampage.
