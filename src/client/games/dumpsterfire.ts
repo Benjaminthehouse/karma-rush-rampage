@@ -186,8 +186,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         fx.shake();
       }
       lanes.forEach((l, i) => {
-        if (!over(i)) return;
-        heat[i] = Math.min(100, heat[i] + (GROW * dt) / 1000);
+        if (over(i)) heat[i] = Math.min(100, heat[i] + (GROW * dt) / 1000);
         const ablaze = heat[i] >= 100;
         if (ablaze && !l.ablaze) bad(l.pit, 'Y’ALL CAN’T BEHAVE');
         l.ablaze = ablaze;

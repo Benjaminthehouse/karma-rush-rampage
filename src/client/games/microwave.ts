@@ -68,7 +68,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     // From level 2 the clock sometimes hangs on a number, to trip anyone pressing by rhythm alone.
     const hang = level >= 2 && rng() < 0.1 + level * 0.1 ? randInt(rng, 2, from) : 0;
     const [art, name] = snack();
-    return { btn, from, hang, art, label: `${randInt(rng, 1, 4)}:${randInt(rng, 10, 59)} AM · ${name}` };
+    // The clock on the label never reads one o'clock: the only ONE on screen is the 0:01 to open at.
+    return { btn, from, hang, art, label: `${randInt(rng, 2, 4)}:${randInt(rng, 10, 59)} AM · ${name}` };
   });
 
   /** Microwave `i` as it would run from time `s`, or null when its 0:01 cannot finish before the bell. */
@@ -252,6 +253,6 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       fx.sound(n === 1 ? 'pop' : 'tick');
     },
     score: () => clamp1000((1000 * (ninjas + 0.4 * warm - 0.25 * wrong)) / par),
-    hint: (t) => (cur && state === 'live' && numberAt(cur, t) === 1 ? cur.btn : null),
+    hint: (t) => (cur && state === 'live' && t >= liveAt && numberAt(cur, t) === 1 ? cur.btn : null),
   };
 };

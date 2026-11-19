@@ -30,7 +30,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   // All horizontal distances are a percentage of the yard's width.
   const W = 34 - level * 2; // slab width: narrower later
   const R = (100 - W) / 2; // the slab's centre swings this far either side of the tower
-  const SNAP = W * 0.13; // closer than this clicks flush
+  // Closer than this clicks flush. Wide enough that a press about 40 ms late (screen and touch lag) still clicks on the last round.
+  const SNAP = W * 0.16;
   // Edge to edge in this many ms; every slab that lands makes the next one quicker.
   const sweep = (n: number) => (1100 - level * 60) * Math.max(0.8, 1 - n * 0.02);
   // More slabs than anyone can stack, never the same colour twice running.

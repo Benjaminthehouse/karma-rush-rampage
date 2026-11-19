@@ -67,6 +67,7 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
   let cold: Btn = 1; // last held ticker that cost
   const bagged = [false, false, false]; // held through a dump: pays nothing more until let go
   let losing = 0; // beats in a row spent losing money
+  let buzzed = -1000; // when the buzzer last went off
   let cheered = -1; // last pump the player was cheered for catching
   let shown = -1;
   let rank = 0;
@@ -122,6 +123,12 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
     return i > 0 && pumps[i - 1].up.includes(b) && t - pumps[i].from < wobble ? 'top' : 'down';
   }
   const score = () => ratio(money, par);
+  /** The mistake buzzer, at most every 375 ms however hard the buttons are mashed. */
+  function buzz(b: Btn, t: number) {
+    if (t - buzzed < 375) return;
+    buzzed = t;
+    bad(cols[b].sign, pumps[pumpIndex(t)].bag);
+  }
 
   function draw(c: (typeof cols)[number]) {
     const lo = Math.min(...c.prices);
@@ -152,7 +159,7 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
       mood = 'happy';
     } else if (swing < 0) {
       // A hair late letting go costs its money quietly; the buzzer is for a bag you keep holding.
-      if ((losing || swing <= -3) && losing++ % 3 === 0) bad(cols[cold].sign, pumps[pumpIndex(t)].bag);
+      if (losing++) buzz(cold, t);
       mood = 'dead';
     } else losing = 0;
 
@@ -163,7 +170,7 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
     swing = 0;
     if (now <= rank) return;
     rank = now;
-    fx.pop(cash, `${RANKS[now]}!`, 'gold');
+    fx.pop(ape.el, `${RANKS[now]}!`, 'gold');
     fx.poof(rocket);
     fx.burst(now === 3 ? moon : rocket, 'gold', 12 + now * 6);
     fx.sound(now === 3 ? 'power' : 'coin');
@@ -227,10 +234,8 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
       const s = stateOf(b, t);
       fx.poof(cols[b].sign);
       fx.sound(s === 'up' ? 'power' : 'thud');
-      if (s !== 'down') return;
       // Grabbing a ticker that is already dumping is a mistake from the first instant.
-      losing = 1;
-      bad(cols[b].sign, pumps[pumpIndex(t)].bag);
+      if (s === 'down') buzz(b, t);
     },
     release(b) {
       bagged[b] = false;

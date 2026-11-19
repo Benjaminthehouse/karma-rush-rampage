@@ -92,7 +92,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   const sorry = h('span');
   const pager = h('div', 'pager');
   pager.append(sprite('phone', { px: 0.13 }), h('span', '', 'bzzt! bzzt!'));
-  outage.append(h('b', '', 'PROD IS DOWN'), lost, sorry, pager);
+  const alarm = h('b', '', 'PROD IS DOWN');
+  outage.append(alarm, lost, sorry, pager);
   const puff = h('i', 'puff');
   cal.append(sheet, rocket, puff, outage);
   const desk = h('div', 'desk');
@@ -143,8 +144,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   return {
     press(b, t) {
       if (downUntil) {
-        // Prod is still down: mashing only rattles the pager.
-        pulse(pager, 'bump');
+        // Prod is still down: mashing only rattles the notice.
+        pulse(alarm, 'bump');
         fx.sound('tick');
         return;
       }
@@ -152,7 +153,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       if (p.friday && t - shownAt >= linger) return dodge(t); // it was already leaving
       if (t - shownAt < GRACE) return;
       if (p.friday) {
-        lost.textContent = deploys ? `-${Math.min(2, deploys)} ROLLED BACK` : 'NOTHING LEFT TO ROLL BACK';
+        lost.textContent = `-${Math.min(2, deploys)} ROLLED BACK`;
         deploys = Math.max(0, deploys - 2);
         downUntil = t + DOWN;
         sorry.textContent = OUTAGE[outages++ % OUTAGE.length];

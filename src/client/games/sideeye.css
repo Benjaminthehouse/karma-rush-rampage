@@ -37,7 +37,7 @@
 /* Under the desk it is dark, and the phones glow. */
 .g-sideeye .under { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 0.5em; padding: 0.9em 0.6em 0.5em; background: #151c33; }
 .g-sideeye .phones { flex: 1; min-height: 0; width: 100%; display: flex; justify-content: space-around; padding-bottom: 0.9em; }
-.g-sideeye .phone { position: relative; width: 29%; max-width: 8.5em; max-height: 17em; display: flex; flex-direction: column; padding: 0.7em 0.3em 0.9em; background: var(--c); box-shadow: 0 -0.22em 0 0 #0b1020, 0 0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, 0 0.6em 0 0 var(--cd), -0.22em 0.6em 0 0 #0b1020, 0.22em 0.6em 0 0 #0b1020, 0 0.82em 0 0 #0b1020; }
+.g-sideeye .phone { position: relative; width: 29%; max-width: 8.5em; max-height: 19em; display: flex; flex-direction: column; padding: 0.7em 0.3em 0.9em; background: var(--c); box-shadow: 0 -0.22em 0 0 #0b1020, 0 0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, 0 0.6em 0 0 var(--cd), -0.22em 0.6em 0 0 #0b1020, 0.22em 0.6em 0 0 #0b1020, 0 0.82em 0 0 #0b1020; }
 .g-sideeye .phone::before { content: ''; position: absolute; left: 38%; right: 38%; top: 0.25em; height: 0.2em; background: #0b1020; }
 .g-sideeye .feed, .g-sideeye .doc { flex: 1; min-height: 0; box-shadow: 0 0 0 0.16em #0b1020; overflow: hidden; }
 .g-sideeye .feed { display: flex; flex-direction: column; background: #0b1020; gap: 0.16em; }
