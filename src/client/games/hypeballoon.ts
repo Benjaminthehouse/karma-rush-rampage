@@ -52,6 +52,9 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
   let live = 0; // what the balloon being pumped would bank right now
   let buzz = -1;
   let notch = 0; // tenths of the balloon already ticked off
+  let wasTense = false;
+  let shownStep = -1;
+  let wasStuck = false;
 
   const wrap = h('div', 'g-hypeballoon');
   const post = h('div', 'post');
@@ -62,9 +65,12 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
   const line = h('div', 'line');
   line.append(h('span', '', 'POP LINE'));
   const balloon = h('div', 'balloon');
+  const skin = h('div', 'skin'); // the rubber: scaled, never resized, so pumping costs no layout
+  const text = h('div', 'text');
   const count = h('b');
   const which = h('i', 'which'); // which pad this colour is, for anyone who cannot tell the colours apart
-  balloon.append(count, h('span', 'cap', 'waitlist'), which);
+  text.append(count, h('span', 'cap', 'waitlist'), which);
+  balloon.append(skin, text);
   sky.append(line, balloon, h('div', 'boom', 'POP!'));
   const meter = h('div', 'meter big');
   const bar = h('i');
@@ -82,9 +88,16 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
   };
 
   function paint(f: number) {
-    balloon.style.setProperty('--f', f.toFixed(3));
-    balloon.classList.toggle('tense', f >= 0.8);
-    count.textContent = Math.round(12 * 4000 ** f).toLocaleString('en-US');
+    skin.style.transform = `scale(${(0.34 + 0.66 * f).toFixed(3)})`;
+    text.style.transform = `scale(${(1 + 1.3 * f).toFixed(3)})`;
+    const tense = f >= 0.8;
+    if (tense !== wasTense) balloon.classList.toggle('tense', (wasTense = tense));
+    // The waitlist number ticks over in steps rather than every frame.
+    const step = Math.floor(f * 40);
+    if (step !== shownStep) {
+      shownStep = step;
+      count.textContent = Math.round(12 * 4000 ** (step / 40)).toLocaleString('en-US');
+    }
     // The pump is heard as well as seen: a tick every tenth, and a rising whine once it starts to tremble.
     const tenth = Math.floor(f * 10);
     if (tenth > notch) fx.sound(tenth === 8 ? 'power' : 'tick');
@@ -98,7 +111,7 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
   }
 
   function bank() {
-    bar.style.width = `${Math.min(100, (hype / par) * 100)}%`;
+    bar.style.transform = `scaleX(${Math.min(1, hype / par).toFixed(3)})`;
     // Until something is banked the caption is the one-line tutorial.
     note.textContent = hype ? `${hype} hype banked` : 'hold the balloon’s colour, then let go';
   }
@@ -110,6 +123,7 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
     state = 'pump';
     t0 = t;
     balloon.classList.remove('jam');
+    wasStuck = false;
     fx.sound('power');
   }
 
@@ -120,6 +134,8 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
     buzz = -1;
     sky.className = 'sky';
     balloon.className = `balloon c-${COLOR[cur().col]}`;
+    wasTense = wasStuck = false;
+    shownStep = -1;
     which.replaceChildren(padDots(cur().col));
     app.textContent = cur().app;
     paint(0);
@@ -180,6 +196,7 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
         jamUntil = t + KINK_MS;
         paint(0);
         balloon.classList.add('jam');
+        wasStuck = true;
         pulse(balloon, 'shake');
         bad(balloon, 'WRONG PUMP');
         return;
@@ -200,7 +217,7 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
       if (state === 'gap' && t >= nextAt) arm();
       if (state === 'ready') {
         const stuck = kinked(t);
-        balloon.classList.toggle('jam', stuck);
+        if (stuck !== wasStuck) balloon.classList.toggle('jam', (wasStuck = stuck));
         if (held && !stuck) pump(t);
       }
       if (state !== 'pump') return;

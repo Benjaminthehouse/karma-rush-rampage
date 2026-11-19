@@ -7,7 +7,9 @@
 .g-upvote .cloud.c2 { left: 24%; animation-duration: 5s; }
 @keyframes g-upvote-drift { from { transform: translateX(-1.2em); } 50% { transform: translateX(1.2em); } to { transform: translateX(-1.2em); } }
 /* The post rides from the bottom of the shaft (climb 0) to just under the banner (climb 1). */
-.g-upvote .lift { --climb: 0; position: absolute; left: 0.9em; right: 0.9em; bottom: calc(1.4em + var(--climb) * (100% - 10.4em)); transition: bottom 0.12s cubic-bezier(0.3, 1.7, 0.5, 1); display: flex; flex-direction: column; align-items: flex-start; gap: 0.45em; }
+/* The rail is as tall as the shaft, so a percentage of its own height is a percentage of the climb. */
+.g-upvote .rail { --climb: 0; position: absolute; inset: 0; pointer-events: none; transform: translateY(calc(var(--climb) * -1 * (100% - 10.4em))); transition: transform 0.12s cubic-bezier(0.3, 1.7, 0.5, 1); will-change: transform; }
+.g-upvote .lift { position: absolute; left: 0.9em; right: 0.9em; bottom: 1.4em; display: flex; flex-direction: column; align-items: flex-start; gap: 0.45em; }
 .g-upvote .lift .rx-post { width: 100%; min-height: 6em; box-shadow: 0 -0.22em 0 0 #0b1020, 0 0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, 0 0 0 0.5em var(--c), 0.5em 0.9em 0 0 #0b102044; }
 .g-upvote .tag { display: flex; align-items: center; gap: 0.5em; background: #0b1020; color: var(--gold); font-size: 0.9em; padding: 0.15em 0.5em; }
 .g-upvote .puff { position: absolute; left: 50%; bottom: -0.6em; width: 0; height: 0; }

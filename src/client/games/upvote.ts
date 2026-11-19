@@ -59,7 +59,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   const card = postCard({ sub: '', title: '', big: true, avatar: op.el });
   const puff = h('i', 'puff');
   lift.append(tag, card.el, puff);
-  shaft.append(lift);
+  const rail = h('div', 'rail');
+  rail.append(lift);
+  shaft.append(rail);
   const tally = h('div', 'tally');
   wrap.append(goal, shaft, tally);
   root.append(wrap);
@@ -78,10 +80,11 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     }
     const climb = votes / full;
     card.votes(p.base + votes * 12);
-    lift.style.setProperty('--climb', String(climb));
+    rail.style.setProperty('--climb', String(climb));
     rank.textContent = `#${Math.max(1, Math.round(99 - climb * 98))} in HOT`;
     if (climb > 0.6) op.mood('happy');
-    tally.textContent = fronts ? `${fronts} on the front page` : 'Pump it to the top!';
+    const line = fronts ? `${fronts} on the front page` : 'Pump it to the top!';
+    if (tally.textContent !== line) tally.textContent = line;
   }
   show();
 

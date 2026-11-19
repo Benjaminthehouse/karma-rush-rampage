@@ -201,6 +201,7 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
     if (++steps % BEAT === 0) beat(t);
   }
 
+  let shownMoney = -1;
   function render(t: number) {
     const i = pumpIndex(t);
     if (i !== shown) {
@@ -222,9 +223,12 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
       else if (s === 'top') setSprite(c.sign, 'bang', { px: 0.4 });
       else setSprite(c.sign, 'up', s === 'up' ? { tone: COLOR[b], px: 0.28 } : { tone: 'grey', flipY: true, px: 0.28 });
     });
-    cash.textContent = `$${(money * 40).toLocaleString('en-US')}`;
-    flight.style.setProperty('--p', String(score() / 1000));
-    wrap.classList.toggle('landed', score() === 1000);
+    if (money !== shownMoney) {
+      shownMoney = money;
+      cash.textContent = `$${(money * 40).toLocaleString('en-US')}`;
+      flight.style.setProperty('--p', (score() / 1000).toFixed(2));
+      wrap.classList.toggle('landed', score() === 1000);
+    }
   }
   cols.forEach(draw);
   render(0);

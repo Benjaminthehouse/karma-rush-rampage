@@ -3,9 +3,9 @@
 .g-hypeballoon .post b { font-weight: 900; font-size: 1.15em; line-height: 1.1; white-space: nowrap; }
 .g-hypeballoon .tag { font-weight: 900; font-size: 0.85em; line-height: 1.2; padding: 0.2em 0.9em; border-radius: 99em; background: var(--panel-2); color: var(--dim); white-space: nowrap; }
 .g-hypeballoon .tag.s1 { background: var(--gold); color: #071022; }
-.g-hypeballoon .tag.s2 { background: var(--purple); color: #fff; box-shadow: 0 0 1em var(--purple); animation: g-hypeballoon-alarm 0.16s steps(2) infinite; }
+.g-hypeballoon .tag.s2 { background: var(--purple); color: #fff; animation: g-hypeballoon-alarm 0.16s steps(2) infinite; }
 .g-hypeballoon .tag.bust { background: var(--red); color: #071022; }
-@keyframes g-hypeballoon-alarm { 50% { filter: brightness(1.6); } }
+@keyframes g-hypeballoon-alarm { 50% { opacity: 0.6; } }
 
 /* As big as the stage allows: 15em on a phone, a little less on a short desktop stage. */
 .g-hypeballoon .sky { position: relative; flex: 0 1 15em; min-height: 0; aspect-ratio: 1; }
@@ -13,19 +13,22 @@
 .g-hypeballoon .sky.empty::before { opacity: 0; }
 .g-hypeballoon .line { position: absolute; z-index: 1; inset: 0; border: 0.2em dashed var(--ink); border-radius: 50%; }
 .g-hypeballoon .line span { position: absolute; left: 50%; top: -0.75em; transform: translateX(-50%); padding: 0 0.5em; background: var(--panel); font-weight: 900; font-size: 0.7em; line-height: 1.3; letter-spacing: 0.1em; white-space: nowrap; }
-.g-hypeballoon .balloon { position: absolute; inset: 0; margin: auto; width: calc(34% + 66% * var(--f)); height: calc(34% + 66% * var(--f)); border-radius: 50%; background: radial-gradient(circle at 30% 26%, #fffb 0 7%, #fff0 20%), var(--c); box-shadow: inset -0.5em -0.7em 0 #0003; color: #071022; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.g-hypeballoon .balloon::after { content: ''; position: absolute; left: 50%; top: 100%; margin: -0.15em 0 0 -0.4em; border: 0.4em solid #0000; border-top: 0; border-bottom: 0.55em solid var(--cd); }
-.g-hypeballoon .balloon b { font-size: calc(0.95em + 1.5em * var(--f)); font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
-.g-hypeballoon .balloon .cap { font-size: calc(0.68em + 0.3em * var(--f)); font-weight: 800; line-height: 1.2; }
+.g-hypeballoon .balloon { position: absolute; inset: 0; color: #071022; display: flex; align-items: center; justify-content: center; }
+/* The rubber is drawn once at full size and scaled; the text scales with it. Nothing is resized while pumping. */
+.g-hypeballoon .skin { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 30% 26%, #fffb 0 7%, #fff0 20%), var(--c); box-shadow: inset -0.5em -0.7em 0 #0003; transform: scale(0.34); will-change: transform; }
+.g-hypeballoon .skin::after { content: ''; position: absolute; left: 50%; top: 100%; margin: -0.15em 0 0 -0.4em; border: 0.4em solid #0000; border-top: 0; border-bottom: 0.55em solid var(--cd); }
+.g-hypeballoon .text { position: relative; display: flex; flex-direction: column; align-items: center; will-change: transform; }
+.g-hypeballoon .balloon b { font-size: 1.05em; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+.g-hypeballoon .balloon .cap { font-size: 0.68em; font-weight: 800; line-height: 1.2; }
 /* Left, middle or right pad: white on any balloon colour. */
-.g-hypeballoon .which { display: flex; margin-top: 0.3em; font-size: calc(1em + 0.8em * var(--f)); line-height: 1; }
+.g-hypeballoon .which { display: flex; margin-top: 0.3em; font-size: 0.85em; line-height: 1; }
 .g-hypeballoon .which .pad-dots i.on { background: #fff; }
 /* Kinked hose: dimmed, but the colour still reads. */
-.g-hypeballoon .balloon.jam { filter: brightness(0.55) saturate(0.75); }
-.g-hypeballoon .balloon.tense { animation: g-hypeballoon-tremble 0.07s linear infinite; filter: brightness(1.2); }
+.g-hypeballoon .balloon.jam { opacity: 0.55; }
+.g-hypeballoon .balloon.tense { animation: g-hypeballoon-tremble 0.07s linear infinite; }
 .g-hypeballoon .balloon.fly { animation: g-hypeballoon-fly 0.2s ease-in forwards; }
 .g-hypeballoon .balloon.flop { animation: g-hypeballoon-flop 0.2s ease-in forwards; }
-.g-hypeballoon .balloon.fly > *, .g-hypeballoon .balloon.flop > * { visibility: hidden; }
+.g-hypeballoon .balloon.fly .text, .g-hypeballoon .balloon.flop .text { visibility: hidden; }
 .g-hypeballoon .balloon.popped { display: none; }
 .g-hypeballoon .boom { position: absolute; left: 50%; top: 50%; display: none; font-size: 3.6em; font-weight: 900; font-style: italic; line-height: 1; letter-spacing: 0.03em; white-space: nowrap; color: var(--ink); text-shadow: 0.07em 0.07em 0 var(--red); transform: translate(-50%, -50%) rotate(-7deg); }
 .g-hypeballoon .sky.popped .boom { display: block; animation: g-hypeballoon-boom 0.22s ease-out; }
@@ -34,4 +37,4 @@
 @keyframes g-hypeballoon-flop { to { transform: translateY(3em) scale(0.15); opacity: 0; } }
 @keyframes g-hypeballoon-boom { from { transform: translate(-50%, -50%) rotate(-7deg) scale(0.3); opacity: 0; } 60% { transform: translate(-50%, -50%) rotate(-7deg) scale(1.15); opacity: 1; } }
 
-.g-hypeballoon .meter i { background: var(--gold); }
+.g-hypeballoon .meter i { background: var(--gold); width: 100% !important; transform: scaleX(0); transform-origin: left center; }

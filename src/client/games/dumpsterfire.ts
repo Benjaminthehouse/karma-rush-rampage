@@ -127,14 +127,32 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
 
   const over = (i: number) => heat[i] >= LINE;
 
+  // Drawn with transforms and only when something changed: resizing three
+  // flames and a meter every frame made phones stutter.
+  const shown = { size: ['', '', ''], over: [false, false, false], fill: '', secs: '' };
   function draw() {
     lanes.forEach((l, i) => {
       // 0 when out; a fire one spray from out is still a third of the way up.
-      l.pit.style.setProperty('--size', over(i) ? ((heat[i] - 30) / 70).toFixed(3) : '0');
-      l.el.classList.toggle('over', over(i));
+      const size = over(i) ? ((heat[i] - 30) / 70).toFixed(2) : '0';
+      if (size !== shown.size[i]) {
+        shown.size[i] = size;
+        l.flame.style.transform = `scale(${size})`;
+      }
+      if (over(i) !== shown.over[i]) {
+        shown.over[i] = over(i);
+        l.el.classList.toggle('over', over(i));
+      }
     });
-    fill.style.width = `${Math.min(100, (civilMs / par) * 100)}%`;
-    secs.textContent = `${(civilMs / 1000).toFixed(1)}s`;
+    const fillNow = Math.min(1, civilMs / par).toFixed(3);
+    if (fillNow !== shown.fill) {
+      shown.fill = fillNow;
+      fill.style.transform = `scaleX(${fillNow})`;
+    }
+    const secsNow = `${(civilMs / 1000).toFixed(1)}s`;
+    if (secsNow !== shown.secs) {
+      shown.secs = secsNow;
+      secs.textContent = secsNow;
+    }
   }
   draw();
 
@@ -144,6 +162,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       aim = b;
       if (mod.el.parentElement !== l.perch) l.perch.append(mod.el);
       pulse(mod.el, 'bump');
+      // The water reaches down to the top of the flame as it stands right now.
+      l.pit.style.setProperty('--size', over(b) ? ((heat[b] - 30) / 70).toFixed(2) : '0');
       pulse(l.jet, 'on');
       if (over(b)) {
         heat[b] -= KNOCK;

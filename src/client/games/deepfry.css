@@ -12,7 +12,7 @@
   filter: saturate(calc(0.7 + var(--sat) * 3.3)) hue-rotate(calc(var(--sat) * -14deg)) contrast(calc(1 + var(--crunch) * 0.8)) brightness(calc(1 + var(--glow) * 0.16));
   /* GLOW also burns two hard halos into the frame. */
   box-shadow: 0 0 0 0.24em #0b1020, 0 0 0 calc(0.24em + var(--glow) * 0.3em) #ff8a3d, 0 0 0 calc(0.24em + var(--glow) * 0.6em) #ffcf3f, 0.6em 0.75em 0 0 #0b102088;
-  animation: g-deepfry-jitter 0.09s steps(2) infinite alternate;
+  animation: g-deepfry-jitter 0.09s steps(2) infinite alternate; will-change: transform;
 }
 @keyframes g-deepfry-jitter { to { transform: translate(calc(var(--heat) * 0.24em), calc(var(--heat) * -0.18em)) rotate(calc(var(--heat) * 1.4deg)); } }
 .g-deepfry .h0 { --sky: #7f93bd; }
@@ -20,14 +20,14 @@
 .g-deepfry .h2 { --sky: #b09bc4; }
 .g-deepfry .h3 { --sky: #c9b48a; }
 /* COLOUR: posterised orange rings that burn in on top of the saturation. */
-.g-deepfry .meme::before { content: ''; position: absolute; inset: 0; z-index: 1; background: radial-gradient(circle at 50% 50%, #ffe45c 0 24%, #ffa200 24% 46%, #ff5a00 46% 70%, #c81400 70%); mix-blend-mode: overlay; opacity: var(--sat); }
+.g-deepfry .meme::before { content: ''; position: absolute; inset: 0; z-index: 1; background: radial-gradient(circle at 50% 50%, #ffe45c 0 24%, #ffa200 24% 46%, #ff5a00 46% 70%, #c81400 70%); opacity: calc(var(--sat) * 0.42); }
 /* CRUNCH: three block patterns that never line up, like compression artefacts. */
 .g-deepfry .grain {
-  position: absolute; inset: 0; z-index: 3; mix-blend-mode: overlay; opacity: calc(var(--crunch) * 0.62);
+  position: absolute; inset: 0; z-index: 3; opacity: calc(var(--crunch) * 0.26);
   background: repeating-conic-gradient(#000 0 25%, #fff 0 50%) 0 0 / 0.42em 0.42em, repeating-conic-gradient(#fff 0 25%, #0000 0 50%) 0.07em 0.11em / 0.56em 0.98em, repeating-conic-gradient(#000 0 25%, #0000 0 50%) 0.2em 0.05em / 1.4em 0.84em;
 }
 .g-deepfry .cap { position: relative; z-index: 4; font-size: 1.25em; line-height: 1.05; letter-spacing: 0.02em; text-align: center; color: #fff; -webkit-text-stroke: 0.26em #0b1020; paint-order: stroke fill; }
-.g-deepfry .face { position: relative; z-index: 2; flex: none; font-size: min(7.2cqh, 8cqw); filter: drop-shadow(0.16em 0.2em 0 #0b102066); }
+.g-deepfry .face { position: relative; z-index: 2; flex: none; font-size: min(7.2cqh, 8cqw); }
 .g-deepfry .face .person { display: block; }
 /* GLOW: a hard-edged flare and a streak grow out of each eye. */
 .g-deepfry .flare { position: absolute; top: 53%; width: 0; height: 0; }

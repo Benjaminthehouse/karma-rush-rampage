@@ -9,7 +9,7 @@
 .g-anypercent .split.ahead { background: var(--gold); }
 .g-anypercent .map { grid-column: 1 / -1; position: relative; height: 0.9em; background: #2c3763; overflow: hidden; }
 .g-anypercent .map::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 0.9em; background: conic-gradient(#fff 25%, #0b1020 0 50%, #fff 0 75%, #0b1020 0) 0 0 / 0.45em 0.45em; }
-.g-anypercent .map i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--gold); transition: width 0.09s linear; }
+.g-anypercent .map i { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: var(--gold); transform: scaleX(0); transform-origin: left center; transition: transform 0.09s linear; }
 .g-anypercent .map b { position: absolute; top: 0; bottom: 0; width: 0.3em; margin-left: -0.15em; background: #fff; z-index: 1; }
 
 .g-anypercent .scene { position: absolute; inset: 0; overflow: hidden; container-type: size; --floor: 22cqh; }

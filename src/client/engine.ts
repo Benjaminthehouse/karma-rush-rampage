@@ -96,7 +96,8 @@ export function runMatch(o: {
   let lastPing = 0;
   let shownScore = -1;
   const raceEl = $('race');
-  let racers: { name: string; you: boolean; el: HTMLElement; curve: number }[] = [];
+  let racers: { name: string; you: boolean; el: HTMLElement; curve: number; at: number }[] = [];
+  let raceWidth = 0;
 
   /** The race track: one marker per player, sliding from START to 1,000 as the round goes. */
   function lineUp() {
@@ -105,10 +106,12 @@ export function runMatch(o: {
       const el = h('i', n.you ? 'you' : '', n.you ? 'YOU' : n.name.replace(/^u\//, '').slice(0, 1).toUpperCase());
       el.title = n.name;
       // Ghost runs replay as a curve to their recorded score: some start fast, some finish strong.
-      return { ...n, el, curve: 0.75 + (hashStr(n.name) % 60) / 100 };
+      return { ...n, el, curve: 0.75 + (hashStr(n.name) % 60) / 100, at: 0 };
     });
     raceEl.replaceChildren(h('b', 'goal', 'GOAL'), ...racers.map((r) => r.el).reverse());
-    racers.forEach((r) => (r.el.style.left = '0%'));
+    racers.forEach((r) => (r.el.style.transform = ''));
+    // Markers slide with a transform, in whole pixels, so the track never needs laying out again.
+    raceWidth = raceEl.clientWidth;
   }
 
   function race(ph: Phase, local: number, mine: number) {
@@ -122,7 +125,10 @@ export function runMatch(o: {
         // A recorded run has this round's score already; a live player only has their latest ping.
         v = known !== undefined ? known * frac ** r.curve : (rv?.live ?? 0);
       }
-      r.el.style.left = `${Math.max(0, Math.min(100, v / 10))}%`;
+      const at = Math.round((Math.max(0, Math.min(1000, v)) / 1000) * raceWidth);
+      if (at === r.at) continue;
+      r.at = at;
+      r.el.style.transform = `translateX(${at}px)`;
     }
   }
   const scoreEl = $('hud-score');

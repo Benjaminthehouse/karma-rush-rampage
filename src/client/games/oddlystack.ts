@@ -101,13 +101,18 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     const u = (Math.max(0, t - from) / sweep(landed)) % 2;
     return cur().side * R * (1 - 2 * (u < 1 ? u : 2 - u));
   }
-  const place = (t: number) => (mover.style.left = `${50 - W / 2 + offsetAt(t)}%`);
+  // The slab is parked centred and slides by a share of its own width: no layout while it moves.
+  let moverAt = 0;
+  const place = (t: number) => {
+    moverAt = offsetAt(t);
+    mover.style.transform = `translateX(${((moverAt / W) * 100).toFixed(2)}%)`;
+  };
 
   function show() {
     dress(mover, cur().c, 'mover');
     streak.textContent = `FLUSH ×${chain}`;
     streak.classList.toggle('on', chain > 1);
-    fill.style.width = `${Math.min(100, (points / par) * 100)}%`;
+    fill.style.transform = `scaleX(${Math.min(1, points / par).toFixed(3)})`;
   }
   show();
   place(0);
@@ -131,7 +136,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         // Barely on the tower: it tips off the side.
         chain = 0;
         dress(lost, c, 'lost');
-        lost.style.left = mover.style.left;
+        lost.style.left = `${50 - W / 2 + moverAt}%`;
         pulse(lost, off < 0 ? 'g-oddlystack-tipl' : 'g-oddlystack-tipr');
         fan.mood('shock');
         reply.text.textContent = ugh();

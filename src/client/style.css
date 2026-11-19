@@ -380,3 +380,13 @@ body.fx-low #stage *, body.fx-low #stage *::before, body.fx-low #stage *::after 
 .fx-layer > .pop-text { will-change: transform, opacity; }
 #race i { transition: none; }
 body { background: var(--bg); }
+
+/* Repaint as little as possible: no blurred glows that change every frame, markers that slide on the
+   compositor, and each strip of the play screen boxed off so a change in one never repaints another. */
+#combo, #hud-score.live { text-shadow: none; }
+#race i { left: 0; will-change: transform; }
+#race i.you { box-shadow: none; }
+#stage { contain: layout paint style; }
+#hud, #race, #timebar { contain: layout style; }
+#pads .pad { contain: layout style; }
+.fx-layer > .spark { animation: none; }

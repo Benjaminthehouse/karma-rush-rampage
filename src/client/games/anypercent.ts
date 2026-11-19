@@ -147,6 +147,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     if (cls) pulse(runner, cls);
   }
 
+  let shownTick = -1;
+  let shownWr = '';
+  let shownPace = '';
   function draw() {
     strip.style.transform = `translateX(calc(var(--tile) * ${ME - pos}))`;
     clouds.style.transform = `translateX(${-((pos * 2.5) % 100) / 2}%)`;
@@ -157,7 +160,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     const hi = pos - ME + VIEW + 4;
     for (const s of traps) s.el.style.display = s.at > lo && s.at - REACH < hi ? '' : 'none';
     goal.style.display = finish > lo && finish < hi ? '' : 'none';
-    mapMe.style.width = `${Math.min(100, (pos / finish) * 100)}%`;
+    mapMe.style.transform = `scaleX(${Math.min(1, pos / finish).toFixed(3)})`;
     setSprite(legs, foot < 0 ? 'anypercent-stand' : `anypercent-step${foot}`, { px: PX });
     scene.classList.toggle('go', !!ahead(pos));
   }
@@ -232,19 +235,26 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     },
     tick(t) {
       const now = wonAt < 0 ? Math.min(t, duration) : wonAt;
-      clock.textContent = stamp(now);
-      split.textContent = signed(behind(now));
-      split.classList.toggle('ahead', behind(now) < 0);
+      // The clock reads in hundredths but only needs redrawing twenty times a second.
+      const tickNo = wonAt < 0 ? Math.floor(now / 50) : -2;
+      if (tickNo !== shownTick) {
+        shownTick = tickNo;
+        clock.textContent = stamp(now);
+        split.textContent = signed(behind(now));
+        split.classList.toggle('ahead', behind(now) < 0);
+      }
       // The flag holds world-record pace: it reaches the finish line on the bell.
       const wr = Math.min(1, t / duration);
-      mapWr.style.left = `${wr * 100}%`;
+      const wrAt = (wr * 100).toFixed(1);
+      if (wrAt !== shownWr) mapWr.style.left = `${(shownWr = wrAt)}%`;
       const gap = wr * finish - pos + ME; // its tile, counted from the left edge of the scene
       ghost.style.display = wonAt < 0 && gap > 0.5 && gap < VIEW - 3.5 ? '' : 'none';
       ghost.style.left = `calc(var(--tile) * ${(gap + 0.5).toFixed(2)})`;
       runner.classList.toggle('down', t < downUntil);
       heat *= Math.exp((last - t) / 400);
       last = t;
-      scene.style.setProperty('--pace', heat.toFixed(2));
+      const pace = heat.toFixed(1);
+      if (pace !== shownPace) scene.style.setProperty('--pace', (shownPace = pace));
     },
     score: () => ratio(pos, finish),
     hint(t) {

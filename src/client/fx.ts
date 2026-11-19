@@ -29,6 +29,7 @@ export type FxLayer = ReturnType<typeof createFx>;
 export function createFx(arena: HTMLElement, layer: HTMLElement) {
   const full = () => settings.get('fx');
   let lastFlash = -1000;
+  const lite = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 
   function point(at: Element | null): { x: number; y: number } {
     const base = layer.getBoundingClientRect();
@@ -44,22 +45,30 @@ export function createFx(arena: HTMLElement, layer: HTMLElement) {
     el.addEventListener('animationend', () => el.remove(), { once: true });
     layer.append(el);
     // Safety net: the layer never accumulates if an animation is skipped.
-    if (layer.childElementCount > 50) layer.firstElementChild?.remove();
+    if (layer.childElementCount > (lite ? 24 : 50)) layer.firstElementChild?.remove();
     return el;
   }
 
   return {
     burst(at: Element | null, color: FxColor = 'gold', count = 10) {
       const { x, y } = point(at);
-      const n = full() ? count : Math.min(4, count);
+      // Every spark is its own compositor layer, so a mashing player on a phone gets fewer of them.
+      const n = Math.min(full() ? (lite ? 6 : 14) : 4, count);
       for (let i = 0; i < n; i++) {
         const el = spawn('spark', x, y);
         const ang = Math.random() * Math.PI * 2;
         const dist = 30 + Math.random() * 70;
-        el.style.setProperty('--dx', `${Math.cos(ang) * dist}px`);
-        el.style.setProperty('--dy', `${Math.sin(ang) * dist - 20}px`);
         el.style.background = HEX[color];
-        el.style.animationDuration = `${380 + Math.random() * 260}ms`;
+        // Literal keyframes run on the compositor; a CSS animation fed by custom properties
+        // would restyle every spark on every frame.
+        const fly = el.animate(
+          [
+            { transform: 'translate(0, 0) rotate(0deg) scale(1)', opacity: 1 },
+            { transform: `translate(${Math.cos(ang) * dist}px, ${Math.sin(ang) * dist - 20}px) rotate(200deg) scale(0)`, opacity: 0 },
+          ],
+          { duration: 380 + Math.random() * 260, easing: 'ease-out', fill: 'forwards' },
+        );
+        fly.onfinish = () => el.remove();
       }
     },
     pop(at: Element | null, text: string, color: FxColor = 'gold') {
