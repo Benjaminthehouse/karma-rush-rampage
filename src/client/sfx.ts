@@ -41,7 +41,7 @@ type Tone = { f: number; dur: number; type?: OscillatorType; vol?: number; to?: 
 function tone({ f, dur, type = 'square', vol = 0.08, to, at = 0, attack = 0.004, music = false }: Tone) {
   const a = audio();
   const bus = music ? beat : out;
-  if (!a || !bus) return;
+  if (!a || !bus || a.state !== 'running') return; // a suspended context would only hoard nodes
   const t0 = a.currentTime + at;
   const o = a.createOscillator();
   const g = a.createGain();
@@ -62,7 +62,7 @@ type Noise = { dur: number; vol?: number; type?: BiquadFilterType; f?: number; t
 function noise({ dur, vol = 0.08, type = 'highpass', f = 2000, to, at = 0, attack = 0.002, q = 0.8, music = false }: Noise) {
   const a = audio();
   const bus = music ? beat : out;
-  if (!a || !bus || !noiseBuf) return;
+  if (!a || !bus || !noiseBuf || a.state !== 'running') return;
   const t0 = a.currentTime + at;
   const src = a.createBufferSource();
   src.buffer = noiseBuf;
@@ -193,15 +193,43 @@ const NAMED: Record<string, () => void> = {
 // iPhones mute Web Audio while the ring switch is on silent, but not media
 // playback. A looping silent clip moves the page into the media category, so the
 // game is heard either way. Started once, from a gesture.
-let unmuted = false;
+// The clip must have real length: a zero-sample loop makes the media stack spin. It is
+// tried at most twice, so a web view that refuses media never piles up players.
+let unmuteTries = 0;
+let clip: HTMLAudioElement | null = null;
+function silence(): string {
+  const n = 8000; // one second of 8-bit mono at 8 kHz
+  const bytes = new Uint8Array(44 + n).fill(128);
+  const head = new DataView(bytes.buffer);
+  const put = (at: number, text: string) => [...text].forEach((ch, i) => head.setUint8(at + i, ch.charCodeAt(0)));
+  put(0, 'RIFF');
+  head.setUint32(4, 36 + n, true);
+  put(8, 'WAVEfmt ');
+  head.setUint32(16, 16, true);
+  head.setUint16(20, 1, true);
+  head.setUint16(22, 1, true);
+  head.setUint32(24, 8000, true);
+  head.setUint32(28, 8000, true);
+  head.setUint16(32, 1, true);
+  head.setUint16(34, 8, true);
+  put(36, 'data');
+  head.setUint32(40, n, true);
+  let text = '';
+  bytes.forEach((v) => (text += String.fromCharCode(v)));
+  return `data:audio/wav;base64,${btoa(text)}`;
+}
 function unmuteIos() {
-  if (unmuted || !/iPad|iPhone|iPod/.test(navigator.userAgent) && !(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return;
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (!ios || unmuteTries >= 2) return;
+  unmuteTries++;
   try {
-    const clip = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
-    clip.loop = true;
-    clip.setAttribute('playsinline', '');
+    if (!clip) {
+      clip = new Audio(silence());
+      clip.loop = true;
+      clip.setAttribute('playsinline', '');
+    }
     void clip.play().then(
-      () => (unmuted = true),
+      () => (unmuteTries = 2),
       () => undefined
     );
   } catch {

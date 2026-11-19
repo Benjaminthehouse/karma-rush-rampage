@@ -9,7 +9,17 @@ const reducedMotion = (() => {
   }
 })();
 
-const state: Record<Key, boolean> = { sound: true, voice: true, fx: !reducedMotion };
+// The speech voice stalls iPhone web views for a moment on every word, so there it starts
+// off (the VOICE toggle turns it on); the announcer's synthesised hits play either way.
+const ios = (() => {
+  try {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  } catch {
+    return false;
+  }
+})();
+
+const state: Record<Key, boolean> = { sound: true, voice: !ios, fx: !reducedMotion };
 
 for (const k of Object.keys(state) as Key[]) {
   try {

@@ -5,6 +5,7 @@ import { settings } from './settings';
 const synth: SpeechSynthesis | null = typeof speechSynthesis === 'undefined' ? null : speechSynthesis;
 let chosen: SpeechSynthesisVoice | null = null;
 let unlocked = false;
+let tries = 0;
 
 function choose() {
   if (!synth) return;
@@ -25,7 +26,10 @@ export const voice = {
   available: () => !!synth,
   /** Call from a user gesture once; mobile browsers refuse speech before that. */
   unlock() {
-    if (!synth || unlocked) return;
+    // Tried twice at most: a web view that never starts the utterance must not have one
+    // queued on every tap, which jams the speech engine and freezes the page.
+    if (!synth || unlocked || tries >= 2) return;
+    tries++;
     try {
       const u = new SpeechSynthesisUtterance(' ');
       u.volume = 0;
@@ -39,7 +43,7 @@ export const voice = {
   say(text: string, o: { rate?: number; pitch?: number } = {}) {
     if (!synth || !settings.get('voice') || !settings.get('sound')) return;
     try {
-      synth.cancel();
+      if (synth.speaking || synth.pending) synth.cancel();
       // Lowercase so engines read words instead of spelling out capitals.
       const u = new SpeechSynthesisUtterance(text.toLowerCase().replace(/’/g, "'"));
       if (chosen) u.voice = chosen;
