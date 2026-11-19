@@ -44,7 +44,7 @@ export function createFx(arena: HTMLElement, layer: HTMLElement) {
     el.addEventListener('animationend', () => el.remove(), { once: true });
     layer.append(el);
     // Safety net: the layer never accumulates if an animation is skipped.
-    if (layer.childElementCount > 140) layer.firstElementChild?.remove();
+    if (layer.childElementCount > 50) layer.firstElementChild?.remove();
     return el;
   }
 

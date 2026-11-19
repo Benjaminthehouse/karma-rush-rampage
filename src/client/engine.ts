@@ -131,6 +131,9 @@ export function runMatch(o: {
   const done = new Promise<number[]>((r) => (finish = r));
 
   const total = () => scores.reduce((a, b) => a + b, 0);
+  // Scaled, not resized: a transform never forces the page to lay out again.
+  const setBar = (frac: number) => (bar.style.transform = `scaleX(${Math.max(0, Math.min(1, frac))})`);
+  let lastHud = -1000;
 
   function hud() {
     pips.replaceChildren(
@@ -165,7 +168,7 @@ export function runMatch(o: {
     stage.replaceChildren();
     stage.className = '';
     fx.clear();
-    bar.style.width = '100%';
+    setBar(1);
     bar.parentElement!.classList.remove('rush');
     setCombo(0);
     $('hud-title').textContent = meta.title;
@@ -226,6 +229,7 @@ export function runMatch(o: {
     down.fill(false);
     rushing = false;
     lastPing = 0;
+    lastHud = -1000;
     lineUp();
     sfx.go();
     fx.flash('white');
@@ -245,7 +249,7 @@ export function runMatch(o: {
         good(at, text) {
           setCombo(combo + 1);
           sfx.good(combo);
-          fx.burst(at ?? null, 'gold', 6);
+          fx.burst(at ?? null, 'gold', 3);
           fx.lights('green');
           if (text) fx.pop(at ?? null, text, 'gold');
           if (combo % 10 === 0 || combo === 5) {
@@ -294,7 +298,7 @@ export function runMatch(o: {
     arena.classList.remove('playing');
     sfx.roundEnd();
     stage.className = 'frozen';
-    bar.style.width = '0%';
+    setBar(0);
     bar.parentElement!.classList.remove('rush');
     o.onRound?.([...scores]);
   }
@@ -385,7 +389,7 @@ export function runMatch(o: {
     }
     if (ph.type === 'play') {
       const left = ph.end - t;
-      bar.style.width = `${(left / (ph.end - ph.start)) * 100}%`;
+      setBar(left / (ph.end - ph.start));
       if (!rushing && left < 2000) {
         rushing = true;
         music.rush(true);
@@ -395,7 +399,9 @@ export function runMatch(o: {
         inst?.tick(local);
         if (inst && bot && o.autoplay) bot(inst, local, o.autoplay.press, o.autoplay.release);
         // The score in the corner climbs live, so the round total is never a surprise.
-        if (inst) {
+        // Ten times a second is plenty for the corner score and the race track.
+        if (inst && local - lastHud >= 100) {
+          lastHud = local;
           const mine = clamp1000(inst.score());
           race(ph, local, mine);
           if (o.onLive && local - lastPing >= 1000 && mine > 0) {

@@ -357,3 +357,26 @@ html, body { overscroll-behavior: none; -webkit-touch-callout: none; }
 
 /* With FLASH off (or the OS asking for less motion), nothing on the stage blinks or loops forever. */
 body.fx-low #stage *, body.fx-low #stage *::before, body.fx-low #stage *::after { animation-iteration-count: 1 !important; }
+
+/* ---------- performance: animate only transform and opacity ----------
+   Spinning gradients, pulsing shadows and filters repaint large areas every
+   frame and made phones stutter. Everything below is compositor-only. */
+#arena, #arena.hit, #arena.playing { animation: none !important; box-shadow: none; background: linear-gradient(135deg, var(--red), var(--gold), var(--green), var(--blue), var(--purple)); }
+#arena.shake { animation: shake 0.22s !important; }
+#arena::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 6; box-shadow: inset 0 0 0 0.3rem var(--hit); opacity: 0; }
+#arena.hit::after { animation: hit-fade 0.28s ease-out; }
+@keyframes hit-fade { from { opacity: 1; } to { opacity: 0; } }
+#card.card-intro::before, #card.card-count::before { background: repeating-conic-gradient(var(--r2, #1c6fe0) 0deg 12deg, #0000 12deg 24deg); animation: turn 16s linear infinite; will-change: transform; }
+@keyframes turn { to { transform: rotate(360deg); } }
+#timebar i { width: 100% !important; transform-origin: left center; will-change: transform; }
+#timebar.rush { animation: none; }
+#timebar.rush i { background: var(--red); }
+#pads .pad, #pads .pad.down, #pads .pad.idle { filter: none; transition: transform 0.04s; }
+#pads .pad.idle { opacity: 0.45; }
+#pads .pad.glow { animation: none; }
+#stage.frozen { filter: none; opacity: 0.35; }
+.ui .logo, .ui .play-btn, .ui .rgb i { animation: none; }
+.fx-layer > .spark { box-shadow: none; will-change: transform, opacity; }
+.fx-layer > .pop-text { will-change: transform, opacity; }
+#race i { transition: none; }
+body { background: var(--bg); }
