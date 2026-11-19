@@ -7,6 +7,23 @@ and seeded from the date. An announcer shouts each command one word at a time, t
 round runs for 6-8 seconds, and the score counts up over confetti. You get one scored
 run, a spot on the day's leaderboard and a streak.
 
+## Play it on Reddit (first time)
+
+You need Node.js 20 or newer and a Reddit account.
+
+```bash
+git clone https://github.com/Benjaminthehouse/karma-rush-rampage.git
+cd karma-rush-rampage
+npm install
+npx devvit login       # approve in the browser (or: npx devvit login --copy-paste)
+npx devvit playtest    # builds, uploads and installs into a test subreddit it creates
+```
+
+Open the link it prints, open the post, press PLAY TODAY’S RUSH!. If the app name in
+`devvit.json` is taken, change `"name"` and run playtest again.
+
+## How to play
+
 Red, green and blue are the only inputs. Tap the pads, or on a keyboard:
 
 | Pad | Keys |
@@ -159,4 +176,3 @@ without written approval, so the game is not called "Reddit" anything.
   phones, not real ones.
 - The look is a placeholder: two games (Upvote Crisis, Shameless Plug) and a few
   later ones use the pixel kit, the rest an earlier flat style. A design pass is planned.
-- The folder is still called `karma-mash`; the app itself is Karma Rush Rampage.
