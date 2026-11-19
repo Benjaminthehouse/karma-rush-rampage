@@ -32,6 +32,12 @@ function label(n: number): string {
 }
 /** Rounds to what the label can show, so two posts never look tied. */
 const snap = (v: number) => (v < 1000 ? Math.round(v) : Math.round(v / 100) * 100);
+/** Pixel digits one stroke apart. No two posts are ever separated only by telling such a pair apart. */
+const LOOKALIKES = ['56', '68', '89', '59', '39', '08'];
+function lookalike(a: string, b: string): boolean {
+  const i = a.length === b.length ? [...a].findIndex((ch, k) => ch !== b[k]) : -1;
+  return i >= 0 && LOOKALIKES.includes([a[i], b[i]].sort().join(''));
+}
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   // A flawless set is worth 5 and a quick reader clears five of them. The par stays put:
@@ -48,7 +54,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       // Later rounds huddle around 1k and 10k, where 999 meets 1.0k.
       const mid = sunk ? 1.3 : rng() < level * 0.15 ? pick(rng, [3, 4]) : 2 + rng() * 2.2;
       vals = BTNS.map(() => snap(10 ** Math.min(4.95, mid + spread * (rng() * 2 - 1))));
-    } while (new Set(vals).size < 3);
+    } while (new Set(vals).size < 3 || vals.some((v, i) => lookalike(label(v), label(vals[(i + 1) % 3]))));
     if (sunk) {
       const keep = randBtn(rng);
       vals = vals.map((v, i) => (i === keep ? v : -v));

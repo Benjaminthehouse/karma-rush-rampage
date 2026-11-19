@@ -6,7 +6,7 @@ const SALT = ['run dead?', 'reset', 'F', 'choke', 'RIP splits', 'unlucky', 'back
 const GG = ['GG', 'GG WR', 'GGs', 'GG!!'];
 
 const VIEW = 9; // tiles across the scene
-const ME = 1; // the tile the runner stands on, counted from the left edge
+const ME = 2; // the tile the runner stands on, counted from the left edge: far enough in for the hop's flip to stay on stage
 const REACH = 3; // a hop clears a spike up to this many strides ahead
 const TRACK = 260; // tiles: more than anyone can cover
 const PX = 0.2; // one runner pixel, in em
@@ -102,7 +102,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     const el = h('div', 'trap');
     el.style.left = `calc(var(--tile) * ${at - REACH})`;
     const pad = h('div', 'pad');
-    for (let i = 0; i < REACH; i++) pad.append(sprite('up', { tone: 'green', px: 0.09 }));
+    for (let i = 0; i < REACH; i++) pad.append(sprite('up', { tone: 'green', px: 0.08 }));
     const spike = sprite('anypercent-spike', { tone: 'purple', px: 0.16 }, 'spike');
     el.append(pad, spike);
     strip.append(el);
@@ -111,8 +111,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   /** The spike a hop from tile `p` would clear, if one is in reach. */
   const ahead = (p: number) => traps.find((s) => s.at > p && s.at - p <= REACH);
 
-  // The finish line is where a flawless runner gets with the par number of presses.
-  const parPresses = Math.round((duration / 1000) * (7.2 + level * 0.35));
+  // The finish line is where a flawless runner gets with the par number of presses: 7.2 a second, 8 on the last round.
+  const parPresses = Math.round((duration / 1000) * (7.2 + level * 0.2));
   let finish = 0;
   for (let i = 0; i < parPresses; i++) finish = ahead(finish) ? ahead(finish)!.at + 1 : finish + 1;
   goal.style.left = `calc(var(--tile) * ${finish})`;
@@ -165,8 +165,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       const s = ahead(pos);
       if (b === 1) {
         if (!s) {
-          // Nothing to clear: a hop on the spot costs a beat.
+          // Nothing to clear: a hop on the spot costs a beat. Either leg may lead off again afterwards.
           lockedUntil = t + 300;
+          foot = -1;
           who.mood('shock');
           act('g-anypercent-whiff');
           bad(callout, 'TOO EARLY');

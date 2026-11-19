@@ -110,7 +110,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         idx++;
         lastBtn = b;
         graceEnd = t + GRACE;
-        pulse(goal, 'bump');
+        // Bump the crowns, not the full-width banner, which would poke out of the stage.
+        pulse(goal.firstElementChild as HTMLElement, 'bump');
+        pulse(goal.lastElementChild as HTMLElement, 'bump');
         fx.pop(tag, 'FRONT PAGE!', 'gold');
         fx.burst(goal, COLOR[p.btn], 24);
         fx.burst(goal, 'gold', 12);

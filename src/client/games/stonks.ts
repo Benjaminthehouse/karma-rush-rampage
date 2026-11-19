@@ -151,7 +151,7 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
       losing = 0;
       mood = 'happy';
     } else if (swing < 0) {
-      // A hair late letting go costs its money quietly; the buzzer is for a real bag.
+      // A hair late letting go costs its money quietly; the buzzer is for a bag you keep holding.
       if ((losing || swing <= -3) && losing++ % 3 === 0) bad(cols[cold].sign, pumps[pumpIndex(t)].bag);
       mood = 'dead';
     } else losing = 0;
@@ -174,7 +174,10 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
   function step(t: number) {
     let delta = 0;
     for (const b of BTNS) {
-      if (!down[b]) continue;
+      if (!down[b]) {
+        bagged[b] = false;
+        continue;
+      }
       const s = stateOf(b, t);
       if (s === 'down') {
         delta--;
@@ -221,8 +224,13 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
 
   return {
     press(b, t) {
+      const s = stateOf(b, t);
       fx.poof(cols[b].sign);
-      fx.sound(stateOf(b, t) === 'up' ? 'power' : 'thud');
+      fx.sound(s === 'up' ? 'power' : 'thud');
+      if (s !== 'down') return;
+      // Grabbing a ticker that is already dumping is a mistake from the first instant.
+      losing = 1;
+      bad(cols[b].sign, pumps[pumpIndex(t)].bag);
     },
     release(b) {
       bagged[b] = false;

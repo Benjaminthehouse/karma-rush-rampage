@@ -1,11 +1,10 @@
 .g-sideeye { justify-content: flex-start !important; align-items: stretch !important; gap: 0 !important; padding: 0 !important; color: #0b1020; }
 
 /* The boss peeks over the desk. On a tall stage there is room for a bigger boss. */
-.g-sideeye .boss { flex: none; font-size: clamp(1em, 3.9cqh, 1.35em); display: flex; flex-direction: column; align-items: center; padding-top: 1.3em; }
-.g-sideeye .head { position: relative; display: flex; gap: 1.1em; padding: 2.4em 1.3em 0.8em; background: var(--gold); box-shadow: 0 -0.25em 0 0 #0b1020, -0.25em 0 0 0 #0b1020, 0.25em 0 0 0 #0b1020; transform-origin: 50% 100%; }
-.g-sideeye.caught .head { transform: scale(1.08); }
+.g-sideeye .boss { flex: none; font-size: clamp(1em, 3.9cqh, 1.12em); display: flex; flex-direction: column; align-items: center; padding-top: 1.3em; }
+.g-sideeye .head { position: relative; display: flex; gap: 1.1em; padding: 2.7em 1.3em 0.8em; background: var(--gold); box-shadow: 0 -0.25em 0 0 #0b1020, -0.25em 0 0 0 #0b1020, 0.25em 0 0 0 #0b1020; }
 /* Ears. */
-.g-sideeye .head::before, .g-sideeye .head::after { content: ''; position: absolute; top: 2.9em; width: 0.7em; height: 1.7em; background: #c98a10; box-shadow: 0 0 0 0.25em #0b1020; }
+.g-sideeye .head::before, .g-sideeye .head::after { content: ''; position: absolute; top: 3.2em; width: 0.7em; height: 1.7em; background: #c98a10; box-shadow: 0 0 0 0.25em #0b1020; }
 .g-sideeye .head::before { right: calc(100% + 0.25em); }
 .g-sideeye .head::after { left: calc(100% + 0.25em); }
 /* Hair in two steps, so the head is not a box. */
@@ -13,9 +12,11 @@
 .g-sideeye .hair::before { content: ''; position: absolute; left: 1.2em; right: 1.2em; bottom: 100%; height: 0.7em; background: #6e3f1c; box-shadow: 0 -0.25em 0 0 #0b1020, -0.25em 0 0 0 #0b1020, 0.25em 0 0 0 #0b1020, inset 0 0.25em 0 0 #b0703c; }
 .g-sideeye .nose { position: absolute; left: 50%; bottom: 0; width: 0.6em; height: 1.3em; margin-left: -0.3em; background: #c98a10; box-shadow: 0 -0.25em 0 0 #0b1020; }
 .g-sideeye .socket { position: relative; }
+/* Caught: the eyes go wide. */
+.g-sideeye.caught .socket { transform: scale(1.1); }
 /* Nicks the four corners off each eye. */
 .g-sideeye .socket::after { content: ''; position: absolute; inset: -0.25em; --g: linear-gradient(var(--gold), var(--gold)); --k: linear-gradient(#0b1020, #0b1020); background: var(--g) 0 0, var(--g) 100% 0, var(--g) 0 100%, var(--g) 100% 100%, var(--k) 0.25em 0.25em, var(--k) calc(100% - 0.25em) 0.25em, var(--k) 0.25em calc(100% - 0.25em), var(--k) calc(100% - 0.25em) calc(100% - 0.25em); background-size: 0.25em 0.25em; background-repeat: no-repeat; }
-.g-sideeye .brow { position: absolute; left: -0.25em; right: -0.25em; top: -1em; height: 0.5em; background: #0b1020; transform: translateY(calc(var(--sus, 0) * 0.3em)); }
+.g-sideeye .brow { position: absolute; left: -0.25em; right: -0.25em; top: -1.25em; height: 0.5em; background: #0b1020; transform: translateY(calc(var(--sus, 0) * 0.3em)); }
 .g-sideeye .socket:first-of-type .brow { transform: translateY(calc(var(--sus, 0) * -0.3em)); }
 .g-sideeye.caught .brow { transform: translateY(0.3em) rotate(-10deg); }
 .g-sideeye.caught .socket:first-of-type .brow { transform: translateY(0.3em) rotate(10deg); }

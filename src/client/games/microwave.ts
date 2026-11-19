@@ -50,11 +50,13 @@ const NINJA = ['SILENT NINJA', 'NOT A SOUND', 'STEALTH SNACK', 'LIKE A SHADOW', 
 const COLD = ['STILL FROZEN', 'COLD IN THE MIDDLE', 'ICE CORE'];
 const WOKEN = ['IT IS 3 AM!', 'WHO IS COOKING?!', 'AGAIN?!', 'SERIOUSLY?'];
 const FIRST = 300; // head start before the first countdown moves
-const GAP = 380; // ms an opened microwave shows off before the next one arrives
+const GAP = 350; // ms an opened microwave shows off before the next one arrives
+const JAM = 250; // ms the doors stay stuck after a wrong one, so pressing all three at once is not a plan
 const BEEPING = 800; // ms the house suffers after a countdown reaches zero
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
-  const beat = 320 - level * 15; // ms per number, and so the length of the 0:01 window
+  const beat = 320 - level * 15; // ms per number
+  const last = 380 - level * 25; // ms that 0:01 stays up: a little longer than a beat, for thumbs and slow screens
   const snack = dealer(rng, SNACKS);
   let lastBtn = -1;
   const queue = Array.from({ length: 24 }, (_, i) => {
@@ -62,7 +64,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     while (btn === lastBtn) btn = randBtn(rng);
     lastBtn = btn;
     // Short counts keep the snacks coming. The first one always starts at 0:04: time to find its colour.
-    const from = i ? randInt(rng, 3, 4) : 4;
+    const from = i && rng() < 0.6 ? 3 : 4;
     // From level 2 the clock sometimes hangs on a number, to trip anyone pressing by rhythm alone.
     const hang = level >= 2 && rng() < 0.1 + level * 0.1 ? randInt(rng, 2, from) : 0;
     const [art, name] = snack();
@@ -72,13 +74,13 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   /** Microwave `i` as it would run from time `s`, or null when its 0:01 cannot finish before the bell. */
   function plan(i: number, s: number) {
     const m = queue[i % queue.length];
-    const beats = (duration - s) / beat;
-    const from = Math.min(m.from, Math.floor(beats));
+    const beats = (duration - s - last) / beat; // room for the numbers above 0:01
+    const from = Math.min(m.from, 1 + Math.floor(beats));
     if (from < 3) return null;
-    const hang = m.hang <= from && beats >= from + 0.7 ? m.hang : 0;
+    const hang = m.hang <= from && beats >= from - 0.3 ? m.hang : 0;
     const ends: number[] = []; // ends[n] is when the display stops showing n
     let at = s;
-    for (let n = from; n >= 1; n--) ends[n] = at += beat * (n === hang ? 1.7 : 1);
+    for (let n = from; n >= 1; n--) ends[n] = at += n === 1 ? last : beat * (n === hang ? 1.7 : 1);
     return { ...m, from, ends };
   }
   type Oven = NonNullable<ReturnType<typeof plan>>;
@@ -98,7 +100,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let served = 0;
   let shown = 0;
   let nextAt = 0;
-  let liveAt = 0; // a fresh microwave ignores presses for a blink, so a late double tap cannot open it
+  let liveAt = 0; // presses count from here: a fresh microwave shrugs off a late double tap, a wrong door jams
   let beepAt = 0;
   let rings = 0;
   let ninjas = 0;
@@ -202,6 +204,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       if (n === 0) return; // too late: the next frame beeps
       if (b !== cur.btn) {
         wrong++;
+        liveAt = t + JAM;
         pulse(oven, 'shake');
         bad(door, 'WRONG DOOR');
         return;

@@ -36,9 +36,10 @@
 .g-anypercent .ghost { position: absolute; top: 6.4em; bottom: var(--floor); width: 0.25em; margin-left: -0.12em; background: #0b1020; transition: left 0.09s linear; }
 .g-anypercent .ghost b { position: absolute; left: 0.25em; top: 0; white-space: nowrap; font-size: 0.8em; padding: 0.1em 0.45em; background: var(--gold); color: #0b1020; box-shadow: 0 0 0 0.15em #0b1020; }
 
-/* A trap is four tiles: a green launch pad (the feet are on it exactly when a hop will clear) and the spike. */
+/* A trap is four tiles: a green launch pad and the spike. The pad's near edge sits where the front boot (1.4em
+   ahead of the runner's middle) first touches it on the stride a hop starts to clear, however narrow the tiles are. */
 .g-anypercent .trap { position: absolute; bottom: var(--floor); width: calc(var(--tile) * 4); height: 0; }
-.g-anypercent .pad { position: absolute; left: calc(var(--tile) * 0.5); right: var(--tile); bottom: -0.2em; height: 0.7em; display: flex; align-items: flex-end; justify-content: space-around; background: var(--green); box-shadow: 0 0 0 0.2em #0b1020; }
+.g-anypercent .pad { position: absolute; left: calc(var(--tile) * 0.5 + max(0em, 1.8em - var(--tile))); right: var(--tile); bottom: -0.2em; height: 0.7em; display: flex; align-items: flex-end; justify-content: space-around; background: var(--green); box-shadow: 0 0 0 0.2em #0b1020; }
 .g-anypercent .pad .px { margin-bottom: 1em; animation: g-anypercent-bob 0.36s steps(2) infinite alternate; }
 @keyframes g-anypercent-bob { to { transform: translateY(-0.4em); } }
 .g-anypercent .spike { position: absolute; right: calc(var(--tile) / 2); bottom: 0; margin-right: -0.88em; transform-origin: 50% 100%; }
@@ -51,7 +52,7 @@
 .g-anypercent .shadow { position: absolute; left: calc(var(--tile) * (var(--me) + 0.5)); bottom: calc(var(--floor) - 0.55em); width: 2.6em; height: 0.3em; margin-left: -1.3em; background: #0b102066; }
 .g-anypercent .runner { position: absolute; left: calc(var(--tile) * (var(--me) + 0.5)); bottom: var(--floor); width: 3.2em; margin-left: -1.6em; display: flex; flex-direction: column; align-items: center; transform-origin: 50% 65%; }
 .g-anypercent .legs { margin-top: -0.2em; }
-.g-anypercent .runner.g-anypercent-hop { animation: g-anypercent-hop 0.3s cubic-bezier(0.3, 0.6, 0.6, 1); }
+.g-anypercent .runner.g-anypercent-hop { transform-origin: 50% 50%; animation: g-anypercent-hop 0.3s cubic-bezier(0.3, 0.6, 0.6, 1); }
 .g-anypercent .runner.g-anypercent-whiff { animation: g-anypercent-whiff 0.24s ease-out; }
 .g-anypercent .runner.down { transform: translateY(0.8em) rotate(90deg); animation: g-anypercent-dead 0.12s steps(2) infinite; }
 @keyframes g-anypercent-hop { 50% { transform: translateY(-3.2em) rotate(180deg); } to { transform: rotate(360deg); } }
@@ -60,7 +61,7 @@
 /* "Press green now": an up arrow over the runner while a spike is in reach. */
 .g-anypercent .cue { position: absolute; left: calc(var(--tile) * (var(--me) + 0.5)); bottom: calc(var(--floor) + 4.9em); margin-left: -1.1em; opacity: 0; }
 .g-anypercent .scene.go .cue { opacity: 1; animation: g-anypercent-bob 0.18s steps(2) infinite alternate; }
-.g-anypercent .callout { position: absolute; left: 42%; bottom: calc(var(--floor) + 5.4em); }
+.g-anypercent .callout { position: absolute; left: 50%; bottom: calc(var(--floor) + 5.4em); }
 
 .g-anypercent .chat { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 0.55em; min-height: 1.7em; margin-bottom: 0.7em; }
 .g-anypercent .line { font-size: 0.8em; white-space: nowrap; padding: 0.15em 0.5em; background: #fff; color: #0b1020; box-shadow: 0 0 0 0.16em #0b1020, 0.3em 0.4em 0 #0b102066; }
