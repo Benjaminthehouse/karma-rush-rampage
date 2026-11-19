@@ -270,8 +270,12 @@ export const sfx = {
   state: (): string => (!settings.get('sound') ? 'off' : (ac?.state ?? 'not started')),
   /** Every pad press answers with its own note: low, middle, high for red, green, blue. */
   press(b: number) {
-    tone({ f: [330, 415, 494][b], dur: 0.06, type: 'triangle', vol: 0.15 });
-    noise({ dur: 0.025, vol: 0.05, f: 3200 });
+    // Bright and percussive so it cuts through the beat on a phone speaker: a square blip
+    // that drops into its note, with a click on the front.
+    const f = [659.25, 830.61, 987.77][b];
+    tone({ f: f * 1.5, to: f, dur: 0.11, type: 'square', vol: 0.2, attack: 0.001 });
+    tone({ f: f / 2, dur: 0.08, type: 'triangle', vol: 0.16, attack: 0.001 });
+    noise({ dur: 0.035, vol: 0.1, f: 2400, attack: 0.001 });
   },
   /**
    * A hit. `combo` is the streak length including this one: the note climbs a semitone
