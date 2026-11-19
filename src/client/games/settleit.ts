@@ -36,7 +36,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     shape.className = HANDS[f.hand];
     name.textContent = HANDS[f.hand].toUpperCase();
     pulse(hand, 'pop-in');
-    note.textContent = `${wins} arguments won`;
+    note.textContent = `${wins} argument${wins === 1 ? '' : 's'} won`;
   }
   show();
 
@@ -46,12 +46,14 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       const f = foes[idx % foes.length];
       if (b === BEATS[f.hand]) {
         wins++;
-        good(hand, 'OWNED');
+        // The verdict floats up from under the card, so it never covers the next hand.
+        good(hand);
+        fx.pop(note, 'OWNED', 'gold');
         if (wins % 5 === 0) fx.burst(hand, 'gold', 16);
       } else {
         wrong++;
         lockedUntil = t + 350;
-        bad(hand, b === f.hand ? 'DRAW' : 'RATIOED');
+        bad(note, b === f.hand ? 'DRAW' : 'RATIOED');
       }
       idx++;
       show();

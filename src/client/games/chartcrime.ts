@@ -45,7 +45,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       b.bar.style.height = `${c.heights[i] * 100}%`;
     });
     pulse(chart, 'pop-in');
-    note.textContent = `${right} crimes solved`;
+    note.textContent = `${right} crime${right === 1 ? '' : 's'} solved`;
   }
   show();
 
@@ -55,12 +55,16 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       const c = charts[idx % charts.length];
       if (b === c.win) {
         right++;
-        good(bars[b].num, 'BUSTED');
+        // The word floats from the title, never over the numbers of the next chart.
+        good(bars[b].col);
+        fx.pop(title, 'BUSTED', 'gold');
         fx.burst(bars[b].col, 'gold', 10);
       } else {
         wrong++;
         lockedUntil = t + 450;
-        bad(bars[b].num, 'FOOLED');
+        bad(bars[b].col);
+        fx.pop(title, 'FOOLED', 'red');
+        fx.burst(bars[b].col, 'red', 8);
       }
       idx++;
       show();

@@ -1,0 +1,57 @@
+.g-npccheck .rule { font-size: 1.1em; }
+.g-npccheck .row { flex: 1; min-height: 0; max-height: 17em; width: 100%; max-width: 27em; display: flex; gap: 0.4em; }
+.g-npccheck .pod { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; background: var(--bg); border: 0.16em solid var(--cd); border-radius: 0.9em; padding: 0.3em 0.2em 0.5em; overflow: hidden; }
+.g-npccheck .top { flex: none; height: 2.9em; display: flex; align-items: center; justify-content: center; }
+.g-npccheck .say { visibility: hidden; font-size: 0.72em; font-weight: 800; line-height: 1.15; text-align: center; white-space: pre-line; color: #071022; background: var(--ink); border-radius: 0.7em; padding: 0.25em 0.5em; }
+.g-npccheck .fig { flex: 1; min-height: 0; width: 100%; }
+.g-npccheck .fig svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.g-npccheck .floor { flex: none; width: 74%; height: 0.55em; margin-top: -0.3em; border-radius: 50%; background: var(--c); opacity: 0.45; }
+
+/* The figure: shirt and arms in the button colour. */
+.g-npccheck .shirt { fill: var(--c); }
+.g-npccheck .arm { stroke: var(--c); stroke-width: 8; stroke-linecap: round; }
+.g-npccheck .leg { stroke: var(--dim); stroke-width: 8; stroke-linecap: round; }
+.g-npccheck .head { fill: var(--ink); }
+.g-npccheck .face { fill: var(--bg); }
+.g-npccheck .body, .g-npccheck .arm { transition: transform 0.12s ease-out; }
+
+/* NPC loops: two poses, swapped on the beat by the p1 class. */
+.g-npccheck .m-sway .body { transform: rotate(-10deg); }
+.g-npccheck .m-sway.p1 .body { transform: rotate(10deg); }
+.g-npccheck .m-bob.p1 .body { transform: translateY(-12%); }
+.g-npccheck .m-jack.p1 .arm.l { transform: rotate(135deg); }
+.g-npccheck .m-jack.p1 .arm.r { transform: rotate(-135deg); }
+.g-npccheck .m-disco .arm.l { transform: rotate(105deg); }
+.g-npccheck .m-disco.p1 .arm.l { transform: none; }
+.g-npccheck .m-disco.p1 .arm.r { transform: rotate(-105deg); }
+.g-npccheck .m-squat.p1 .body { transform: scaleY(0.68); }
+
+/* Real-player moves: free-running and frantic. */
+.g-npccheck .w-hop .body { animation: g-npccheck-hop 0.3s ease-in-out infinite; }
+.g-npccheck .w-hop .arm.l, .g-npccheck .found .fig .arm.l { transform: rotate(140deg); }
+.g-npccheck .w-hop .arm.r, .g-npccheck .found .fig .arm.r { transform: rotate(-140deg); }
+.g-npccheck .w-spin .body { animation: g-npccheck-spin 0.36s linear infinite; }
+.g-npccheck .w-spin .arm.l { transform: rotate(72deg); }
+.g-npccheck .w-spin .arm.r { transform: rotate(-72deg); }
+.g-npccheck .w-crouch .body { animation: g-npccheck-crouch 0.24s ease-in-out infinite; }
+.g-npccheck .w-flail .body { animation: g-npccheck-wiggle 0.32s ease-in-out infinite; }
+.g-npccheck .w-flail .arm.l { animation: g-npccheck-flail-l 0.16s ease-in-out infinite alternate; }
+.g-npccheck .w-flail .arm.r { animation: g-npccheck-flail-r 0.16s ease-in-out infinite alternate; }
+.g-npccheck .w-zoom .body { animation: g-npccheck-zoom 0.42s ease-in-out infinite; }
+@keyframes g-npccheck-hop { 50% { transform: translateY(-15%); } }
+@keyframes g-npccheck-spin { 50% { transform: scaleX(-1); } }
+@keyframes g-npccheck-crouch { 50% { transform: scaleY(0.52); } }
+@keyframes g-npccheck-wiggle { 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
+@keyframes g-npccheck-flail-l { from { transform: rotate(40deg); } to { transform: rotate(170deg); } }
+@keyframes g-npccheck-flail-r { from { transform: rotate(-170deg); } to { transform: rotate(-40deg); } }
+@keyframes g-npccheck-zoom { 0%, 100% { transform: translateX(-9%) rotate(-8deg); } 50% { transform: translateX(9%) rotate(8deg); } }
+
+/* The reveal: spotlight on the player, the NPCs recite their line. */
+.g-npccheck .npc .say { visibility: visible; animation: g-npccheck-say 0.12s ease-out; }
+.g-npccheck .found { border-color: var(--gold); box-shadow: 0 0 1.2em #ffcf3f99; background: conic-gradient(from 155deg at 50% -8%, #0000 0deg, #ffcf3f66 0deg 50deg, #0000 50deg) var(--bg); }
+.g-npccheck .found .say { visibility: visible; font-size: 0.8em; font-weight: 900; background: var(--gold); animation: g-npccheck-say 0.12s ease-out; }
+.g-npccheck .found .fig .body { animation: g-npccheck-jump 0.3s ease-out both; }
+.g-npccheck .missed { border-color: var(--gold); border-style: dashed; }
+@keyframes g-npccheck-jump { 45% { transform: translateY(-13%) scale(1.08); } }
+@keyframes g-npccheck-say { from { transform: scale(0.4); } }
+.g-npccheck .meter i { background: var(--gold); }

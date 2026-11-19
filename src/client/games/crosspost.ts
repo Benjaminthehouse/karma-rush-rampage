@@ -18,15 +18,12 @@ const POSTS = [
 ];
 const WINDOW = 140; // ms allowed between the presses of one chord
 
-export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
+export const create: GameFactory = ({ root, rng, level, good, bad }) => {
   const par = 16 + level;
   let last = -1;
+  // Always exactly two lit: the shout says BOTH, and three at once cannot be
+  // pressed with two thumbs on a phone (the prompt would never clear).
   const prompts = Array.from({ length: 48 }, () => {
-    // Later rounds sometimes light all three.
-    if (level >= 2 && rng() < 0.12 + level * 0.04 && last !== 3) {
-      last = 3;
-      return { lit: [0, 1, 2] as Btn[], text: pick(rng, POSTS) };
-    }
     let i = Math.floor(rng() * 3);
     while (i === last) i = Math.floor(rng() * 3);
     last = i;
@@ -37,6 +34,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let wrong = 0;
   let pending: Btn[] = [];
   let firstAt = 0;
+  let deaf = 0; // presses are ignored until then, so one fumbled chord costs one miss, not two
 
   const wrap = h('div', 'g-crosspost');
   const post = h('div', 'post');
@@ -62,17 +60,19 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   }
   show();
 
-  function miss(word: string, at: HTMLElement) {
+  function miss(word: string, at: HTMLElement, t: number) {
     wrong++;
     pending = [];
-    tiles.forEach((t) => t.classList.remove('half'));
+    deaf = t + 200; // swallows the other finger of the same fumbled chord
+    tiles.forEach((el) => el.classList.remove('half'));
     bad(at, word);
   }
 
   return {
     press(b, t) {
+      if (t < deaf) return;
       const lit = prompts[idx % prompts.length].lit;
-      if (!lit.includes(b)) return miss('NOT THAT SUB', tiles[b]);
+      if (!lit.includes(b)) return miss('NOT THAT SUB', tiles[b], t);
       if (pending.includes(b)) return;
       if (!pending.length) firstAt = t;
       pending.push(b);
@@ -81,14 +81,13 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       pending = [];
       done++;
       idx++;
-      good(post, lit.length === 3 ? 'EVERYWHERE!' : 'X-POSTED');
-      if (lit.length === 3) fx.burst(subs, 'gold', 18);
+      good(post, 'X-POSTED');
       show();
     },
     tick(t) {
-      if (pending.length && t - firstAt > WINDOW) miss('TOGETHER!', tiles[pending[0]]);
+      if (pending.length && t - firstAt > WINDOW) miss('TOGETHER!', tiles[pending[0]], t);
     },
     score: () => clamp1000((1000 * (done - wrong)) / par),
-    hint: () => (pending.length ? null : prompts[idx % prompts.length].lit),
+    hint: (t) => (pending.length || t < deaf ? null : prompts[idx % prompts.length].lit),
   };
 };

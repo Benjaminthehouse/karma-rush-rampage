@@ -1,0 +1,26 @@
+.g-aitaverdict .case { flex: 1; min-height: 0; max-height: 18em; width: 100%; max-width: 25em; display: flex; flex-direction: column; gap: 0.5em; position: relative; background: var(--panel-2); border: 0.16em solid var(--line); border-radius: 1em; padding: 0.7em; }
+.g-aitaverdict .title { flex: none; min-height: 2.4em; display: flex; align-items: center; justify-content: center; gap: 0.35em; text-align: center; font-weight: 800; line-height: 1.2; }
+.g-aitaverdict .title b { flex: none; font-weight: 900; color: var(--gold); }
+.g-aitaverdict .dock { flex: 1; min-height: 0; display: flex; gap: 0.6em; }
+.g-aitaverdict .dock.swap { flex-direction: row-reverse; }
+.g-aitaverdict .seat { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 0.3em; background: var(--bg); border: 0.16em solid var(--cd); border-radius: 0.8em; padding: 0.4em 0.3em 0.5em; }
+.g-aitaverdict .seat svg { flex: 1; min-height: 0; width: 100%; overflow: visible; }
+.g-aitaverdict .badge { flex: none; font-weight: 900; letter-spacing: 0.08em; color: #071022; background: var(--c); border-radius: 99px; padding: 0.05em 0.8em; }
+
+/* The bust: horns in the seat's colour, a gold halo for the innocent. */
+.g-aitaverdict .torso, .g-aitaverdict .horns { fill: var(--c); }
+.g-aitaverdict .horns { stroke: var(--bg); stroke-width: 2.5; stroke-linejoin: round; }
+.g-aitaverdict .halo { fill: none; stroke: var(--gold); stroke-width: 6; }
+.g-aitaverdict .head { fill: var(--ink); }
+.g-aitaverdict .eye { fill: var(--bg); }
+.g-aitaverdict .brows, .g-aitaverdict .grin { fill: none; stroke: var(--bg); stroke-width: 4; stroke-linecap: round; }
+.g-aitaverdict .seat:not(.guilty) .horns, .g-aitaverdict .seat:not(.guilty) .brows, .g-aitaverdict .guilty .halo { display: none; }
+
+/* The ruling: horns fly off, the verdict thuds down. */
+.g-aitaverdict .stamp { position: absolute; left: 50%; top: 56%; visibility: hidden; font-size: 3.6em; font-weight: 900; font-style: italic; line-height: 1; letter-spacing: 0.04em; color: var(--c); background: #0b1020e6; border: 0.1em solid var(--c); border-radius: 0.18em; padding: 0.08em 0.3em; transform: translate(-50%, -50%) rotate(-9deg); }
+.g-aitaverdict .ruled .stamp { visibility: visible; animation: g-aitaverdict-thud 0.14s ease-in; }
+.g-aitaverdict .ruled .horns { animation: g-aitaverdict-off 0.24s ease-out forwards; }
+.g-aitaverdict .overruled .stamp { color: var(--dim); border-color: var(--dim); border-style: dashed; }
+@keyframes g-aitaverdict-thud { from { transform: translate(-50%, -50%) rotate(-9deg) scale(2.6); opacity: 0; } }
+@keyframes g-aitaverdict-off { to { transform: translateY(-26%) scale(1.2); opacity: 0; } }
+.g-aitaverdict .meter i { background: var(--gold); }

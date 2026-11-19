@@ -1,0 +1,31 @@
+.g-bananascale .meter { --c: var(--gold); flex: none; max-width: 26em; }
+.g-bananascale .title { flex: none; min-height: 2.4em; display: flex; align-items: center; text-align: center; font-size: 1.15em; font-weight: 800; line-height: 1.2; }
+.g-bananascale .title.count { min-height: 1.725em; font-size: 1.6em; font-weight: 900; font-style: italic; color: var(--gold); font-variant-numeric: tabular-nums; }
+
+/* The scene is a size container: the thing is --h tall and each banana is exactly --h / --k. */
+.g-bananascale .scene { flex: 1 1 0; min-height: 8em; max-height: 20em; width: min(100%, 26em); position: relative; container-type: size; border-bottom: 0.2em solid var(--ink); }
+.g-bananascale .pair { --h: min(92cqh, (100cqw - 1.5em) / (var(--ar) + 0.25)); position: absolute; left: 0; right: 0; bottom: 0; height: var(--h); display: flex; justify-content: center; align-items: flex-end; gap: 1em; border-top: 0.12em dashed #0000; }
+.g-bananascale .pair.done { border-top-color: var(--gold); }
+.g-bananascale .stack { flex: none; display: flex; flex-direction: column-reverse; }
+.g-bananascale .thing { flex: none; }
+.g-bananascale .thing svg { display: block; height: var(--h); width: calc(var(--h) * var(--ar)); }
+.g-bananascale .nana { display: block; }
+.g-bananascale .stack .nana { height: calc(var(--h) / var(--k)); width: calc(var(--h) / var(--k) * 0.44); opacity: 0; }
+.g-bananascale .stack .nana:first-child { opacity: 1; }
+.g-bananascale .stack .nana.on { opacity: 1; animation: g-bananascale-drop 0.12s ease-out; }
+.g-bananascale .pair.spin .nana { animation: g-bananascale-spin 0.3s ease-out; }
+
+.g-bananascale .stamp { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%) rotate(-9deg); white-space: nowrap; font-size: 1.35em; font-weight: 900; letter-spacing: 0.04em; padding: 0.1em 0.45em; border: 0.14em solid; border-radius: 0.3em; background: #0b1020e6; color: var(--gold); opacity: 0; }
+.g-bananascale .stamp.on { opacity: 1; animation: g-bananascale-slam 0.16s ease-out; }
+.g-bananascale .stamp.no { color: var(--dim); }
+
+.g-bananascale .picks { flex: none; display: flex; gap: 0.5em; width: 100%; }
+.g-bananascale .pick { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.2em; padding: 0.3em 0 0.45em; background: var(--c); color: #071022; border-radius: 0.6em; box-shadow: inset 0 -0.22em 0 var(--cd); transition: opacity 0.1s; }
+.g-bananascale .pick b { font-size: 2.2em; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+.g-bananascale .pick .nana { height: 1.8em; width: 0.8em; transform: rotate(16deg); }
+.g-bananascale .pick.no { opacity: 0.3; }
+.g-bananascale .pick.yes { outline: 0.18em solid var(--ink); }
+
+@keyframes g-bananascale-drop { from { transform: translateY(-50%) scale(1.25); opacity: 0; } }
+@keyframes g-bananascale-spin { to { transform: rotate(360deg); } }
+@keyframes g-bananascale-slam { from { transform: translate(-50%, -50%) rotate(-9deg) scale(1.3); opacity: 0; } }

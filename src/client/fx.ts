@@ -16,6 +16,7 @@ export type FxLayer = ReturnType<typeof createFx>;
 
 export function createFx(arena: HTMLElement, layer: HTMLElement) {
   const full = () => settings.get('fx');
+  let lastFlash = -1000;
 
   function point(at: Element | null): { x: number; y: number } {
     const base = layer.getBoundingClientRect();
@@ -63,6 +64,10 @@ export function createFx(arena: HTMLElement, layer: HTMLElement) {
     },
     flash(color: FxColor = 'white') {
       if (!full()) return;
+      // Never more than about two full-arena flashes a second, however often games ask.
+      const now = performance.now();
+      if (now - lastFlash < 450) return;
+      lastFlash = now;
       const el = spawn('flash', 0, 0);
       el.style.background = HEX[color];
     },

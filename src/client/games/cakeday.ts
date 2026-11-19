@@ -3,6 +3,7 @@ import { COLOR, clamp1000, h, randBtn, type Btn, type GameFactory } from './comm
 
 const FALL = 1100; // ms a flame takes to reach the cake
 const WINDOW = 120; // ms either side of the beat that still counts
+const SYNC = 40; // ms after the round starts that the music's first kick sounds
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   // Same tempo as the round's music, so the flames land on the beat.
@@ -22,7 +23,10 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   root.append(wrap);
 
   let prev = -1;
-  for (let k = 0, at = FALL + beat; at < duration - 200; k++, at += beat / 2) {
+  // The music kicks on every multiple of `beat`, starting SYNC ms into the round.
+  // Flames land on those kicks; the first one leaves room for a full fall.
+  const first = Math.ceil((FALL + 200) / beat) * beat + SYNC;
+  for (let k = 0, at = first; at < duration - 200; k++, at += beat / 2) {
     // Early rounds play quarter notes; later rounds fill in the off-beats.
     const off = k % 2 === 1;
     if (off && rng() > level * 0.2) continue;
@@ -64,7 +68,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
           continue;
         }
         n.el.style.display = '';
-        n.el.style.top = `${Math.min(1, p) * 74}%`;
+        // Lands exactly on the wick at every stage size: cake 3.2em + candle 4.2em + flame 2.4em.
+        n.el.style.top = `calc((100% - 9.8em) * ${Math.min(1, p).toFixed(4)})`;
       }
     },
     score: () => clamp1000((1000 * (hits - stray / 2)) / notes.length),

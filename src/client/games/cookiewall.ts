@@ -8,7 +8,7 @@ const TRAPS = [
   'Reject none',
   'Yes to cookies',
   'Allow everything',
-  'Accept rejection',
+  'Reject privacy',
   'Reject later',
   'OK, track me',
   'Manage 847 partners',
@@ -55,7 +55,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       o.className = `opt ${w.loud[i] ? 'loud' : 'quiet'}`;
     });
     pulse(banner, 'pop-in');
-    note.textContent = `${right} walls dodged`;
+    note.textContent = `${right} wall${right === 1 ? '' : 's'} dodged`;
   }
   show();
 
@@ -65,12 +65,16 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       const w = walls[idx % walls.length];
       if (b === w.slot) {
         right++;
-        good(opts[b], 'REJECTED');
+        // The word floats from the header, never over the options of the next wall.
+        good(opts[b]);
+        fx.pop(site, 'REJECTED', 'gold');
         fx.burst(opts[b], 'green', 10);
       } else {
         wrong++;
         lockedUntil = t + 450;
-        bad(opts[b], 'TRACKED');
+        bad(opts[b]);
+        fx.pop(site, 'TRACKED', 'red');
+        fx.burst(opts[b], 'red', 8);
       }
       idx++;
       show();

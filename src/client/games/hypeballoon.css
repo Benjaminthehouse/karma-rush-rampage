@@ -1,0 +1,26 @@
+.g-hypeballoon .post { display: flex; flex-direction: column; align-items: center; gap: 0.35em; }
+.g-hypeballoon .post b { font-weight: 900; font-size: 1.15em; line-height: 1.1; white-space: nowrap; }
+.g-hypeballoon .tag { font-weight: 900; font-size: 0.85em; line-height: 1.2; padding: 0.2em 0.9em; border-radius: 99em; background: var(--panel-2); color: var(--dim); white-space: nowrap; }
+.g-hypeballoon .tag.s1 { background: var(--gold); color: #071022; }
+.g-hypeballoon .tag.s2 { background: var(--purple); color: #fff; box-shadow: 0 0 1em var(--purple); animation: g-hypeballoon-alarm 0.16s steps(2) infinite; }
+.g-hypeballoon .tag.bust { background: var(--red); color: #071022; }
+@keyframes g-hypeballoon-alarm { 50% { filter: brightness(1.6); } }
+
+.g-hypeballoon .sky { position: relative; width: 13em; height: 13em; flex: none; }
+.g-hypeballoon .sky::before { content: ''; position: absolute; left: 50%; top: 50%; bottom: -0.4em; width: 0.14em; margin-left: -0.07em; background: var(--dim); }
+.g-hypeballoon .line { position: absolute; inset: 0; border: 0.2em dashed var(--ink); border-radius: 50%; }
+.g-hypeballoon .line span { position: absolute; left: 50%; top: -0.75em; transform: translateX(-50%); padding: 0 0.5em; background: var(--panel); font-weight: 900; font-size: 0.7em; line-height: 1.3; letter-spacing: 0.1em; white-space: nowrap; }
+.g-hypeballoon .balloon { position: absolute; inset: 0; margin: auto; width: calc(34% + 66% * var(--f)); height: calc(34% + 66% * var(--f)); border-radius: 50%; background: radial-gradient(circle at 30% 26%, #fffb 0 7%, #fff0 20%), var(--c); box-shadow: inset -0.5em -0.7em 0 #0003; color: #071022; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.g-hypeballoon .balloon::after { content: ''; position: absolute; left: 50%; top: 100%; margin: -0.2em 0 0 -0.5em; border: 0.5em solid #0000; border-top: 0; border-bottom: 0.7em solid var(--cd); }
+.g-hypeballoon .balloon b { font-size: calc(0.95em + 1.5em * var(--f)); font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+.g-hypeballoon .balloon span { font-size: calc(0.68em + 0.3em * var(--f)); font-weight: 800; line-height: 1.2; }
+.g-hypeballoon .balloon.tense { animation: g-hypeballoon-tremble 0.07s linear infinite; filter: brightness(1.2); }
+.g-hypeballoon .balloon.fly { animation: g-hypeballoon-fly 0.2s ease-in forwards; }
+.g-hypeballoon .balloon.flop { animation: g-hypeballoon-flop 0.2s ease-in forwards; }
+.g-hypeballoon .balloon.fly > *, .g-hypeballoon .balloon.flop > * { visibility: hidden; }
+.g-hypeballoon .balloon.popped { display: none; }
+@keyframes g-hypeballoon-tremble { 25% { transform: translate(-0.1em, 0.06em); } 75% { transform: translate(0.1em, -0.06em); } }
+@keyframes g-hypeballoon-fly { to { transform: translateY(-9em) scale(0.5); opacity: 0; } }
+@keyframes g-hypeballoon-flop { to { transform: translateY(3em) scale(0.15); opacity: 0; } }
+
+.g-hypeballoon .meter i { background: var(--gold); }

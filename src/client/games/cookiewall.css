@@ -2,5 +2,6 @@
 .g-cookiewall .site { font-weight: 800; font-size: 0.9em; text-align: center; }
 .g-cookiewall .row { display: flex; gap: 0.35em; align-items: stretch; }
 .g-cookiewall .opt { flex: 1; min-width: 0; min-height: 4.4em; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 900; font-size: 0.82em; line-height: 1.1; border-radius: 0.6em; padding: 0.3em; }
-.g-cookiewall .opt.loud { background: var(--green); color: #071022; box-shadow: 0 0.25em 0 var(--green-d); }
-.g-cookiewall .opt.quiet { background: #e4e8f7; color: #6a7399; border: 0.1em solid #c4cbe4; font-weight: 700; }
+/* Loud is gold, never red, green or blue: those colours mean a button. */
+.g-cookiewall .opt.loud { background: var(--gold); color: #071022; box-shadow: 0 0.25em 0 #b98a10; }
+.g-cookiewall .opt.quiet { background: #e4e8f7; color: #555e85; border: 0.1em solid #c4cbe4; font-weight: 700; }

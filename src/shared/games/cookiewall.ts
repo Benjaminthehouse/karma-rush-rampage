@@ -8,5 +8,5 @@ export default defineGame({
   labels: ['LEFT', 'MIDDLE', 'RIGHT'],
   duration: 8000,
   kind: 'sort',
-  think: 750,
+  think: 850,
 });

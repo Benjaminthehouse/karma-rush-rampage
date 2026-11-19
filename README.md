@@ -22,7 +22,8 @@ Red, green and blue are the only inputs. Tap the pads, or on a keyboard:
 - **Live Party** — one lobby per post. Anyone presses START and everyone in the lobby
   plays a fresh lineup on a shared, server-timed clock, with live standings between
   rounds. Realtime pushes updates; a 2 s poll is the heartbeat and the fallback.
-- **Practice** — random lineup, nothing recorded.
+- **Practice** — a random five, or the **Arcade**: browse every mini-game with the
+  pads (prev / play / next) and practise one at a time. Nothing is recorded.
 
 ## The mini-games
 
@@ -53,14 +54,16 @@ already has scores.
 npm install
 npm test                          # server rules on an in-memory store
 npm run check                     # regenerate registries, type-check client and server
-node tools/game-check.mjs --all   # play-test every mini-game with bots
+node tools/game-check.mjs --all   # play-test every mini-game with bots, in isolation
+npm run smoke                     # play every mini-game inside the real app, end to end
 npm run mock                      # no Reddit needed: http://localhost:5199/splash.html?u=alice
 ```
 
 `npm run mock` serves the real client against the real server rules
 (`src/server/core.ts`) with an in-memory store. `?u=<name>` logs that browser in;
 open a second browser profile with another name to try Live Party. In Practice,
-`game.html?games=upvote,dodge` forces the lineup.
+`game.html?games=upvote,dodge` forces the lineup and `&autoplay=1` lets a demo bot
+play (practice and arcade only; scored runs ignore it).
 
 On Reddit:
 
@@ -91,7 +94,9 @@ src/client/engine.ts        the intro → play → result timeline for one match
 src/client/sfx.ts, voice.ts, fx.ts   sound, announcer, effects
 src/client/main.ts          menu, lobby, results, input
 src/client/splash.*         inline post view: lineup, top five, live score feed, PLAY
+src/client/bot.ts           demo player that follows a game's hint (practice only)
 tools/game-check.mjs        automated play-tester (bots, layout checks, screenshots)
+tools/smoke.mjs             end-to-end run of every game in the real app
 tools/                      build script, registry generator, mock server, rules test
 ```
 
