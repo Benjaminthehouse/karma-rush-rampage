@@ -26,3 +26,6 @@
 /* The plate stays readable when the angry bear leans in. */
 .g-selfpromo .plate { position: relative; z-index: 1; }
 .g-selfpromo .bear { transform-origin: 50% 85%; }
+/* The mod sits in the middle of the top half, with the spam piling up below. */
+.g-selfpromo .desk { flex: 1 0 auto; justify-content: center; }
+.g-selfpromo .pile { flex: 1 1 0; }
