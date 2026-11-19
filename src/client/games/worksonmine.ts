@@ -114,7 +114,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     rigs.forEach((r) => (r.slot === bout().start ? face(r, 'ok', 'WORKS') : face(r, 'err', bout().errors[e++])));
   }
 
-  // The laptop heading right arcs over the top, the one heading left ducks under.
+  // The laptop heading right arcs round the back, the one heading left swings past the front, so both stay in view.
   function swap([a, b]: Btn[]) {
     const over = rigAt(a);
     const under = rigAt(b);

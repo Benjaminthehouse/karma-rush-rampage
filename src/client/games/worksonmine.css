@@ -14,10 +14,11 @@
 .g-worksonmine .desk.ask .pad { box-shadow: 0 0.28em 0 var(--cd), 0 0 1.3em var(--c); filter: brightness(1.25); }
 .g-worksonmine .rig { position: absolute; bottom: 1.7em; width: 30%; transition: left var(--ms) ease-in-out; }
 .g-worksonmine .laptop { position: relative; z-index: 1; transition: transform 0.12s; animation-duration: var(--ms); animation-timing-function: ease-in-out; }
-.g-worksonmine .laptop.over { z-index: 2; animation-name: g-worksonmine-over; }
-.g-worksonmine .laptop.under { z-index: 0; animation-name: g-worksonmine-under; }
-@keyframes g-worksonmine-over { 50% { transform: translateY(-2.4em) scale(1.06); } }
-@keyframes g-worksonmine-under { 50% { transform: translateY(0.35em) scale(0.88); } }
+.g-worksonmine .laptop.over { z-index: 0; animation-name: g-worksonmine-over; }
+.g-worksonmine .laptop.under { z-index: 2; animation-name: g-worksonmine-under; }
+/* One goes round the back, high enough to show over the others; one comes past the front. Neither is ever hidden. */
+@keyframes g-worksonmine-over { 50% { transform: translateY(-2.9em) scale(0.92); } }
+@keyframes g-worksonmine-under { 50% { transform: translateY(0.45em) scale(1.05); } }
 
 .g-worksonmine .screen { aspect-ratio: 0.95; max-height: 6.6em; width: 100%; border: 0.28em solid #c9d1ee; border-radius: 0.65em 0.65em 0.15em 0.15em; background: linear-gradient(155deg, #1c2550, var(--bg) 60%); display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .g-worksonmine .base { position: relative; height: 0.8em; margin: 0 -0.2em; border-radius: 0.15em 0.15em 0.65em 0.65em; background: linear-gradient(#e6eafb, #8e99c4); }
