@@ -1,38 +1,47 @@
-/* A pale verification widget. --grain is how noisy the tile pictures are. */
-.g-notarobot .panel { --grain: 0.05; width: min(100%, 30em); flex: 0 1 19em; min-height: 13em; display: flex; flex-direction: column; gap: 0.5em; padding: 0.5em; background: var(--ink); color: #071022; border-radius: 0.9em; box-shadow: 0 0.35em 0 #c4cbe4; }
-.g-notarobot .head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 0.6em; padding: 0.4em 0.5em 0.4em 0.75em; background: var(--panel-2); color: var(--ink); border-radius: 0.55em; }
-.g-notarobot .ask { display: flex; flex-direction: column; min-width: 0; }
-.g-notarobot .ask span { font-size: 0.75em; font-weight: 700; color: var(--dim); }
-.g-notarobot .ask b { font-size: 1.4em; font-weight: 900; line-height: 1.1; }
-.g-notarobot .sample { flex: none; width: 2.7em; height: 2.7em; padding: 0.15em; background: #cfe0f7; border-radius: 0.4em; }
-.g-notarobot .sample svg, .g-notarobot .pic svg { display: block; width: 100%; height: 100%; }
+/* The scene, top to bottom: the checkpoint robot and its speech bubble, then the verification window. */
+.g-notarobot { justify-content: space-between !important; gap: 0.5em !important; padding: 0.6em 0.7em 0.8em !important; color: #0b1020; }
+.g-notarobot .guard { flex: 1 1 auto; min-height: 4.2em; width: min(100%, 22em); display: flex; align-items: center; justify-content: center; gap: 0.8em; }
+/* The robot grows into whatever height the window leaves it: small on desktop, big on a tall phone. */
+.g-notarobot .guard .person { font-size: clamp(1em, (100cqh - 19.5em) / 4.2, 2em); filter: drop-shadow(0.14em 0.2em 0 #0b102088); }
+.g-notarobot.scene-danger .guard .person { animation: g-notarobot-glare 0.12s steps(2) infinite; }
+@keyframes g-notarobot-glare { 50% { transform: translateX(0.14em); } }
+.g-notarobot .bubble { position: relative; flex: 0 1 12.5em; min-width: 0; min-height: 2.9em; display: flex; align-items: center; padding: 0.25em 0.6em; background: #fff; font-size: 0.9em; line-height: 1.1; box-shadow: 0 0 0 0.2em #0b1020, 0.45em 0.55em 0 0 #0b102066; }
+.g-notarobot .bubble::before { content: ''; position: absolute; left: -0.6em; top: 50%; width: 0.45em; height: 0.5em; margin-top: -0.25em; background: inherit; box-shadow: 0 -0.2em 0 0 #0b1020, 0 0.2em 0 0 #0b1020, -0.2em 0 0 0 #0b1020; }
+.g-notarobot.scene-danger .bubble { background: #ffd9dc; }
 
-/* One tile per button, its bottom edge in the button's colour. */
-.g-notarobot .strip { flex: 1; min-height: 0; display: flex; gap: 0.4em; }
-.g-notarobot .strip.deal { animation: g-notarobot-deal 0.14s ease-out; }
-@keyframes g-notarobot-deal { from { transform: scale(0.88); opacity: 0.2; } }
-.g-notarobot .tile { position: relative; flex: 1; min-width: 0; overflow: hidden; background: linear-gradient(#cfe0f7 78%, #a7b2c8 0); border-bottom: 0.45em solid var(--c); border-radius: 0.5em; }
-.g-notarobot .tile::after { content: ''; position: absolute; inset: 0; opacity: var(--grain); background: repeating-conic-gradient(#000 0 25%, #0000 0 50%) 0 0 / 0.3em 0.3em, repeating-conic-gradient(#fff 0 25%, #0000 0 50%) 0.1em 0.07em / 0.46em 0.38em; }
-.g-notarobot .pic { position: absolute; inset: 7% 6% 5%; transform: rotate(var(--tilt)); transition: transform 0.08s; }
-.g-notarobot .mark { position: absolute; z-index: 1; display: none; border-radius: 50%; }
-.g-notarobot .mark::after { content: ''; position: absolute; left: 36%; top: 15%; width: 26%; height: 52%; border: solid #071022; border-width: 0 0.26em 0.26em 0; transform: rotate(45deg); }
-/* Ticked: the picture shrinks inside a gold frame, under a gold badge. */
-.g-notarobot .ok::before { content: ''; position: absolute; inset: 0; z-index: 1; border: 0.28em solid var(--gold); border-radius: 0.5em 0.5em 0 0; }
-.g-notarobot .ok .pic { transform: scale(0.8) rotate(var(--tilt)); }
-.g-notarobot .ok .mark { display: block; left: 0.3em; top: 0.3em; width: 1.9em; height: 1.9em; background: var(--gold); border: 0.14em solid #071022; }
-/* Wrong: the picture greys out under a cross. */
-.g-notarobot .no .pic { filter: grayscale(1) brightness(0.65); }
-.g-notarobot .no .mark { display: block; left: 50%; top: 46%; width: 3.4em; height: 3.4em; margin: -1.7em; background: var(--red); border: 0.16em solid #071022; }
-.g-notarobot .no .mark::before, .g-notarobot .no .mark::after { content: ''; position: absolute; left: 16%; right: 16%; top: 50%; width: auto; height: 0.46em; margin-top: -0.23em; border: 0; border-radius: 1em; background: #071022; transform: rotate(45deg); }
-.g-notarobot .no .mark::after { transform: rotate(-45deg); }
+/* The window. --grain is how noisy the tile pictures are. */
+.g-notarobot .panel { --grain: 0.05; flex: none; width: min(100%, 22em); display: flex; flex-direction: column; gap: 0.45em; padding: 0.45em; background: #f4f6ff; box-shadow: 0 0 0 0.22em #0b1020, 0.5em 0.6em 0 0 #0b102088; }
+.g-notarobot .head { display: flex; align-items: center; justify-content: space-between; gap: 0.6em; padding: 0.3em 0.5em 0.35em 0.65em; background: #0b1020; color: var(--ink); }
+.g-notarobot .ask { display: flex; flex-direction: column; min-width: 0; }
+.g-notarobot .ask span { font-size: 0.72em; font-weight: 500; color: #a8b1d6; }
+.g-notarobot .ask b { font-size: 1.3em; line-height: 1.05; letter-spacing: 0.02em; }
+.g-notarobot .sample { box-shadow: 0 0 0 0.22em #cfe0f7; background-color: #cfe0f7; margin-right: 0.25em; }
+
+/* One tile per button, standing on a stripe of the button's colour. */
+.g-notarobot .strip { height: 9em; display: flex; gap: 0.55em; padding: 0.16em; }
+.g-notarobot .strip.deal { animation: g-notarobot-deal 0.14s steps(3); }
+@keyframes g-notarobot-deal { from { transform: translateY(-0.5em); opacity: 0.3; } }
+.g-notarobot .tile { position: relative; flex: 1; min-width: 0; overflow: hidden; background: linear-gradient(#cfe0f7 78%, #a7b2c8 0); border-bottom: 0.55em solid var(--c); box-shadow: 0 0 0 0.16em #0b1020; }
+.g-notarobot .tile::after { content: ''; position: absolute; inset: 0; opacity: var(--grain); background: repeating-conic-gradient(#000 0 25%, #0000 0 50%) 0 0 / 0.32em 0.32em, repeating-conic-gradient(#fff 0 25%, #0000 0 50%) 0.16em 0 / 0.64em 0.32em; }
+.g-notarobot .pic { --dx: 0em; --dy: 0em; position: absolute; left: 50%; bottom: 0.3em; transform: translate(calc(-50% + var(--dx)), var(--dy)); }
+.g-notarobot .tick, .g-notarobot .cross { position: absolute; z-index: 1; display: none; }
+/* Ticked: a gold frame and a gold tick on a dark badge. */
+.g-notarobot .ok::before { content: ''; position: absolute; inset: 0; z-index: 1; border: 0.3em solid var(--gold); }
+.g-notarobot .ok .tick { display: block; left: 0.3em; top: 0.3em; background-color: #0b1020; box-shadow: 0 0 0 0.2em #0b1020, 0 0 0 0.32em var(--gold); }
+/* Wrong: the picture greys out under a big red cross. */
+.g-notarobot .no { background: linear-gradient(#b9c1d6 78%, #8e97ad 0); }
+.g-notarobot .no .pic { filter: grayscale(1) brightness(0.7); }
+.g-notarobot .no .cross { display: block; left: 50%; top: 42%; margin: -1.35em; background-color: #fff; box-shadow: 0 0 0 0.3em #fff, 0 0 0 0.5em #0b1020; }
 
 /* The checkbox blips on every passed check and stays ticked once the meter is full. */
-.g-notarobot .foot { --c: var(--gold); flex: none; display: flex; align-items: center; gap: 0.6em; padding: 0 0.2em 0.1em; }
-.g-notarobot .box { position: relative; flex: none; width: 2em; height: 2em; background: #fff; border: 0.16em solid #6a7399; border-radius: 0.35em; }
-.g-notarobot .box .mark { display: block; inset: 0; opacity: 0; }
-.g-notarobot .box.on { background: var(--gold); border-color: #071022; }
-.g-notarobot .box.on .mark { opacity: 1; }
-.g-notarobot .box.blip .mark { animation: g-notarobot-blip 0.4s ease-out; }
-@keyframes g-notarobot-blip { from { opacity: 1; transform: scale(1.8); } }
-.g-notarobot .who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.25em; }
-.g-notarobot .pct { font-size: 0.82em; font-weight: 900; letter-spacing: 0.04em; }
+.g-notarobot .foot { display: flex; align-items: center; gap: 0.6em; padding: 0 0.15em 0.05em; }
+.g-notarobot .box { position: relative; flex: none; width: 1.9em; height: 1.9em; display: grid; place-items: center; background: #fff; box-shadow: inset 0 0 0 0.18em #0b1020; }
+.g-notarobot .box .tick { position: static; display: block; opacity: 0; }
+.g-notarobot .box.on { background: #0b1020; }
+.g-notarobot .box.on .tick { opacity: 1; }
+.g-notarobot .box.blip .tick { animation: g-notarobot-blip 0.4s steps(4); }
+@keyframes g-notarobot-blip { from { opacity: 1; transform: scale(1.7); } }
+.g-notarobot .who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.2em; }
+.g-notarobot .pct { font-size: 0.82em; letter-spacing: 0.03em; line-height: 1.1; }
+.g-notarobot .bar { height: 0.7em; background: #0b1020; box-shadow: 0 0 0 0.14em #0b1020; }
+.g-notarobot .bar i { display: block; height: 100%; width: 0; background: var(--gold); transition: width 0.1s steps(3); }

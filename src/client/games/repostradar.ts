@@ -1,7 +1,7 @@
 import './repostradar.css';
 import { clamp1000, h, pulse, randBtn, shuffled, type Btn, type GameFactory } from './common';
 
-const SHAPES = ['disc', 'box', 'tri', 'star', 'gem', 'drop'];
+const SHAPES = ['disc', 'box', 'tri', 'star', 'gem', 'drop', 'cross', 'bolt', 'moon', 'ring'];
 const TINTS = ['gold', 'purple', 'ink', 'teal', 'pink'];
 const CAPTIONS = ['wow', 'OC', 'look', 'lol', 'me irl', 'TIL', 'cute', 'huh'];
 
@@ -18,7 +18,9 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   // Opening screen: three fresh posts to remember, nothing to press yet.
   const intro = [next(), next(), next()];
   seen.push(...intro);
-  const screens = Array.from({ length: 30 }, () => {
+  // Two fresh posts a screen, and never more screens than the deck can fill: a "fresh"
+  // post that has been shown before would be a second repost, and calling it out a "miss".
+  const screens = Array.from({ length: Math.floor((deck.length - intro.length) / 2) }, () => {
     // Later rounds reach further back for the repost.
     const reach = Math.min(seen.length, 3 + level * 2);
     const repost = seen[seen.length - 1 - Math.floor(rng() * reach)];
@@ -44,6 +46,10 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     row.append(c);
     return { c, art, cap };
   });
+  // Verdicts float up from above the row, so they never cover the next three posts
+  // (or get cut off at the edge of the stage).
+  const stamp = h('i', 'stamp');
+  row.append(stamp);
   const note = h('div', 'g-note');
   wrap.append(banner, row, note);
   root.append(wrap);
@@ -62,21 +68,28 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
 
   return {
     press(b: Btn, t) {
-      if (idx < 0 || t < lockedUntil) return;
+      if (idx < 0 || t < lockedUntil) {
+        // Too early: still answer the press.
+        fx.sound('tick');
+        if (idx < 0) pulse(banner, 'bump');
+        return;
+      }
       const s = screens[idx % screens.length];
       if (b === s.slot) {
         right++;
-        good(cells[b].c, 'REPOST!');
+        good(stamp, 'REPOST!');
         fx.burst(cells[b].c, 'gold', 10);
       } else {
         wrong++;
         lockedUntil = t + 450;
-        bad(cells[b].c, 'THAT WAS OC');
+        bad(stamp, 'THAT WAS OC');
       }
       idx++;
       show();
     },
     tick(t) {
+      // Red frames while a wrong call has the buttons locked.
+      row.classList.toggle('locked', t < lockedUntil);
       if (idx < 0 && t >= INTRO_MS) {
         idx = 0;
         show();

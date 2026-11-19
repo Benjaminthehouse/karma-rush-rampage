@@ -1,0 +1,13 @@
+.g-rant { justify-content: flex-start !important; align-items: stretch !important; padding: 0.6em !important; gap: 0.45em !important; }
+.g-rant .bar { display: flex; align-items: center; gap: 0.5em; background: #0b1020; color: #fff; padding: 0.3em 0.6em; font-size: 0.9em; }
+.g-rant .bar .next { margin-left: auto; }
+.g-rant .view { flex: 1; min-height: 0; overflow: hidden; background: #fff; box-shadow: 0 -0.2em 0 0 #0b1020, 0 0.2em 0 0 #0b1020, -0.2em 0 0 0 #0b1020, 0.2em 0 0 0 #0b1020, 0.35em 0.6em 0 0 #0b102044; margin: 0.2em; }
+.g-rant .page { padding: 0.6em 0.7em 6em; font-size: 1.25em; line-height: 1.32; text-align: left; transition: transform 0.12s ease-out; overflow-wrap: break-word; }
+/* Words still to type are a pale wash of their colour; typed words are solid. */
+.g-rant .run i { font-style: normal; color: color-mix(in srgb, var(--c) 38%, #fff); }
+.g-rant .run.now i { color: color-mix(in srgb, var(--c) 62%, #fff); }
+.g-rant .run b { color: var(--cd); }
+.g-rant .run.now b { color: var(--c); background: color-mix(in srgb, var(--c) 14%, #fff); }
+.g-rant .run.now b::after { content: ''; display: inline-block; width: 0.14em; height: 1em; margin-left: 0.05em; vertical-align: -0.15em; background: #0b1020; animation: g-rant-caret 0.5s steps(2) infinite; }
+@keyframes g-rant-caret { 50% { opacity: 0; } }
+.g-rant .count { text-align: center; font-size: 0.8em; color: #0b1020; }

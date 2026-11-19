@@ -1,11 +1,14 @@
 /* The paint queue: the big blinking swatch is the colour to press now. */
-.g-voidcanvas .queue { display: flex; align-items: center; gap: 0.45em; transition: opacity 0.1s; }
+.g-voidcanvas .queue { display: flex; align-items: center; gap: 0.45em; }
 .g-voidcanvas .queue i { width: 1.8em; height: 1.8em; border-radius: 0.35em; background: var(--c); box-shadow: inset 0 -0.22em 0 var(--cd); opacity: 0.4; }
 .g-voidcanvas .queue i:first-child { width: 5.6em; height: 3em; margin-right: 0.35em; opacity: 1; display: grid; place-items: center; font-style: normal; font-weight: 900; letter-spacing: 0.06em; color: #071022; outline: 0.2em solid var(--ink); outline-offset: 0.14em; animation: g-voidcanvas-blink 0.3s steps(1) infinite; }
 .g-voidcanvas .queue i:nth-child(2) { opacity: 0.95; }
 .g-voidcanvas .queue i:nth-child(3) { opacity: 0.75; }
 .g-voidcanvas .queue i:nth-child(4) { opacity: 0.55; }
 @keyframes g-voidcanvas-blink { 50% { filter: brightness(1.4); } }
+/* Every new prompt punches in, so the same colour twice in a row still reads as a fresh one. */
+.g-voidcanvas .queue i:first-child.next { animation: g-voidcanvas-next 0.13s ease-out, g-voidcanvas-blink 0.3s steps(1) infinite; }
+@keyframes g-voidcanvas-next { from { transform: scale(0.76); } }
 
 /* The canvas: art underneath, the void clipped over its right-hand side. */
 .g-voidcanvas .canvas { position: relative; width: min(100%, 17em); aspect-ratio: 20 / 14; background: #eef1ff; box-shadow: 0 0 0 0.22em var(--line); }
@@ -31,10 +34,18 @@
 .g-voidcanvas .splat.go { animation: g-voidcanvas-splat 0.2s ease-out; }
 @keyframes g-voidcanvas-splat { from { opacity: 0.9; transform: scale(1.7, 1.08); } to { opacity: 0; transform: none; } }
 
-/* Void pushed off the edge: nothing left to paint until it bites again. */
+/* A raid is coming: the void swells and the columns it will take flash a warning. */
+.g-voidcanvas .omen { position: absolute; top: 0; bottom: 0; left: max(0%, calc((var(--held) - var(--raid)) * 5%)); width: calc(min(var(--raid), var(--held)) * 5%); background: repeating-linear-gradient(135deg, #b14bffe6 0 0.4em, #b14bff59 0.4em 0.8em); opacity: 0; }
+.g-voidcanvas .brace .omen { animation: g-voidcanvas-omen 0.24s steps(1) infinite; }
+@keyframes g-voidcanvas-omen { 0% { opacity: 0.9; } 50% { opacity: 0.4; } }
+.g-voidcanvas .brace .void { background-color: #2b0d4d; }
+.g-voidcanvas .g-note.alarm { color: var(--purple); }
+/* Where the big words rise from: mid-canvas, clear of the queue above. */
+.g-voidcanvas .shout { position: absolute; left: 50%; top: 62%; }
+
+/* Void pushed off the edge: keep matching colours to keep it out. */
 .g-voidcanvas.full .canvas { animation: g-voidcanvas-held 0.6s linear infinite; }
 .g-voidcanvas.full .front { display: none; }
-.g-voidcanvas.full .queue { opacity: 0.35; }
 @keyframes g-voidcanvas-held {
   0%, 100% { box-shadow: 0 0 0 0.22em var(--gold), 0 0 1.6em var(--gold); }
   33% { box-shadow: 0 0 0 0.22em var(--green), 0 0 1.6em var(--green); }

@@ -1,46 +1,98 @@
 import './anypercent.css';
-import { arrow, h, pulse, randInt, ratio, shuffled, type GameFactory } from './common';
+import { dealer, defineSprite, h, person, pulse, randInt, ratio, setSprite, sprite, type GameFactory } from './common';
 
 const HYPE = ['clip that!', 'gold split', 'PB pace??', 'new strat', 'so clean', 'first try', 'is this TAS?', 'frame 1 hop', 'no reset!', 'cracked'];
-const SALT = ['run dead?', 'reset', 'F', 'choke', 'RIP splits', 'unlucky', 'back to menu'];
+const SALT = ['run dead?', 'reset', 'F', 'choke', 'RIP splits', 'unlucky', 'back to menu', 'timer says no'];
 const GG = ['GG', 'GG WR', 'GGs', 'GG!!'];
 
 const VIEW = 9; // tiles across the scene
 const ME = 1; // the tile the runner stands on, counted from the left edge
 const REACH = 3; // a hop clears a spike up to this many strides ahead
 const TRACK = 260; // tiles: more than anyone can cover
+const PX = 0.2; // one runner pixel, in em
+// Clouds as [left %, top %, pixel size] across a sky two scenes wide: the same three twice, so it loops without a seam.
+const CLOUDS = [[4, 30, 0.3], [24, 44, 0.22], [39, 33, 0.26], [54, 30, 0.3], [74, 44, 0.22], [89, 33, 0.26]];
+
+// The runner's body under its robot head. The left leg is the red button, the right leg the blue one.
+const BODY = `
+....kkkkkkkk....
+...kwwwwwwwwk...
+...kwwwwwwyyk...
+...kddddddddk...
+....kkkkkkkk....`;
+defineSprite('anypercent-stand', `${BODY}
+...krrk..kbbk...
+...krrk..kbbk...
+...kRRRk.kBBBk..
+...kkkkk.kkkkk..`);
+// Mid-stride: the leg that just stepped (red for step0, blue for step2) is out in front.
+defineSprite('anypercent-step0', `${BODY}
+..kbbk....krrk..
+.kbbk......krrk.
+kBBBk.....kRRRk.
+kkkkk.....kkkkk.`);
+defineSprite('anypercent-step2', `${BODY}
+..krrk....kbbk..
+.krrk......kbbk.
+kRRRk.....kBBBk.
+kkkkk.....kkkkk.`);
+defineSprite('anypercent-spike', `
+.....k.....
+....kLk....
+....kLk....
+...kLAak...
+...kLAak...
+..kLAAAak..
+..kLAAAak..
+.kLAAAAAak.
+.kLAAAAAak.
+kLAAAAAAAak
+kLAAAAAAAak
+kkkkkkkkkkk`);
 
 const stamp = (ms: number) => `0:${(ms / 1000).toFixed(2).padStart(5, '0')}`;
 /** A speedrun split: seconds behind (+) or ahead of (-) the record. */
 const signed = (s: number) => `${s < 0 ? '-' : '+'}${Math.abs(s).toFixed(2)}`;
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
-  const wrap = h('div', 'g-anypercent');
+  // The scene: a sprint under an open sky, a speedrun timer on top, stream chat at the bottom.
+  const wrap = h('div', 'g-anypercent scene-sky');
   const hud = h('div', 'hud');
   const clock = h('b', 'clock');
   const split = h('b', 'split');
-  hud.append(clock, split);
   const map = h('div', 'map');
   const mapMe = h('i');
   const mapWr = h('b');
   map.append(mapMe, mapWr);
+  hud.append(h('span', 'cat', 'Front Page Any%'), clock, split, map);
   const scene = h('div', 'scene');
   scene.style.cssText = `--tile: ${100 / VIEW}cqw; --me: ${ME}`;
-  const sky = h('div', 'sky');
-  sky.append(h('i'), h('i'), h('i'));
+  const clouds = h('div', 'clouds');
+  for (const [x, y, px] of CLOUDS) {
+    const cloud = sprite('cloud', { px });
+    cloud.style.left = `${x}%`;
+    cloud.style.top = `${y}%`;
+    clouds.append(cloud);
+  }
+  const lines = h('div', 'lines');
+  lines.append(h('i'), h('i'), h('i'));
   const strip = h('div', 'strip');
   const floor = h('i', 'floor');
-  const goal = h('i', 'goal');
+  const goal = h('div', 'goal');
+  goal.append(sprite('trophy', { px: 0.16 }));
+  strip.append(floor, goal);
   const ghost = h('div', 'ghost');
   ghost.append(h('b', '', 'WR PACE'));
-  strip.append(floor, goal);
   const shadow = h('i', 'shadow');
+  const who = person({ tone: 'gold', kind: 'bot', mood: 'cool', px: PX });
+  const legs = sprite('anypercent-stand', { px: PX }, 'legs');
   const runner = h('div', 'runner');
-  runner.append(h('i', 'head'), h('i', 'body'), h('i', 'leg c-red'), h('i', 'leg c-blue'));
+  runner.append(who.el, legs);
+  const cue = sprite('up', { tone: 'green', px: PX }, 'cue');
   const callout = h('i', 'callout'); // where the runner's mistakes are spelled out, clear of the edge
-  scene.append(sky, h('div', 'cat', 'Front Page Any%'), h('div', 'banner', 'NEW WORLD RECORD'), strip, ghost, shadow, runner, arrow('up', 'cue'), callout);
+  scene.append(clouds, lines, h('div', 'banner', 'NEW WORLD RECORD'), strip, ghost, shadow, runner, cue, callout);
   const chat = h('div', 'chat');
-  wrap.append(hud, map, scene, chat);
+  wrap.append(scene, hud, chat);
   root.append(wrap);
 
   // Spikes crowd closer with level. Each one sits at the end of a green launch pad.
@@ -50,8 +102,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     const el = h('div', 'trap');
     el.style.left = `calc(var(--tile) * ${at - REACH})`;
     const pad = h('div', 'pad');
-    for (let i = 0; i < REACH; i++) pad.append(h('i'));
-    const spike = h('i', 'spike');
+    for (let i = 0; i < REACH; i++) pad.append(sprite('up', { tone: 'green', px: 0.09 }));
+    const spike = sprite('anypercent-spike', { tone: 'purple', px: 0.16 }, 'spike');
     el.append(pad, spike);
     strip.append(el);
     traps.push({ at, el, spike });
@@ -65,19 +117,18 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   for (let i = 0; i < parPresses; i++) finish = ahead(finish) ? ahead(finish)!.at + 1 : finish + 1;
   goal.style.left = `calc(var(--tile) * ${finish})`;
 
-  const hype = shuffled(rng, HYPE);
-  const salt = shuffled(rng, SALT);
+  const hype = dealer(rng, HYPE);
+  const salt = dealer(rng, SALT);
   let pos = 0;
   let foot = -1; // the foot that took the last stride; -1 lets either foot go next
   let lockedUntil = 0;
   let downUntil = 0;
   let wonAt = -1;
-  let hops = 0;
-  let falls = 0;
   let heat = 0; // recent pace, 0..1: drives the speed lines
   let last = 0;
 
   function say(text: string) {
+    if (wonAt >= 0) return; // the wall of GGs stays up
     if (chat.childElementCount >= 2) chat.firstElementChild!.remove();
     chat.append(h('span', 'line pop-in', text));
   }
@@ -94,6 +145,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
 
   function draw() {
     strip.style.transform = `translateX(calc(var(--tile) * ${ME - pos}))`;
+    clouds.style.transform = `translateX(${-((pos * 2.5) % 100) / 2}%)`;
     // The floor is a short piece of track that leapfrogs along two tiles (one stripe pair) at a time.
     floor.style.left = `calc(var(--tile) * ${2 * Math.floor((pos - ME - 6) / 2)})`;
     // Only what is near the screen is shown; a hop slides up to four tiles at once.
@@ -102,8 +154,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     for (const s of traps) s.el.style.display = s.at > lo && s.at - REACH < hi ? '' : 'none';
     goal.style.display = finish > lo && finish < hi ? '' : 'none';
     mapMe.style.width = `${Math.min(100, (pos / finish) * 100)}%`;
-    runner.classList.toggle('f0', foot === 0);
-    runner.classList.toggle('f2', foot === 2);
+    setSprite(legs, foot < 0 ? 'anypercent-stand' : `anypercent-step${foot}`, { px: PX });
     scene.classList.toggle('go', !!ahead(pos));
   }
   draw();
@@ -114,7 +165,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       const s = ahead(pos);
       if (b === 1) {
         if (!s) {
-          lockedUntil = t + 250;
+          // Nothing to clear: a hop on the spot costs a beat.
+          lockedUntil = t + 300;
+          who.mood('shock');
           act('g-anypercent-whiff');
           bad(callout, 'TOO EARLY');
           return;
@@ -123,15 +176,17 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         foot = -1;
         heat = Math.min(1, heat + 0.4);
         s.el.classList.add('done');
+        who.mood('happy');
         act('g-anypercent-hop');
         fx.poof(shadow);
         good(runner);
         fx.pop(s.spike, signed(behind(t)), behind(t) < 0 ? 'gold' : 'white');
         fx.burst(s.spike, 'gold', 10);
         fx.sound('boing');
-        if (wonAt < 0) say(hype[hops++ % hype.length]);
+        say(hype());
       } else {
         if (b === foot) {
+          who.mood('shock');
           act('shake');
           bad(callout, 'OTHER FOOT');
           return;
@@ -144,11 +199,16 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
           lockedUntil = downUntil = t + 500;
           foot = -1;
           s.el.classList.add('hit');
+          who.mood('dead');
           act();
+          fx.poof(s.spike);
           bad(callout, 'RUN DEAD?');
           fx.sound('thud');
-          if (wonAt < 0) say(salt[falls++ % salt.length]);
-        } else good(runner, wonAt < 0 ? undefined : 'GG');
+          say(salt());
+        } else {
+          who.mood(wonAt < 0 ? 'cool' : 'happy');
+          good(runner, wonAt < 0 ? undefined : 'GG');
+        }
       }
       scene.classList.toggle('air', b === 1);
       draw();
@@ -156,6 +216,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         wonAt = t;
         scene.classList.add('won');
         clock.classList.add('wr');
+        who.mood('happy');
         chat.replaceChildren(...GG.map((text) => h('span', 'line pop-in', text)));
         fx.flash('gold');
         fx.burst(runner, 'gold', 40);
@@ -168,11 +229,11 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       clock.textContent = stamp(now);
       split.textContent = signed(behind(now));
       split.classList.toggle('ahead', behind(now) < 0);
-      // The ghost holds world-record pace: it reaches the finish line on the bell.
+      // The flag holds world-record pace: it reaches the finish line on the bell.
       const wr = Math.min(1, t / duration);
       mapWr.style.left = `${wr * 100}%`;
       const gap = wr * finish - pos + ME; // its tile, counted from the left edge of the scene
-      ghost.style.display = wonAt < 0 && gap > 1 && gap < VIEW - 2 ? '' : 'none';
+      ghost.style.display = wonAt < 0 && gap > 0.5 && gap < VIEW - 3.5 ? '' : 'none';
       ghost.style.left = `calc(var(--tile) * ${(gap + 0.5).toFixed(2)})`;
       runner.classList.toggle('down', t < downUntil);
       heat *= Math.exp((last - t) / 400);

@@ -26,7 +26,7 @@
 
 /* Three phones under the desk. */
 .g-sideeye .phones { flex: 1; min-height: 0; width: 100%; display: flex; justify-content: space-around; }
-.g-sideeye .phone { position: relative; width: 30%; max-width: 7.5em; display: flex; flex-direction: column; padding: 0.3em; overflow: hidden; border: 0.22em solid var(--c); border-radius: 1em; background: var(--bg); box-shadow: 0 0 0.9em color-mix(in srgb, var(--c) 45%, transparent); }
+.g-sideeye .phone { position: relative; width: 30%; max-width: 9em; display: flex; flex-direction: column; padding: 0.3em; overflow: hidden; border: 0.22em solid var(--c); border-radius: 1em; background: var(--bg); box-shadow: 0 0 0.9em color-mix(in srgb, var(--c) 45%, transparent); }
 .g-sideeye .feed { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.3em; }
 .g-sideeye .feed.scroll { animation: g-sideeye-scroll 0.09s ease-out; }
 @keyframes g-sideeye-scroll { from { transform: translateY(1.8em); } }

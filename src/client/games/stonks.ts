@@ -1,5 +1,5 @@
 import './stonks.css';
-import { COLOR, arrow, h, pick, randInt, ratio, shuffled, type Btn, type GameFactory } from './common';
+import { COLOR, dealer, h, person, randInt, ratio, setSprite, shuffled, sprite, type Btn, type GameFactory, type Mood } from './common';
 
 const TICKERS = ['$CATS', '$SOUP', '$MEME', '$YOLO', '$NAPS', '$BEANS', '$HYPE', '$COPE', '$APES', '$VIBE', '$TACO', '$OOPS'];
 const NEWS = [
@@ -18,7 +18,7 @@ const HYPE = ['STONKS!', 'HODL!', 'TENDIES!', 'BULLISH!', 'PUMP IT!', 'APE IN!',
 const BAGS = ['GUH!', 'REKT', 'OOF', 'PANIC!', 'SELL LOW', 'BAGGED!', 'DIPPED!', 'BIG OOF'];
 const RANKS = ['PAPER HANDS', 'STONKS', 'DIAMOND HANDS', 'TO THE MOON'];
 const RANK_AT = [0, 300, 650, 1000]; // the score that earns each rank
-/** What a ticker says under its arrow: [button up, button held, held through a dump]. */
+/** What a ticker says under its sign: [button up, button held, held through a dump]. */
 const TAGS = {
   up: ['HOLD ME!', 'STONKS', 'LET GO!'],
   top: ['TOPPED', 'LET GO!', 'LET GO!'],
@@ -34,6 +34,9 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
   const doubles = Math.max(0, level - 1) * 0.1; // later rounds sometimes pump two tickers at once
   const names = shuffled(rng, TICKERS).slice(0, 3);
   const noise = Array.from({ length: 16 }, () => 0.5 + rng());
+  const news = dealer(rng, NEWS);
+  const hype = dealer(rng, HYPE);
+  const bag = dealer(rng, BAGS);
 
   // Back-to-back pumps. Each one lights a ticker that was not climbing in the pump before.
   const pumps: { from: number; to: number; up: Btn[]; news: string; hype: string; bag: string }[] = [];
@@ -45,7 +48,7 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
     const lead = order.filter((b) => !prev.includes(b))[0];
     const up = rng() < doubles ? [lead, order.filter((b) => b !== lead)[0]] : [lead];
     const to = from + randInt(rng, 850, 1450) - level * 70;
-    pumps.push({ from, to, up, news: pick(rng, NEWS), hype: pick(rng, HYPE), bag: pick(rng, BAGS) });
+    pumps.push({ from, to, up, news: news(), hype: hype(), bag: bag() });
     best += (Math.max(0, Math.min(to, duration) - from) / STEP) * up.length;
     prev = up;
     from = to;
@@ -65,16 +68,22 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
   let shown = -1;
   let rank = 0;
 
-  const wrap = h('div', 'g-stonks pix');
-  const board = h('div', 'board');
-  const label = h('span', 'rank');
+  // The scene: a night sky where your rocket flies to the moon as the portfolio grows,
+  // an ape who lives and dies by the chart, and three tickers on the trading floor.
+  const wrap = h('div', 'g-stonks scene-night');
+  const sky = h('div', 'sky');
+  const ape = person({ tone: 'brown', kind: 'bear', px: 0.28 });
+  const label = h('span', 'rank', RANKS[0]);
   const cash = h('b', 'cash');
-  const track = h('div', 'track');
-  const meter = h('div', 'meter big');
-  const fill = h('i');
-  meter.append(fill);
-  track.append(meter, h('span', 'moon'));
-  board.append(label, cash, track);
+  const wallet = h('div', 'wallet');
+  wallet.append(label, cash);
+  const trader = h('div', 'trader');
+  trader.append(ape.el, wallet);
+  const flight = h('div', 'flight');
+  const rocket = sprite('rocket', { tone: 'orange', px: 0.22 }, 'rocket');
+  const moon = sprite('moon', { px: 0.26 }, 'moon');
+  flight.append(rocket, moon);
+  sky.append(trader, flight);
   const row = h('div', 'row');
   const cols = BTNS.map((b) => {
     const el = h('div', `col c-${COLOR[b]}`);
@@ -85,14 +94,19 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
       chart.append(candle);
       return candle;
     });
+    const sign = sprite('up', { px: 0.28 });
+    const slot = h('div', 'slot');
+    slot.append(sign);
     const tag = h('span', 'tag');
-    el.append(h('span', 'name', names[b]), chart, arrow('up'), tag);
+    el.append(h('span', 'name', names[b]), chart, slot, tag);
     row.append(el);
     // Every chart opens on a jagged slide, so the first pump stands out.
-    return { el, candles, tag, key: '', prices: Array.from({ length: CANDLES + 1 }, (_, k) => -k * noise[b + k]) };
+    return { el, candles, sign, tag, key: '', prices: Array.from({ length: CANDLES + 1 }, (_, k) => -k * noise[b + k]) };
   });
-  const note = h('div', 'g-note');
-  wrap.append(board, row, note);
+  const tape = h('div', 'tape');
+  const floor = h('div', 'floor');
+  floor.append(row, tape);
+  wrap.append(sky, floor);
   root.append(wrap);
 
   const pumpIndex = (t: number) => {
@@ -114,11 +128,11 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
       const close = (c.prices[k + 1] - lo) / span;
       el.className = close > open ? 'gain' : '';
       el.style.bottom = `${8 + Math.min(open, close) * 80}%`;
-      el.style.height = `${Math.max(3, Math.abs(close - open) * 80)}%`;
+      el.style.height = `${Math.max(4, Math.abs(close - open) * 80)}%`;
     });
   }
 
-  /** Candles, sparks and stamps, eight times a second. */
+  /** Candles, sparks, the ape's face and rank stamps, eight times a second. */
   function beat(t: number) {
     cols.forEach((c, b) => {
       const s = stateOf(b as Btn, t);
@@ -127,23 +141,27 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
       c.prices.shift();
       draw(c);
     });
+    let mood: Mood = BTNS.some((b) => down[b] && stateOf(b, t) === 'top') ? 'shock' : 'idle';
     if (swing > 0) {
-      good(cols[hot].el, riding === cheered ? undefined : pumps[riding].hype);
+      good(cols[hot].sign, riding === cheered ? undefined : pumps[riding].hype);
       cheered = riding;
       losing = 0;
+      mood = 'happy';
     } else if (swing < 0) {
-      if (losing++ % 3 === 0) bad(cols[cold].el, pumps[pumpIndex(t)].bag);
+      if (losing++ % 3 === 0) bad(cols[cold].sign, pumps[pumpIndex(t)].bag);
+      mood = 'dead';
     } else losing = 0;
 
     const now = RANK_AT.filter((at) => score() >= at).length - 1;
+    ape.mood(now === 3 ? 'cool' : mood);
     label.textContent = swing < 0 ? 'NOT STONKS' : RANKS[now];
-    board.classList.toggle('loss', swing < 0);
-    board.classList.toggle('landed', now === 3);
+    wrap.classList.toggle('loss', swing < 0);
     swing = 0;
     if (now <= rank) return;
     rank = now;
-    fx.pop(board, `${RANKS[now]}!`, 'gold');
-    fx.burst(board, 'gold', 12 + now * 6);
+    fx.pop(cash, `${RANKS[now]}!`, 'gold');
+    fx.poof(rocket);
+    fx.burst(now === 3 ? moon : rocket, 'gold', 12 + now * 6);
     fx.sound(now === 3 ? 'power' : 'coin');
     if (now === 3) fx.flash('gold');
   }
@@ -175,7 +193,7 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
       if (shown >= 0) fx.sound('zap');
       shown = i;
       const p = pumps[i];
-      note.textContent = p.up.length > 1 ? `DOUBLE PUMP! ${p.up.map((b) => names[b]).join(' + ')}` : `${names[p.up[0]]}: ${p.news}`;
+      tape.textContent = p.up.length > 1 ? `DOUBLE PUMP! ${p.up.map((b) => names[b]).join(' + ')}` : `${names[p.up[0]]}: ${p.news}`;
     }
     cols.forEach((c, b) => {
       const s = stateOf(b as Btn, t);
@@ -185,16 +203,21 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
       c.key = key;
       c.el.className = `col c-${COLOR[b]} ${key}`;
       c.tag.textContent = TAGS[s][grip];
+      // The sign: a skull for a bag holder, a warning at the top, else an arrow up or down.
+      if (grip === 2) setSprite(c.sign, 'skull', { px: 0.3 });
+      else if (s === 'top') setSprite(c.sign, 'bang', { px: 0.4 });
+      else setSprite(c.sign, 'up', s === 'up' ? { tone: COLOR[b], px: 0.28 } : { tone: 'grey', flipY: true, px: 0.28 });
     });
     cash.textContent = `$${(money * 40).toLocaleString('en-US')}`;
-    fill.style.width = `${score() / 10}%`;
+    flight.style.setProperty('--p', String(score() / 1000));
+    wrap.classList.toggle('landed', score() === 1000);
   }
-  label.textContent = RANKS[0];
   cols.forEach(draw);
   render(0);
 
   return {
     press(b, t) {
+      fx.poof(cols[b].sign);
       fx.sound(stateOf(b, t) === 'up' ? 'power' : 'thud');
     },
     release(b) {

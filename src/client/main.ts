@@ -7,7 +7,7 @@ import {
   type PartyState,
   type Rival,
 } from '../shared/api';
-import { GAME_IDS, GAME_META, MAX_TOTAL, TIMING, botRounds, lineupFor, prettyDay, roundsFromIds, type Round } from '../shared/daily';
+import { GAME_IDS, GAME_META, MAX_TOTAL, TIMING, botRounds, dayKey, lineupFor, prettyDay, roundsFromIds, type Round } from '../shared/daily';
 import { api, fmt } from './api';
 import { rating, runMatch, standings, type Match } from './engine';
 import { createFx } from './fx';
@@ -27,7 +27,35 @@ let skew = 0;
 const serverNow = () => Date.now() + skew;
 
 const guest = Math.random().toString(36).slice(2, 8);
-const myName = () => init?.username ?? `guest-${guest}`;
+/** True when there is no game server (a static demo): everything runs on this device. */
+let offline = false;
+const myName = () => init?.username ?? (offline ? 'you' : `guest-${guest}`);
+
+/** What the server would have said, for a build with no server behind it. */
+function offlineInit(): InitResponse {
+  const day = dayKey();
+  let myRun: InitResponse['myRun'] = null;
+  try {
+    const saved = JSON.parse(localStorage.getItem(`km_run_${day}`) ?? 'null');
+    if (Array.isArray(saved) && saved.length === 5) myRun = { rounds: saved.map(Number), total: saved.reduce((a: number, b: number) => a + Number(b), 0) };
+  } catch {
+    /* no saved run */
+  }
+  return {
+    username: null,
+    day,
+    isToday: true,
+    lineup: lineupFor(day).map((r) => r.id),
+    myRun,
+    streak: 0,
+    best: 0,
+    leaderboard: [],
+    rank: null,
+    players: 0,
+    rivals: botRounds(day).map((b) => ({ ...b, bot: true })),
+    now: Date.now(),
+  };
+}
 
 // ------------------------------------------------------------------- pads
 
@@ -190,9 +218,11 @@ function menu() {
     ? 'Counts for today’s leaderboard'
     : played
       ? `${fmt(init.myRun!.total)} points${init.rank ? ` · #${init.rank} of ${fmt(init.players)}` : ''}`
-      : init.username
-        ? 'Counts for today’s leaderboard'
-        : 'Log in to get on the leaderboard';
+      : offline
+        ? 'Today’s five games. Scores stay on this device'
+        : init.username
+          ? 'Counts for today’s leaderboard'
+          : 'Log in to get on the leaderboard';
   setChoices([
     ['PRACTICE', 'A random five or any single game. Nothing at stake'],
     [played ? 'YOUR RESULT' : 'DAILY RUN', dailySub],
@@ -264,6 +294,7 @@ async function arcadePlay(id: string) {
     rivals: () => [],
     setPads,
     pulsePad,
+    held: () => held,
     autoplay: params.has('autoplay') ? { press, release } : undefined,
   });
   const mine = match;
@@ -295,6 +326,7 @@ async function solo(kind: 'daily' | 'practice', lineup: Round[], rivals: Rival[]
     rivals: () => rivals,
     setPads,
     pulsePad,
+    held: () => held,
     // Demo mode for practice runs only: `?autoplay=1` lets a bot play.
     autoplay: kind === 'practice' && params.has('autoplay') ? { press, release } : undefined,
   });
@@ -306,6 +338,16 @@ async function solo(kind: 'daily' | 'practice', lineup: Round[], rivals: Rival[]
 
   if (kind === 'practice') {
     final({ kind: 'PRACTICE RUN', lineup, rounds, total, boardTitle: 'This run', board: standings(myName(), rounds, rivals, rounds.length) });
+    return;
+  }
+  if (offline && init) {
+    init.myRun = { rounds, total };
+    try {
+      localStorage.setItem(`km_run_${init.day}`, JSON.stringify(rounds));
+    } catch {
+      /* the run still shows for this visit */
+    }
+    final({ kind: `DAILY RUN · ${prettyDay(init.day)}`, lineup, rounds, total, badges: ['Demo: scores stay on this device'], boardTitle: 'You vs the house bots', board: standings(myName(), rounds, rivals, rounds.length) });
     return;
   }
   let board: LbEntry[] = init?.leaderboard ?? [];
@@ -342,8 +384,8 @@ function daily() {
       rounds: init.myRun.rounds,
       total: init.myRun.total,
       badges,
-      boardTitle: 'Leaderboard',
-      board: leaderboard(init.leaderboard),
+      boardTitle: offline ? 'You vs the house bots' : 'Leaderboard',
+      board: offline ? standings(myName(), init.myRun.rounds, init.rivals, 5) : leaderboard(init.leaderboard),
       announce: false,
     });
     return;
@@ -470,6 +512,7 @@ function stopParty() {
 }
 
 function lobby() {
+  if (offline) return toast('Live Party needs a Reddit post. It is switched off in this demo.');
   show('lobby');
   setPads(['BACK', 'START', ''], [menu, startParty, null]);
   $('lobby-status').textContent = 'Finding the lobby…';
@@ -543,6 +586,7 @@ async function joinParty(state: PartyState) {
     rivals: partyRivals,
     setPads,
     pulsePad,
+    held: () => held,
     onRound: (rounds) => {
       api.partyScore({ guest, matchId: id, rounds }).then(takeParty, console.error);
     },
@@ -575,7 +619,11 @@ api.init().then(
     if (screen === 'menu') menu();
   },
   (err) => {
-    console.error(err);
-    toast('Could not reach the server. Practice still works.');
+    // No server behind this build: run as a self-contained demo.
+    console.warn('no game server, running offline', err);
+    offline = true;
+    init = offlineInit();
+    if (screen === 'menu') menu();
+    toast('Demo mode: scores stay on this device.');
   }
 );

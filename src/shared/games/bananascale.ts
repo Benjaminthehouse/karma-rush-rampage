@@ -8,5 +8,5 @@ export default defineGame({
   labels: ['LOW', 'MID', 'HIGH'],
   duration: 8000,
   kind: 'brain',
-  think: 850,
+  think: 950,
 });

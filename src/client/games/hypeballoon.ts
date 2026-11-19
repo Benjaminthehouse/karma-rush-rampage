@@ -1,5 +1,5 @@
 import './hypeballoon.css';
-import { COLOR, h, pulse, randBtn, ratio, shuffled, type GameFactory } from './common';
+import { COLOR, h, padDots, pulse, randBtn, ratio, shuffled, type GameFactory } from './common';
 
 const APPS = [
   'To-do list, but AI',
@@ -26,10 +26,10 @@ const POPS = [
 const BUZZ = ['we’re live', 'trending', 'UNICORN??']; // the launch post's status as the balloon swells
 const GAP = 200; // ms before the next balloon arrives
 const POP_MS = 500; // extra pause after a pop
-const KINK_MS = 350; // the pump jams after a wrong-colour press
+const KINK_MS = 350; // the hose stays kinked this long after a wrong-colour press
 const SURGE = (2 * Math.PI) / 700; // how fast the pump surges and stalls, in radians per ms
 
-export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
+export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) => {
   const speed = (70 + 12 * level) / 100000; // share of the balloon filled per ms of holding
   const sway = level >= 2 ? 0.25 : 0; // later rounds: the fill rate swings by a quarter
   const par = 360 + 50 * level; // four launches let go at 95% on level 0, six on level 4
@@ -47,9 +47,11 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let t0 = 0; // when the current hold began
   let nextAt = 0;
   let jamUntil = 0;
+  let held = false; // the balloon's own button is down, pressed since this balloon arrived
   let hype = 0; // banked
   let live = 0; // what the balloon being pumped would bank right now
   let buzz = -1;
+  let notch = 0; // tenths of the balloon already ticked off
 
   const wrap = h('div', 'g-hypeballoon');
   const post = h('div', 'post');
@@ -61,8 +63,9 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   line.append(h('span', '', 'POP LINE'));
   const balloon = h('div', 'balloon');
   const count = h('b');
-  balloon.append(count, h('span', '', 'waitlist'));
-  sky.append(line, balloon);
+  const which = h('i', 'which'); // which pad this colour is, for anyone who cannot tell the colours apart
+  balloon.append(count, h('span', 'cap', 'waitlist'), which);
+  sky.append(line, balloon, h('div', 'boom', 'POP!'));
   const meter = h('div', 'meter big');
   const bar = h('i');
   meter.append(bar);
@@ -82,27 +85,42 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     balloon.style.setProperty('--f', f.toFixed(3));
     balloon.classList.toggle('tense', f >= 0.8);
     count.textContent = Math.round(12 * 4000 ** f).toLocaleString('en-US');
+    // The pump is heard as well as seen: a tick every tenth, and a rising whine once it starts to tremble.
+    const tenth = Math.floor(f * 10);
+    if (tenth > notch) fx.sound(tenth === 8 ? 'power' : 'tick');
+    notch = tenth;
     const s = f < 0.5 ? 0 : f < 0.85 ? 1 : 2;
     if (s === buzz) return;
     buzz = s;
     tag.className = `tag s${s}`;
     tag.textContent = BUZZ[s];
-    if (s) {
-      pulse(tag, 'pop-in');
-      fx.sound('tick');
-    }
+    if (s) pulse(tag, 'pop-in');
   }
 
   function bank() {
     bar.style.width = `${Math.min(100, (hype / par) * 100)}%`;
-    note.textContent = `${hype} hype banked`;
+    // Until something is banked the caption is the one-line tutorial.
+    note.textContent = hype ? `${hype} hype banked` : 'hold the balloon’s colour, then let go';
+  }
+
+  // The pump only runs on the balloon's own button: any other button down, or just pressed, kinks the hose.
+  const kinked = (t: number) => t < jamUntil || down.some((on, b) => on && b !== cur().col);
+
+  function pump(t: number) {
+    state = 'pump';
+    t0 = t;
+    balloon.classList.remove('jam');
+    fx.sound('power');
   }
 
   function arm() {
     idx++;
     state = 'ready';
+    held = false;
     buzz = -1;
+    sky.className = 'sky';
     balloon.className = `balloon c-${COLOR[cur().col]}`;
+    which.replaceChildren(padDots(cur().col));
     app.textContent = cur().app;
     paint(0);
     pulse(balloon, 'pop-in');
@@ -112,6 +130,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     state = 'gap';
     live = 0;
     nextAt = t + pause;
+    sky.classList.add('empty');
   }
 
   function launch(t: number, f: number) {
@@ -125,7 +144,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       return;
     }
     balloon.classList.add('fly');
-    good(balloon, `BANKED ${pts}!`);
+    good(balloon);
+    fx.pop(meter, `BANKED ${pts}!`, 'gold'); // rises off the hype meter, clear of the next launch post
     fx.sound('whoosh');
     if (f >= 0.9) {
       fx.burst(balloon, 'gold', 20);
@@ -136,10 +156,11 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   function pop(t: number) {
     leave(t, POP_MS + GAP);
     balloon.classList.add('popped');
+    sky.classList.add('popped'); // a big POP! where the balloon was; the post above says what went wrong
     tag.className = 'tag bust';
     tag.textContent = cur().pop;
     pulse(tag, 'pop-in');
-    bad(sky, 'POP!');
+    bad(sky);
     fx.burst(sky, COLOR[cur().col], 26);
     fx.flash('white');
     fx.shake();
@@ -158,23 +179,30 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         live = 0;
         jamUntil = t + KINK_MS;
         paint(0);
+        balloon.classList.add('jam');
         pulse(balloon, 'shake');
         bad(balloon, 'WRONG PUMP');
         return;
       }
-      if (state === 'pump' || t < jamUntil) return;
-      state = 'pump';
-      t0 = t;
-      fx.sound('power');
+      // Pressed while the hose is kinked: keep holding and it pumps the moment the kink clears (see tick).
+      held = true;
+      if (state === 'ready' && !kinked(t)) pump(t);
     },
     release(b, t) {
-      if (state !== 'pump' || b !== cur().col) return;
+      if (b !== cur().col) return;
+      held = false;
+      if (state !== 'pump') return;
       const f = fillAt(t);
       if (f >= 1) pop(t);
       else launch(t, f);
     },
     tick(t) {
       if (state === 'gap' && t >= nextAt) arm();
+      if (state === 'ready') {
+        const stuck = kinked(t);
+        balloon.classList.toggle('jam', stuck);
+        if (held && !stuck) pump(t);
+      }
       if (state !== 'pump') return;
       const f = fillAt(t);
       if (f >= 1) {
@@ -187,7 +215,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     // A balloon still being pumped at the bell counts as let go.
     score: () => ratio(hype + live, par),
     hint(t) {
-      if (state === 'ready') return t < jamUntil ? null : { hold: [cur().col] };
+      if (state === 'ready') return { hold: [cur().col] };
       if (state !== 'pump') return null;
       // Let go about three frames before the pop line.
       return fillAt(t + 50) < 1 ? { hold: [cur().col] } : { hold: [] };

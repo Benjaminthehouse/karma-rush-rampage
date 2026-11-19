@@ -1,5 +1,5 @@
 .g-aitaverdict .case { flex: 1; min-height: 0; max-height: 20em; width: 100%; max-width: 25em; display: flex; flex-direction: column; gap: 0.5em; position: relative; background: var(--panel-2); border: 0.16em solid var(--line); border-radius: 1em; padding: 0.7em; }
-.g-aitaverdict .title { flex: none; min-height: 2.4em; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 800; line-height: 1.2; }
+.g-aitaverdict .title { flex: none; min-height: 2.4em; display: flex; align-items: center; justify-content: center; text-align: center; text-wrap: balance; font-weight: 800; line-height: 1.2; }
 .g-aitaverdict .title b { font-weight: 900; color: var(--gold); }
 .g-aitaverdict .dock { flex: 1; min-height: 0; display: flex; gap: 0.6em; }
 .g-aitaverdict .dock.swap { flex-direction: row-reverse; }
@@ -21,7 +21,11 @@
 .g-aitaverdict .stamp { position: absolute; left: 50%; top: 73%; visibility: hidden; font-size: 3.6em; font-weight: 900; font-style: italic; line-height: 1; letter-spacing: 0.04em; color: var(--c); background: #0b1020e6; border: 0.1em solid var(--c); border-radius: 0.18em; padding: 0.08em 0.3em; transform: translate(-50%, -50%) rotate(-9deg); }
 .g-aitaverdict .ruled .stamp, .g-aitaverdict .overruled .stamp { visibility: visible; animation: g-aitaverdict-thud 0.1s ease-in; }
 .g-aitaverdict .ruled .horns { transform-origin: 60% 15%; animation: g-aitaverdict-off 0.26s ease-out forwards; }
-.g-aitaverdict .overruled .stamp { color: var(--dim); border-color: var(--dim); border-style: dashed; }
+/* Overruled: the right verdict stays in its button's colour, and the horns you missed throb where they are. */
+.g-aitaverdict .overruled .stamp { border-style: dashed; filter: saturate(0.55) brightness(0.9); }
+.g-aitaverdict .overruled .guilty { border-color: var(--c); }
+.g-aitaverdict .overruled .horns { transform-origin: 60% 15%; animation: g-aitaverdict-throb 0.22s ease-in-out 2; }
 @keyframes g-aitaverdict-thud { from { transform: translate(-50%, -50%) rotate(-9deg) scale(1.5); opacity: 0; } }
 @keyframes g-aitaverdict-off { to { transform: translateY(-9%) scale(1.15); opacity: 0; } }
+@keyframes g-aitaverdict-throb { 50% { transform: scale(1.22); } }
 .g-aitaverdict .meter i { background: var(--gold); }

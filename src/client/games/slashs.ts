@@ -1,27 +1,46 @@
 import './slashs.css';
-import { COLOR, COLOR_NAME, arrow, clamp1000, h, pick, pulse, randBtn, shuffled, type Btn, type GameFactory } from './common';
+import { COLOR, COLOR_NAME, clamp1000, dealer, defineSprite, h, person, pulse, randBtn, shuffled, sprite, type Btn, type GameFactory, type Tone } from './common';
 
-// {c} becomes the colour word. Plain orders shout it in its own colour; dry ones make you read.
+// The joke, sailing over your head.
+defineSprite('slashs-plane', `
+kkk.............
+kwwkkk..........
+.kwwwwkkk.......
+..kwwwwwwkkk....
+...kwwwwwwwwkkk.
+....kddddddddddk
+.....kwwdkkkkkk.
+......kwdk......
+.......kkk......`);
+
+// {c} becomes the colour word. Plain orders shout it on its own colour; dry ones make you read.
 const PLAIN = ['Press {c}.', 'Hit {c}!', 'Smash {c}!', 'Go {c}. Trust me.', '{c}. Obviously.', 'It’s {c}. Easy.'];
 const DRY = ['oh sure, press {c}', 'wow, {c}. genius.', 'yeah, totally {c}', '{c}, great idea', 'press {c}, big brain', 'clearly it’s {c}'];
 const USERS = ['trust_me_bro', 'well_actually', 'SourceIMadeItUp', 'literally_larry', 'EditThanksKind', 'lurker_since_09', 'NotABot_4000', 'reply_guy_42', 'this_but_unironic', 'tone_tag_tina'];
-const HUES = ['gold', 'pink', 'teal', 'purple'];
+const SKINS: Tone[] = ['gold', 'pink', 'teal', 'purple', 'orange'];
+const KINDS = ['plain', 'cat', 'bear'] as const;
 const AWARDS = ['BIG BRAIN', 'READ THE ROOM', 'SARCASM PHD', 'NOT A BOT', 'TOUCHED GRASS', 'TONE POLICE', 'GALAXY BRAIN', 'CERTIFIED LURKER'];
-const PLANE =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 10.5 22 3l-6.5 18-4-7.5z" fill="#f4f6ff" stroke="#0b1020" stroke-width="1.4" stroke-linejoin="round"/><path d="M22 3 11.5 13.5" stroke="#0b1020" stroke-width="1.4"/></svg>';
+const PRIZES = ['star', 'coin', 'trophy', 'heart', 'crown'];
 
 const GAP = 140; // ms an upvoted comment lingers before the next one
 const LOCK = 400; // ms a misread costs
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
-  const par = 10 + level;
+  // Comments to read right for a full score: a decision about every 560 ms, tightening to 440 ms.
+  const par = 10 + level / 2;
+  const plain = dealer(rng, PLAIN);
+  const dry = dealer(rng, DRY);
+  const user = dealer(rng, USERS);
+  const skin = dealer(rng, SKINS);
   let prev = -1;
-  const cards = Array.from({ length: 80 }, () => {
+  const cards = Array.from({ length: 80 }, (_, n) => {
     let btn = randBtn(rng);
     while (btn === prev) btn = randBtn(rng);
     prev = btn;
-    const dry = rng() < level * 0.2;
-    return { btn, sarcasm: rng() < 0.4, dry, line: pick(rng, dry ? DRY : PLAIN), user: pick(rng, USERS), hue: pick(rng, HUES) };
+    // The opening comment is always a plain, sincere order: obey first, then the twist.
+    const isDry = rng() < level * 0.2 && n > 0;
+    const sarcasm = rng() < 0.4 && n > 0;
+    return { btn, sarcasm, dry: isDry, line: (isDry ? dry : plain)(), user: user(), tone: skin(), kind: Math.floor(rng() * KINDS.length) };
   });
   const awards = shuffled(rng, AWARDS);
   let idx = 0;
@@ -31,32 +50,36 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let pinned = 0;
   let nextAt = -1; // when the answered card makes way for the next; -1 while a card is live
 
-  const wrap = h('div', 'g-slashs');
+  // The scene: a comment thread. The rule is pinned up top, one loud comment fills the
+  // middle, and the awards you earn for reading the room line up underneath.
+  const wrap = h('div', 'g-slashs scene-feed');
   const rule = h('div', 'rule');
   rule.innerHTML = '<em>/s</em> = any <b>OTHER</b> colour';
   const card = h('div', 'card');
   const who = h('div', 'who');
-  const face = h('i', 'face');
+  const faces = KINDS.map((kind) => person({ kind, px: 0.17 }));
+  let face = faces[0];
   const name = h('span');
-  who.append(face, name);
+  who.append(face.el, name);
   const say = h('div', 'say');
   const text = h('span');
   say.append(text);
   const foot = h('div', 'foot');
-  const up = arrow('up');
-  const votes = h('span', 'votes', '0');
+  const up = sprite('up', { tone: 'orange', px: 0.17 }, 'up');
+  const votes = h('b', 'votes', '0');
   foot.append(up, votes, h('span', 'act', 'Reply'), h('span', 'act', 'Share'));
-  // The joke going over your head: only shown when a /s is taken literally.
+  // Only shown when a /s is taken literally.
   const over = h('div', 'over');
-  const plane = h('i', 'plane');
-  plane.innerHTML = PLANE;
-  over.append(plane, h('i', 'face'), h('b', '', 'WHOOSH'));
+  const you = person({ tone: 'gold', mood: 'shock', px: 0.2 });
+  over.append(sprite('slashs-plane', { px: 0.28 }, 'plane'), you.el, h('b', '', 'WHOOSH'));
   card.append(who, say, foot, over);
+  const me = h('div', 'me');
   const shelf = h('div', 'shelf');
   const slots = Array.from({ length: 5 }, () => h('i', 'slot'));
   shelf.append(...slots);
-  const note = h('div', 'g-note', '3 in a row pins an award');
-  wrap.append(rule, card, shelf, note);
+  const note = h('div', 'note', '3 IN A ROW PINS AN AWARD');
+  me.append(shelf, note);
+  wrap.append(rule, card, me);
   root.append(wrap);
 
   const now = () => cards[idx % cards.length];
@@ -64,9 +87,15 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   function show() {
     const c = now();
     card.className = 'card';
-    face.className = `face ${c.hue}`;
+    if (faces[c.kind] !== face) {
+      face.el.replaceWith(faces[c.kind].el);
+      face = faces[c.kind];
+    }
+    face.tone(c.tone);
+    // A sarcastic commenter cannot keep a straight face.
+    face.mood(c.sarcasm ? 'wink' : 'idle');
     name.textContent = `u/${c.user}`;
-    const word = c.dry ? `<b>${COLOR_NAME[c.btn].toLowerCase()}</b>` : `<b class="t-${COLOR[c.btn]}">${COLOR_NAME[c.btn]}</b>`;
+    const word = c.dry ? `<b>${COLOR_NAME[c.btn].toLowerCase()}</b>` : `<b class="chip c-${COLOR[c.btn]}">${COLOR_NAME[c.btn]}</b>`;
     text.innerHTML = c.line.replace('{c}', word) + (c.sarcasm ? ' <em>/s</em>' : '');
     pulse(card, 'pop-in');
   }
@@ -95,6 +124,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
           bad(card);
         } else {
           card.classList.add('miss');
+          face.mood('angry');
           pulse(card, 'shake');
           bad(card, 'THEY MEANT IT');
         }
@@ -103,13 +133,16 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         streak++;
         nextAt = t + GAP;
         card.classList.add('ok');
+        face.mood('happy');
         pulse(up, 'bump');
         good(up);
         if (c.sarcasm) fx.pop(card, 'GOT THE JOKE', 'gold');
         if (streak % 3 === 0) {
           const slot = slots[Math.min(pinned, slots.length - 1)];
-          slot.className = `slot on a-${pinned % slots.length}`;
+          slot.replaceChildren(sprite(PRIZES[pinned % PRIZES.length], { px: 0.2 }));
+          slot.classList.add('on');
           pulse(slot, 'pop-in');
+          fx.poof(slot);
           fx.pop(shelf, awards[pinned % awards.length], 'gold');
           fx.burst(slot, 'gold', 14);
           fx.sound('coin');
@@ -117,7 +150,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         }
       }
       votes.textContent = String(right - wrong);
-      note.textContent = streak >= 2 ? `${streak} in a row!` : '3 in a row pins an award';
+      note.textContent = streak >= 2 ? `${streak} IN A ROW!` : '3 IN A ROW PINS AN AWARD';
     },
     tick: sync,
     score: () => clamp1000((1000 * (right - wrong)) / par),

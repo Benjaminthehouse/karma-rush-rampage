@@ -18,16 +18,22 @@ const HAIKUS = [
 ];
 const SIZES = [5, 7, 5];
 const ALL = 17;
+// Counts are spelled out wherever they float over the stage: the pixel display font draws 5 like an S.
+const WORD = ['NO', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN'];
 
 const syllables = (line: string) =>
   line.split(' ').flatMap((word) => word.split('-').map((part, i, parts) => (i < parts.length - 1 ? `${part}-` : part)));
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
-  // Nobody can type every haiku; 1000 points means reaching the par syllable count.
-  const par = 48 + level * 3;
+  // Nobody can type every haiku; 1000 points means reaching the par syllable count:
+  // six clean taps a second on the first round, seven on the last.
+  const par = 48 + level * 2;
   const deck = shuffled(rng, HAIKUS);
   const filled = [0, 0, 0];
   let posted = 0;
+  // A burst that runs a tap past the end of a haiku is swallowed, not buzzed.
+  const GRACE = 280;
+  let graceUntil = 0;
 
   const wrap = h('div', 'g-haikubot');
   const card = h('div', 'card');
@@ -52,12 +58,26 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   wrap.append(card);
   root.append(wrap);
   const typed = () => posted * ALL + filled[0] + filled[1] + filled[2];
+  // The bot types top to bottom: the line being typed is the first one with room left.
+  // (A full haiku is posted and dealt again at once, so there always is one.)
+  const turn = () => filled.findIndex((n, i) => n < SIZES[i]) as Btn;
+
+  function refresh() {
+    const now = turn();
+    lines.forEach((l, i) => l.line.classList.toggle('now', i === now));
+    votes.textContent = String(typed());
+  }
+
+  // Restart one of the line's one-shot animations (they share the `animation` property).
+  function jolt(line: HTMLElement, cls: 'spill' | 'nudge') {
+    line.classList.remove('spill', 'nudge');
+    pulse(line, cls);
+  }
 
   function wipe(b: number) {
     filled[b] = 0;
-    lines[b].line.classList.remove('full', 'spill');
+    lines[b].line.classList.remove('full', 'spill', 'nudge');
     lines[b].cells.forEach((cell) => cell.classList.remove('on'));
-    votes.textContent = String(typed());
   }
 
   function deal() {
@@ -67,27 +87,42 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       syllables(haiku[b]).forEach((s, i) => (l.cells[i].textContent = s));
     });
     tally.textContent = `GOOD BOT ×${posted}`;
+    refresh();
     pulse(poem, 'pop-in');
   }
   deal();
 
   return {
-    press(b) {
+    press(b, t) {
+      const now = turn();
+      if (b > now) {
+        // Not this line's turn yet. Mashing every button gets nowhere; a miscount gets told what is missing.
+        if (b === 2 && t < graceUntil) return;
+        jolt(lines[now].line, 'nudge');
+        bad(lines[now].line);
+        fx.pop(lines[now].line, `${WORD[SIZES[now] - filled[now]]} MORE`, COLOR[now]);
+        return;
+      }
       const { line, cells } = lines[b];
-      if (filled[b] === SIZES[b]) {
-        // One syllable too many: the whole line falls off.
+      if (b < now) {
+        // One syllable too many on a finished line: the whole line falls off.
         wipe(b);
-        pulse(line, 'spill');
+        refresh();
+        jolt(line, 'spill');
         bad(line, 'BAD BOT');
         return;
       }
       const cell = cells[filled[b]++];
       cell.classList.add('on');
-      votes.textContent = String(typed());
       good(cell);
-      if (filled[b] < SIZES[b]) return;
-      if (filled.every((n, i) => n === SIZES[i])) {
+      if (filled[b] < SIZES[b]) {
+        refresh();
+        return;
+      }
+      if (b === 2) {
+        // The last line can only be typed once the first two are full: post it.
         posted++;
+        graceUntil = t + GRACE;
         fx.pop(poem, 'GOOD BOT!', 'gold');
         fx.burst(poem, 'gold', 20);
         fx.flash('gold');
@@ -97,12 +132,13 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         return;
       }
       line.classList.add('full');
-      fx.pop(line, `${SIZES[b]}!`, COLOR[b]);
+      refresh();
+      fx.pop(line, `${WORD[SIZES[b]]}!`, COLOR[b]);
       fx.burst(line, COLOR[b], 10);
       fx.sound('ding');
     },
     tick() {},
     score: () => ratio(typed(), par),
-    hint: () => ([0, 1, 2] as Btn[]).find((b) => filled[b] < SIZES[b]) ?? null,
+    hint: () => turn(),
   };
 };

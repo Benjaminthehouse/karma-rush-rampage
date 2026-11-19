@@ -225,6 +225,8 @@ const live = { running: false, t: 0, error: '' };
       seen.add(el);
       const cs = getComputedStyle(el);
       if (cs.visibility === 'hidden' || cs.display === 'none' || Number(cs.opacity) < 0.05) continue;
+      // A viewport that scrolls its content on purpose (a long text being typed) opts out.
+      if (el.closest('[data-scroll]')) continue;
       // An ellipsis is a deliberate cut (a long username on a meta line), not a layout bug.
       let cut: Element | null = el;
       while (cut && cut !== stage && getComputedStyle(cut).textOverflow !== 'ellipsis') cut = cut.parentElement;

@@ -33,6 +33,7 @@ import { create as oddlystack } from './oddlystack';
 import { create as peak } from './peak';
 import { create as poll } from './poll';
 import { create as popuppanic } from './popuppanic';
+import { create as rant } from './rant';
 import { create as regenerate } from './regenerate';
 import { create as repostradar } from './repostradar';
 import { create as rugpull } from './rugpull';
@@ -85,6 +86,7 @@ export const GAMES: Record<string, GameFactory> = {
   peak,
   poll,
   popuppanic,
+  rant,
   regenerate,
   repostradar,
   rugpull,

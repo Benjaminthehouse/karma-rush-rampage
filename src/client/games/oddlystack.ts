@@ -1,5 +1,5 @@
 import './oddlystack.css';
-import { COLOR, h, pulse, randBtn, ratio, shuffled, type GameFactory } from './common';
+import { COLOR, comment, dealer, h, padDots, person, pulse, randBtn, ratio, type Btn, type GameFactory } from './common';
 
 const NICE = [
   'I could watch this all day',
@@ -21,6 +21,7 @@ const UGH = [
   'reported for crooked',
   'and it was going so well',
 ];
+const FANS = ['flush_enjoyer', 'gap_inspector', 'slab_dad', 'plumb_bob', 'zero_gap_zoe', 'level_headed'];
 const FIRST = 300; // ms before the first slab starts to slide
 const REST = 150; // ms a fresh slab waits at the edge
 const KEEP = 0.6; // a slab hanging over by more than this share of its width falls off
@@ -44,45 +45,54 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let flawless = 0;
   for (let at = FIRST; at + sweep(flawless) / 2 < duration; ) at += sweep(flawless++) / 2 + REST;
   const par = flawless - 2;
-  const nice = shuffled(rng, NICE);
-  const ugh = shuffled(rng, UGH);
+  const nice = dealer(rng, NICE);
+  const ugh = dealer(rng, UGH);
 
   let idx = 0; // the slab that is sliding
   let from = FIRST; // when it starts to slide
   let landed = 0;
   let points = 0;
   let chain = 0;
-  let said = 0;
   let lockedUntil = 0;
 
-  const wrap = h('div', 'g-oddlystack');
+  // The scene: the comment thread under a stacking video. The slab slides along the top,
+  // the tower hangs under it, and the top commenter watches every drop from below.
+  const wrap = h('div', 'g-oddlystack scene-feed');
   wrap.style.setProperty('--w', `${W}%`);
   const top = h('div', 'top');
   const streak = h('b', 'streak');
-  const meter = h('div', 'meter big');
+  const bar = h('div', 'bar');
   const fill = h('i');
-  meter.append(fill);
-  top.append(streak, meter);
+  bar.append(fill);
+  top.append(streak, bar);
   const yard = h('div', 'yard');
-  const mover = h('div', 'slab mover');
+  const mover = h('div');
   const lost = h('div', 'slab lost');
   const stack = h('div', 'stack');
-  yard.append(h('i', 'slot'), stack, lost, mover);
-  const say = h('div', 'say', 'stacking slabs with zero gaps [OC]');
-  wrap.append(top, yard, say);
+  const seam = h('i', 'seam'); // where a slab touches down
+  yard.append(h('i', 'slot'), stack, seam, lost, mover);
+  const fan = person({ tone: 'teal', kind: 'cat', px: 0.25 });
+  const reply = comment({ user: dealer(rng, FANS)(), text: 'go on then. zero gaps.', avatar: fan.el });
+  wrap.append(top, yard, reply.el);
   root.append(wrap);
+
+  /** Paints an element as a slab of one colour, tagged with which pad drops it. */
+  function dress(el: HTMLElement, c: Btn, cls = '') {
+    el.className = `slab c-${COLOR[c]} ${cls}`;
+    el.replaceChildren(padDots(c));
+    return el;
+  }
 
   // The tower, newest row first. `x` is how far a row sits from the top slab, which is always centred.
   const rows: { el: HTMLElement; x: number }[] = [];
-  function addRow(cls: string, x: number) {
-    const el = h('div', cls);
+  function addRow(el: HTMLElement, x: number) {
     el.style.setProperty('--x', `${x}%`);
     stack.prepend(el);
     rows.unshift({ el, x });
     return el;
   }
-  addRow('plinth', 0);
-  addRow('slab base', 0);
+  addRow(h('div', 'table'), 0);
+  addRow(h('div', 'slab base'), 0);
 
   const cur = () => slabs[idx % slabs.length];
   /** Where the sliding slab's centre is, relative to the tower: it bounces edge to edge. */
@@ -93,7 +103,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   const place = (t: number) => (mover.style.left = `${50 - W / 2 + offsetAt(t)}%`);
 
   function show() {
-    mover.className = `slab mover c-${COLOR[cur().c]}`;
+    dress(mover, cur().c, 'mover');
     streak.textContent = `FLUSH ×${chain}`;
     streak.classList.toggle('on', chain > 1);
     fill.style.width = `${Math.min(100, (points / par) * 100)}%`;
@@ -106,7 +116,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       if (t < lockedUntil) return;
       const c = cur().c;
       if (b !== c) {
-        lockedUntil = t + 250;
+        lockedUntil = t + 350;
+        fan.mood('sad');
         pulse(mover, 'shake');
         bad(mover, 'WRONG COLOUR');
         return;
@@ -114,43 +125,49 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       const off = offsetAt(t);
       const flush = Math.abs(off) <= SNAP;
       const q = flush ? 1 : 1 - Math.abs(off) / (KEEP * W);
+      stack.classList.remove('g-oddlystack-sheen');
       if (q <= 0) {
         // Barely on the tower: it tips off the side.
         chain = 0;
-        lost.className = `slab lost c-${COLOR[c]}`;
+        dress(lost, c, 'lost');
         lost.style.left = mover.style.left;
         pulse(lost, off < 0 ? 'g-oddlystack-tipl' : 'g-oddlystack-tipr');
+        fan.mood('shock');
+        reply.text.textContent = ugh();
+        fx.poof(lost);
         bad(lost, 'DROPPED IT');
         fx.sound('whoosh');
       } else {
         // It lands where it was dropped, then the view recentres on it: every row slides across.
         const d = flush ? 0 : off;
-        const el = addRow(`slab c-${COLOR[c]}`, d);
+        const el = addRow(dress(h('div'), c), d);
         pulse(stack, 'g-oddlystack-settle');
         rows.forEach((r, i) => {
           r.x -= d;
           r.el.style.setProperty('--x', `${r.x}%`);
           r.el.style.setProperty('--i', String(Math.max(0, 6 - i))); // the sheen climbs from the bottom row
         });
-        while (rows.length > 9) rows.pop()!.el.remove();
+        while (rows.length > 12) rows.pop()!.el.remove();
         points += q;
         landed++;
-        stack.classList.remove('g-oddlystack-sheen');
+        fx.poof(seam);
         if (flush) {
           chain++;
           pulse(stack, 'g-oddlystack-sheen');
+          fan.mood(chain > 2 ? 'cool' : 'happy');
+          reply.text.textContent = nice();
           good(el, chain > 1 ? `FLUSH ×${chain}` : 'FLUSH');
-          say.textContent = nice[said++ % nice.length];
           if (chain % 5 === 0) {
-            fx.pop(yard, 'ODDLY SATISFYING', 'gold');
-            fx.burst(stack, 'gold', 30);
+            fx.pop(reply.el, 'ODDLY SATISFYING', 'gold');
+            fx.burst(el, 'gold', 30);
             fx.flash('gold');
             fx.sound('coin');
           } else fx.sound('ding');
         } else {
           chain = 0;
+          fan.mood('angry');
+          reply.text.textContent = ugh();
           bad(el, 'mildly infuriating');
-          say.textContent = ugh[said++ % ugh.length];
           fx.sound('thud');
         }
       }

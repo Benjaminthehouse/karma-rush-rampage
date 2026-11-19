@@ -1,30 +1,39 @@
-.g-dumpsterfire { gap: 0.55em !important; }
-.g-dumpsterfire .sign { width: 100%; text-align: center; font-size: 1.55em; font-weight: 900; font-style: italic; line-height: 1; letter-spacing: 0.02em; padding: 0.32em 0.3em; border-radius: 0.5em; color: var(--bg); background: linear-gradient(var(--gold), #ff7a3d); box-shadow: 0 0 1em #ff7a3d99; animation: g-dumpsterfire-alarm 0.26s steps(2) infinite; }
-.g-dumpsterfire .sign.calm { background: var(--green); box-shadow: 0 0 1em #2fd66f99; animation: g-dumpsterfire-flip 0.16s ease-out; }
-@keyframes g-dumpsterfire-alarm { 50% { filter: brightness(1.35); } }
-@keyframes g-dumpsterfire-flip { from { transform: scaleY(0.3); filter: brightness(2); } }
+.g-dumpsterfire { justify-content: space-between !important; align-items: stretch !important; gap: 0.4em !important; padding: 0.7em 0.6em 0.5em !important; color: #0b1020; }
 
-.g-dumpsterfire .lanes { flex: 1; min-height: 0; width: 100%; display: flex; gap: 0.5em; }
-.g-dumpsterfire .lane { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; border-radius: 0.8em; border: 0.16em solid var(--line); background: var(--bg); transition: border-color 0.1s, box-shadow 0.1s; }
-.g-dumpsterfire .lane.over { border-color: var(--c); box-shadow: 0 0 1.1em color-mix(in srgb, var(--c) 70%, transparent); }
-.g-dumpsterfire .pit { flex: 1; min-height: 0; position: relative; }
-/* The top half is the danger zone; its lower edge is the line. */
-.g-dumpsterfire .pit::before { content: ''; position: absolute; inset: 0 0 50%; border-bottom: 0.16em dashed var(--ink); background: repeating-linear-gradient(135deg, #ffffff12 0 0.45em, #0000 0.45em 0.9em); }
-.g-dumpsterfire .lane.over .pit::before { background-color: color-mix(in srgb, var(--c) 24%, transparent); }
-.g-dumpsterfire .zone { position: absolute; top: 0.7em; left: 0; right: 0; z-index: 1; text-align: center; font-size: 0.7em; font-weight: 900; color: var(--dim); opacity: 0.7; }
-.g-dumpsterfire .lane.over .zone { color: var(--ink); opacity: 1; animation: g-dumpsterfire-alarm 0.26s steps(2) infinite; }
+/* The sign over the alley: on fire, or all civil. */
+.g-dumpsterfire .sign { flex: none; margin: 0 0.2em; display: flex; align-items: center; justify-content: center; gap: 0.5em; padding: 0.32em 0.2em; background: var(--gold); line-height: 1; box-shadow: 0 -0.2em 0 0 #0b1020, 0 0.2em 0 0 #0b1020, -0.2em 0 0 0 #0b1020, 0.2em 0 0 0 #0b1020, 0.2em 0.55em 0 0 #0b102088; animation: g-dumpsterfire-alarm 0.24s steps(1) infinite; }
+.g-dumpsterfire .sign b { font-size: 1.3em; letter-spacing: 0.04em; white-space: nowrap; }
+.g-dumpsterfire.calm .sign { background: var(--green); animation: g-dumpsterfire-flip 0.15s steps(3); }
+@keyframes g-dumpsterfire-alarm { 50% { background: #ff8a3d; } }
+@keyframes g-dumpsterfire-flip { from { transform: scaleY(0.2); } }
 
-.g-dumpsterfire .flame { position: absolute; left: 50%; bottom: 0; translate: -50% 0; aspect-ratio: 0.62; max-width: 92%; transform-origin: 50% 100%; transition: height 0.09s ease-out; }
-.g-dumpsterfire .lane.over .flame { filter: drop-shadow(0 0 0.5em var(--c)); }
-.g-dumpsterfire .flame svg { display: block; width: 100%; height: 100%; overflow: visible; transform-origin: 50% 100%; animation: g-dumpsterfire-flicker 0.34s ease-in-out infinite; }
-.g-dumpsterfire .lane:nth-child(2) .flame svg { animation-duration: 0.29s; }
-.g-dumpsterfire .lane:nth-child(3) .flame svg { animation-duration: 0.4s; }
-.g-dumpsterfire .flame .out { fill: var(--c); }
-.g-dumpsterfire .flame .in { fill: #ffe58a; }
-.g-dumpsterfire .flame.hit { animation: g-dumpsterfire-hit 0.12s ease-out; }
-@keyframes g-dumpsterfire-flicker { 50% { transform: scaleX(0.88) skewX(-4deg); } }
-@keyframes g-dumpsterfire-hit { from { transform: scale(1.2, 0.78); filter: brightness(1.7); } }
+/* Three threads, one above each button. */
+.g-dumpsterfire .lanes { flex: 1; min-height: 0; align-self: center; width: 100%; max-width: 25em; display: flex; gap: 0.4em; }
+.g-dumpsterfire .lane { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+/* The mod stands over whichever thread was hosed last. */
+.g-dumpsterfire .perch { flex: none; height: 3em; display: flex; align-items: flex-end; justify-content: center; }
+.g-dumpsterfire .pit { --size: 0; --base: 2.7em; flex: 1; min-height: 0; align-self: stretch; position: relative; }
+.g-dumpsterfire .bin { position: absolute; left: 50%; bottom: 0; margin-left: -2.1em; z-index: 1; }
+.g-dumpsterfire .lane.over .bin { animation: g-dumpsterfire-rattle 0.1s steps(2) infinite; }
+@keyframes g-dumpsterfire-rattle { 50% { transform: translateX(0.1em); } }
+/* The flame stands in the dumpster and is as tall as the thread is hot. */
+.g-dumpsterfire .flame { position: absolute; left: 50%; bottom: calc(var(--base) - 0.6em); height: calc((100% - var(--base)) * var(--size) + 0.6em); aspect-ratio: 13 / 16; max-width: 100%; translate: -50% 0; visibility: hidden; transition: height 0.08s steps(2); }
+.g-dumpsterfire .lane.over .flame { visibility: visible; }
+.g-dumpsterfire .flame .px { display: block; width: 100% !important; height: 100% !important; }
+.g-dumpsterfire .tip { position: absolute; left: 50%; top: 0.6em; width: 0; height: 0; }
+/* Water comes straight down from the mod onto the flame. */
+.g-dumpsterfire .jet { position: absolute; left: 50%; top: -0.2em; bottom: calc(var(--base) + (100% - var(--base)) * var(--size) - 0.5em); width: 0.8em; margin-left: -0.4em; z-index: 2; opacity: 0; background: repeating-linear-gradient(#7ee7ff 0 0.3em, #f4f6ff 0.3em 0.6em); box-shadow: -0.16em 0 0 0 #0b1020, 0.16em 0 0 0 #0b1020; }
+.g-dumpsterfire .jet.on { animation: g-dumpsterfire-jet 0.16s steps(1); }
+@keyframes g-dumpsterfire-jet { 0% { opacity: 1; } 50% { opacity: 1; background-position: 0 0.3em; } 100% { opacity: 0; } }
 
-.g-dumpsterfire .take { flex: none; height: 3.3em; display: flex; align-items: center; justify-content: center; padding: 0 0.3em; text-align: center; font-size: 0.72em; font-weight: 800; line-height: 1.1; background: var(--panel-2); border-top: 0.22em solid var(--c); }
-.g-dumpsterfire .clock { font-weight: 800; font-size: 0.85em; letter-spacing: 0.08em; color: var(--dim); line-height: 1; }
-.g-dumpsterfire .clock b { font-size: 1.7em; font-weight: 900; font-style: italic; color: var(--gold); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+/* The comment that started it. */
+.g-dumpsterfire .take { flex: none; align-self: stretch; height: 2.1em; margin: 0.5em 0.2em 0.2em; padding: 0 0.15em; display: flex; align-items: center; justify-content: center; text-align: center; background: #fff; color: #8a93bd; box-shadow: 0 -0.2em 0 0 #0b1020, 0 0.2em 0 0 #0b1020, -0.2em 0 0 0 #0b1020, 0.2em 0 0 0 #0b1020, 0 -0.5em 0 0 var(--c), -0.2em -0.5em 0 0 #0b1020, 0.2em -0.5em 0 0 #0b1020, 0 -0.7em 0 0 #0b1020; }
+.g-dumpsterfire .take span { font-size: 0.72em; line-height: 1; }
+.g-dumpsterfire .lane.over .take { color: #0b1020; background: #fff0a8; }
+
+/* How long everybody has behaved. */
+.g-dumpsterfire .hud { flex: none; display: flex; flex-direction: column; align-items: center; gap: 0.35em; padding-top: 0.2em; }
+.g-dumpsterfire .bar { width: calc(100% - 0.4em); max-width: 22em; height: 0.9em; background: #0b1020; box-shadow: 0 -0.2em 0 0 #0b1020, 0 0.2em 0 0 #0b1020, -0.2em 0 0 0 #0b1020, 0.2em 0 0 0 #0b1020; }
+.g-dumpsterfire .bar i { display: block; height: 100%; width: 0; background: var(--green); box-shadow: inset 0 0.25em 0 0 #9df5bd; }
+.g-dumpsterfire .clock { background: #0b1020; color: #f4f6ff; font-size: 0.8em; letter-spacing: 0.06em; line-height: 1; padding: 0.2em 0.7em; white-space: nowrap; }
+.g-dumpsterfire .clock b { font-size: 1.4em; color: var(--gold); font-variant-numeric: tabular-nums; }

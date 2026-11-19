@@ -9,5 +9,5 @@ export default defineGame({
   labels: ['REPROMPT', 'REPROMPT', 'REPROMPT'],
   duration: 7000,
   kind: 'react',
-  think: 300,
+  think: 350,
 });

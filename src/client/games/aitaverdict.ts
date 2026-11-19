@@ -1,5 +1,5 @@
 import './aitaverdict.css';
-import { COLOR, h, pick, pulse, ratio, shuffled, type Btn, type GameFactory } from './common';
+import { COLOR, h, pulse, ratio, shuffled, type Btn, type GameFactory } from './common';
 
 // Indexed by who has the horns, which is also the button: 0 OP, 1 both, 2 them.
 const VERDICT = ['YTA', 'ESH', 'NTA'];
@@ -47,11 +47,14 @@ const BUST =
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const par = 11 + level * 0.75;
+  // Each verdict's cases come off their own shuffled pile, so none is heard twice before all seven are.
+  const piles = CASES.map((pile) => shuffled(rng, pile));
+  const heard = [0, 0, 0];
   // Dealt in shuffled sixes, two of each verdict, so no single button is ever a lucky guess.
-  const docket = Array.from({ length: 7 }, () => shuffled<Btn>(rng, [0, 0, 1, 1, 2, 2]))
+  const docket =Array.from({ length: 7 }, () => shuffled<Btn>(rng, [0, 0, 1, 1, 2, 2]))
     .flat()
     // Later rounds seat OP on the right, so the colour counts and the side does not.
-    .map((verdict) => ({ verdict, text: pick(rng, CASES[verdict]), swap: rng() < level * 0.12 }));
+    .map((verdict) => ({ verdict, text: piles[verdict][heard[verdict]++ % piles[verdict].length], swap: rng() < level * 0.12 }));
   let idx = 0;
   let right = 0;
   let wrong = 0;

@@ -1,11 +1,13 @@
 .g-worksonmine .say { max-width: 100%; min-height: 3.5em; display: flex; align-items: center; }
 .g-worksonmine .rule i { color: #ff9aa0; }
-.g-worksonmine .stamp { display: inline-block; font-size: 0.9em; font-weight: 900; line-height: 1.1; letter-spacing: 0.03em; color: var(--green); border: 0.16em solid; border-radius: 0.4em; padding: 0.2em 0.6em; transform: rotate(-3deg); animation: g-worksonmine-stamp 0.16s ease-out; }
+.g-worksonmine .stamp { display: inline-block; font-size: 0.9em; font-weight: 900; line-height: 1.1; letter-spacing: 0.03em; color: var(--green); border: 0.16em solid; border-radius: 0.4em; padding: 0.2em 0.6em; transform: rotate(-3deg); animation: g-worksonmine-stamp 0.18s ease-out; }
 .g-worksonmine .stamp.gold { color: var(--gold); box-shadow: 0 0 0.8em #ffcf3f99; }
-@keyframes g-worksonmine-stamp { from { transform: rotate(-3deg) scale(1.8); opacity: 0; } }
+/* Slams in from small with a little overshoot, so it never pokes out of the stage. */
+@keyframes g-worksonmine-stamp { from { transform: rotate(-3deg) scale(0.5); opacity: 0; } 65% { transform: rotate(-3deg) scale(1.07); opacity: 1; } }
 
-/* Three fixed slots, one above each button; the laptops slide between them. */
-.g-worksonmine .desk { position: relative; width: 100%; height: 11.6em; flex: none; }
+/* Three fixed slots, one above each button; the laptops slide between them. The side margins leave
+   room for an end laptop to swell (tick, hop, smoke) without leaving the stage, however wide it is. */
+.g-worksonmine .desk { position: relative; width: 94%; height: 11.6em; flex: none; }
 .g-worksonmine .pad { position: absolute; bottom: 0; width: 30%; height: 1.3em; border-radius: 0.45em; background: var(--c); box-shadow: 0 0.28em 0 var(--cd); }
 .g-worksonmine .pad:nth-child(2) { left: 35%; }
 .g-worksonmine .pad:nth-child(3) { left: 70%; }

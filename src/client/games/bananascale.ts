@@ -63,17 +63,19 @@ const RIGHT_MS = 520; // then the verdict stays up until the next thing
 const WRONG_MS = 800;
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
-  // A sharp eye measures about one thing a second; 1000 points means seven or eight of them.
-  const par = 7 + level * 0.25;
+  // Each call costs a look (about a second) plus the half-second stack-up, so six right
+  // answers is a great round. Later levels get harder through closer guesses, not a higher par.
+  const par = 6;
   const things = shuffled(rng, THINGS);
   let bag: Btn[] = [];
   // More things than anyone can measure; the right answer sits on each button equally often.
   const rounds = Array.from({ length: 27 }, (_, i) => {
     if (i % 3 === 0) bag = shuffled(rng, [0, 1, 2] as Btn[]);
     const thing = things[i % things.length];
-    // Guesses two apart are easy to eyeball; later levels mix in consecutive ones.
+    // Guesses two apart are easy to eyeball; later levels mix in consecutive ones. Those stop
+    // at 3 / 4 / 5: nobody can tell five bananas from six at a glance.
     const step = rng() < level * 0.2 ? 1 : 2;
-    const low = randInt(rng, 2, 3 + Math.floor(level / 3));
+    const low = randInt(rng, 2, step === 1 ? 3 : 3 + Math.floor(level / 3));
     const win = bag[i % 3];
     return { thing, cap: pick(rng, thing.caps), guesses: [low, low + step, low + 2 * step], win, tall: low + win * step };
   });

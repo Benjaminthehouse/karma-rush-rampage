@@ -1,41 +1,37 @@
-.g-slashs .card { position: relative; width: min(100%, 20em); background: var(--panel-2); border: 0.18em solid var(--line); border-radius: 1em; padding: 0.8em 1em; display: flex; flex-direction: column; gap: 0.5em; overflow: hidden; }
-.g-slashs .card.ok { border-color: var(--gold); }
-.g-slashs .card.miss { filter: saturate(0.3) brightness(0.6); }
-.g-slashs .who { display: flex; align-items: center; gap: 0.6em; font-size: 0.85em; font-weight: 800; color: var(--dim); }
-/* A round head: two eyes and a flat mouth. Used for the commenter and for you. */
-.g-slashs .face { position: relative; display: block; flex: none; width: 2.2em; height: 2.2em; border-radius: 50%; background: var(--tint, var(--ink)); }
-.g-slashs .face::before { content: ''; position: absolute; left: 24%; top: 32%; width: 15%; height: 19%; border-radius: 50%; background: var(--bg); box-shadow: 0.8em 0 0 var(--bg); }
-.g-slashs .face::after { content: ''; position: absolute; left: 30%; right: 30%; bottom: 24%; height: 9%; border-radius: 1em; background: var(--bg); }
-.g-slashs .gold { --tint: var(--gold); }
-.g-slashs .pink { --tint: #ff7ac8; }
-.g-slashs .teal { --tint: #2fd6c4; }
-.g-slashs .purple { --tint: var(--purple); }
-.g-slashs .say { display: flex; align-items: center; min-height: 2.4em; font-size: 1.8em; font-weight: 900; line-height: 1.2; }
+.g-slashs { justify-content: space-between !important; padding: 0 0 0.6em !important; gap: 0.6em !important; }
+/* The rule, pinned to the top of the thread. */
+.g-slashs .rule { align-self: stretch; background: #0b1020; color: #fff; font-size: 1.25em; padding: 0.35em 0.3em 0.45em; box-shadow: 0 0.25em 0 #0b102033; }
+.g-slashs .rule em, .g-slashs .say em { font-style: normal; background: var(--gold); color: #0b1020; padding: 0 0.3em; white-space: nowrap; box-shadow: 0 0 0 0.1em #0b1020; }
+.g-slashs .rule em { margin-right: 0.15em; }
+
+/* One loud comment. */
+.g-slashs .card { position: relative; width: min(100% - 1.8em, 21em); background: #fff; color: #0b1020; padding: 0.55em 0.75em 0.5em; display: flex; flex-direction: column; gap: 0.35em; box-shadow: 0 0 0 0.22em #0b1020, 0.5em 0.8em 0 0.22em #0b102055; }
+.g-slashs .card.ok { box-shadow: 0 0 0 0.22em #0b1020, 0 0 0 0.55em var(--gold), 0.5em 0.8em 0 0.55em #0b102055; }
+.g-slashs .card.miss { filter: grayscale(1) brightness(0.8); }
+.g-slashs .who { display: flex; align-items: center; gap: 0.55em; font-size: 0.85em; color: #6a7399; }
+.g-slashs .say { display: flex; align-items: center; min-height: 2.35em; font-size: 1.75em; line-height: 1.14; }
 .g-slashs .say b { text-decoration: underline; text-underline-offset: 0.14em; }
-.g-slashs .say em, .g-slashs .rule em { background: var(--gold); color: #071022; border-radius: 0.25em; padding: 0 0.3em; white-space: nowrap; }
-.g-slashs .foot { display: flex; align-items: center; gap: 0.5em; font-weight: 900; }
-.g-slashs .foot .arrow { width: 1.8em; height: 1.8em; color: var(--gold); }
-.g-slashs .votes { flex: 1; font-size: 1.4em; color: var(--gold); font-variant-numeric: tabular-nums; }
-.g-slashs .act { font-size: 0.75em; font-weight: 800; color: var(--dim); }
-.g-slashs .over { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15em; background: var(--panel-2); visibility: hidden; }
+.g-slashs .say .chip { text-decoration: none; background: var(--c); padding: 0 0.16em; margin: 0 0.12em; box-shadow: 0 0 0 0.08em #0b1020; }
+.g-slashs .say em { margin-left: 0.1em; }
+.g-slashs .foot { display: flex; align-items: center; gap: 0.5em; }
+.g-slashs .votes { flex: 1; font-size: 1.35em; color: #c8551a; font-variant-numeric: tabular-nums; }
+.g-slashs .act { font-size: 0.75em; color: #6a7399; }
+.g-slashs .over { position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15em; background: repeating-linear-gradient(135deg, #ff4b55 0 1.2em, #d63642 1.2em 2.4em); visibility: hidden; }
 .g-slashs .card.whoosh .over { visibility: visible; }
-.g-slashs .plane { width: 2.8em; height: 2.8em; }
-.g-slashs .plane svg { display: block; width: 100%; height: 100%; }
-.g-slashs .card.whoosh .plane { animation: g-slashs-fly 0.38s ease-out both; }
-@keyframes g-slashs-fly { from { transform: translate(-8em, 0.8em) rotate(10deg); } to { transform: translate(5.5em, -0.3em) rotate(10deg); } }
-.g-slashs .over b { font-size: 2.4em; font-style: italic; font-weight: 900; line-height: 1; letter-spacing: 0.04em; color: var(--gold); }
-.g-slashs .shelf { display: flex; gap: 0.6em; }
-.g-slashs .slot { width: 2.2em; height: 2.2em; border-radius: 50%; border: 0.14em dashed var(--line); }
-.g-slashs .slot.on { border: 0; border-radius: 0; background: var(--gold); }
-.g-slashs .slot.a-0 { clip-path: polygon(50% 0, 62% 35%, 100% 38%, 70% 60%, 80% 100%, 50% 76%, 20% 100%, 30% 60%, 0 38%, 38% 35%); }
-.g-slashs .slot.a-1 { background: #2fd6c4; clip-path: polygon(50% 0, 100% 38%, 50% 100%, 0 38%); }
-.g-slashs .slot.a-2 { background: var(--purple); clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%); }
-.g-slashs .slot.a-3 { border-radius: 50%; background: radial-gradient(circle, var(--ink) 0 24%, #ff7ac8 26% 100%); }
-.g-slashs .slot.a-4 { background: var(--ink); clip-path: polygon(0 22%, 26% 52%, 50% 8%, 74% 52%, 100% 22%, 88% 92%, 12% 92%); }
-/* A tall phone stage has room to spare: let the comment breathe. */
+.g-slashs .card.whoosh .plane { animation: g-slashs-fly 0.4s steps(10) both; }
+@keyframes g-slashs-fly { from { transform: translate(-9em, 0.8em); } to { transform: translate(4.5em, -0.1em); } }
+.g-slashs .over b { font-size: 2.6em; line-height: 1; letter-spacing: 0.04em; color: var(--gold); text-shadow: 0.07em 0 #0b1020, -0.07em 0 #0b1020, 0 0.07em #0b1020, 0 -0.07em #0b1020, 0.14em 0.14em 0 #0b1020; }
+
+/* The awards you have been given for reading the room. */
+.g-slashs .me { display: flex; flex-direction: column; align-items: center; gap: 0.45em; }
+.g-slashs .shelf { display: flex; gap: 0.55em; }
+.g-slashs .slot { width: 2.8em; height: 2.8em; display: grid; place-items: center; background: #0b102014; box-shadow: inset 0 0 0 0.14em #0b102044; }
+.g-slashs .slot.on { background: #fff; box-shadow: 0 0 0 0.16em #0b1020, 0.25em 0.35em 0 0.16em #0b102055; }
+.g-slashs .note { background: #0b1020; color: var(--gold); font-size: 0.8em; letter-spacing: 0.05em; padding: 0.1em 0.7em; white-space: nowrap; }
+
+/* A tall phone stage has room to spare: let the comment shout. */
 @container (max-aspect-ratio: 2/3) {
-  .g-slashs { gap: 1.2em; }
-  .g-slashs .card { padding: 1.1em 1em; gap: 0.8em; }
-  .g-slashs .say { font-size: 2em; min-height: 3.6em; }
-  .g-slashs .slot { width: 2.7em; height: 2.7em; }
+  .g-slashs .card { padding: 0.8em 0.8em 0.7em; gap: 0.6em; }
+  .g-slashs .who .person { font-size: 1.3em; }
+  .g-slashs .say { font-size: 2.2em; min-height: 3.5em; }
 }

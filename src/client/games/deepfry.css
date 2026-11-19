@@ -1,55 +1,68 @@
+/* The scene, top to bottom: the meme, the burner under it, the fryer with its three dials. */
+.g-deepfry { justify-content: center !important; gap: 0 !important; padding: 0.7em 0.7em 0.8em !important; }
+
 /* The meme. --sat, --crunch and --glow run 0..1 with their dials; --heat is their average. */
-.g-deepfry .frame { position: relative; width: min(100%, 16em); flex: 0 1 16em; min-height: 9em; }
+/* The frame is a size container, so the face inside can grow with whatever room the phone gives it. */
+.g-deepfry .frame { container-type: size; position: relative; z-index: 1; width: min(100%, 17em); flex: 1 1 15em; min-height: 9em; max-height: 21em; }
 .g-deepfry .meme {
-  --sat: 0; --crunch: 0; --glow: 0; --heat: 0; --sky2: color-mix(in srgb, var(--sky) 74%, #fff);
-  position: absolute; inset: 0; overflow: hidden; border: 0.2em solid var(--ink); border-radius: 0.7em; padding: 0.4em;
+  --sat: 0; --crunch: 0; --glow: 0; --heat: 0; --sky2: color-mix(in srgb, var(--sky) 70%, #fff);
+  position: absolute; inset: 0.3em 0.5em 0.2em; overflow: hidden; padding: 0.3em 0.4em;
   display: flex; flex-direction: column; align-items: center; justify-content: space-between;
   background: repeating-conic-gradient(from 8deg at 50% 54%, var(--sky) 0 30deg, var(--sky2) 0 60deg);
-  filter: saturate(calc(0.65 + var(--sat) * 3.4)) hue-rotate(calc(var(--sat) * -14deg)) contrast(calc(1 + var(--crunch) * 0.8)) brightness(calc(1 + var(--glow) * 0.16));
-  box-shadow: 0 0 calc(var(--glow) * 2.4em) #ff9a3d;
-  animation: g-deepfry-jitter 0.09s linear infinite alternate;
+  filter: saturate(calc(0.7 + var(--sat) * 3.3)) hue-rotate(calc(var(--sat) * -14deg)) contrast(calc(1 + var(--crunch) * 0.8)) brightness(calc(1 + var(--glow) * 0.16));
+  /* GLOW also burns two hard halos into the frame. */
+  box-shadow: 0 0 0 0.24em #0b1020, 0 0 0 calc(0.24em + var(--glow) * 0.3em) #ff8a3d, 0 0 0 calc(0.24em + var(--glow) * 0.6em) #ffcf3f, 0.6em 0.75em 0 0 #0b102088;
+  animation: g-deepfry-jitter 0.09s steps(2) infinite alternate;
 }
 @keyframes g-deepfry-jitter { to { transform: translate(calc(var(--heat) * 0.24em), calc(var(--heat) * -0.18em)) rotate(calc(var(--heat) * 1.4deg)); } }
-.g-deepfry .h0 { --sky: #7f93bd; --blob: #d8c36c; }
-.g-deepfry .h1 { --sky: #86b39a; --blob: #e0a3a9; }
-.g-deepfry .h2 { --sky: #b09bc4; --blob: #9fd0c8; }
-.g-deepfry .h3 { --sky: #c9b48a; --blob: #9db0e0; }
-/* COLOUR: an orange wash that burns in on top of the saturation. */
-.g-deepfry .meme::before { content: ''; position: absolute; inset: 0; z-index: 1; background: radial-gradient(circle at 50% 46%, #ffe45c, #ff7a00 55%, #c81400); mix-blend-mode: overlay; opacity: var(--sat); }
+.g-deepfry .h0 { --sky: #7f93bd; }
+.g-deepfry .h1 { --sky: #86b39a; }
+.g-deepfry .h2 { --sky: #b09bc4; }
+.g-deepfry .h3 { --sky: #c9b48a; }
+/* COLOUR: posterised orange rings that burn in on top of the saturation. */
+.g-deepfry .meme::before { content: ''; position: absolute; inset: 0; z-index: 1; background: radial-gradient(circle at 50% 50%, #ffe45c 0 24%, #ffa200 24% 46%, #ff5a00 46% 70%, #c81400 70%); mix-blend-mode: overlay; opacity: var(--sat); }
 /* CRUNCH: three block patterns that never line up, like compression artefacts. */
 .g-deepfry .grain {
   position: absolute; inset: 0; z-index: 3; mix-blend-mode: overlay; opacity: calc(var(--crunch) * 0.62);
-  background: repeating-conic-gradient(#000 0 25%, #fff 0 50%) 0 0 / 0.34em 0.34em, repeating-conic-gradient(#fff 0 25%, #0000 0 50%) 0.07em 0.11em / 0.5em 0.86em, repeating-conic-gradient(#000 0 25%, #0000 0 50%) 0.2em 0.05em / 1.26em 0.74em;
+  background: repeating-conic-gradient(#000 0 25%, #fff 0 50%) 0 0 / 0.42em 0.42em, repeating-conic-gradient(#fff 0 25%, #0000 0 50%) 0.07em 0.11em / 0.56em 0.98em, repeating-conic-gradient(#000 0 25%, #0000 0 50%) 0.2em 0.05em / 1.4em 0.84em;
 }
-.g-deepfry .cap { position: relative; z-index: 4; font: 900 1.35em/1.05 Impact, 'Arial Narrow Bold', 'Trebuchet MS', sans-serif; letter-spacing: 0.03em; text-align: center; color: #fff; -webkit-text-stroke: 0.2em #000; paint-order: stroke fill; text-shadow: 0 0 calc(var(--glow) * 0.5em) #fff, 0 0 calc(var(--glow) * 1.2em) #ffb300; }
-.g-deepfry .blob { position: relative; z-index: 2; flex: none; height: 48%; aspect-ratio: 8 / 7; background: var(--blob); border: 0.2em solid #1b1408; border-radius: 48% 52% 46% 54% / 56% 52% 48% 44%; }
-.g-deepfry .eye { position: absolute; left: 22%; top: 27%; width: 14%; height: 20%; background: #1b1408; border-radius: 50%; }
-.g-deepfry .eye + .eye { left: auto; right: 22%; }
-/* GLOW: a flare and a streak on each eye. */
-.g-deepfry .eye::before { content: ''; position: absolute; left: 50%; top: 50%; width: 560%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, #fff 0 9%, #ff2a1f 22%, #ff2a1f00 62%); transform: translate(-50%, -50%) scale(var(--glow)); }
-.g-deepfry .eye::after { content: ''; position: absolute; left: 50%; top: 50%; width: 900%; height: 0.3em; background: linear-gradient(90deg, #fff0, #fff, #fff0); transform: translate(-50%, -50%) rotate(-16deg) scaleX(var(--glow)); }
-.g-deepfry .mouth { position: absolute; left: 30%; right: 30%; bottom: 17%; height: 20%; background: #1b1408; border-radius: 0 0 4em 4em; }
-.g-deepfry .gasp .mouth { left: 39%; right: 39%; height: 27%; border-radius: 50%; }
-.g-deepfry .flat .mouth { height: 6%; bottom: 24%; border-radius: 1em; }
-.g-deepfry .smug .mouth { left: 38%; right: 22%; height: 7%; bottom: 24%; border-radius: 1em; transform: rotate(-14deg); }
-.g-deepfry .smug .eye { height: 8%; top: 34%; border-radius: 1em; }
+.g-deepfry .cap { position: relative; z-index: 4; font-size: 1.25em; line-height: 1.05; letter-spacing: 0.02em; text-align: center; color: #fff; -webkit-text-stroke: 0.26em #0b1020; paint-order: stroke fill; }
+.g-deepfry .face { position: relative; z-index: 2; flex: none; font-size: min(7.2cqh, 8cqw); filter: drop-shadow(0.16em 0.2em 0 #0b102066); }
+.g-deepfry .face .person { display: block; }
+/* GLOW: a hard-edged flare and a streak grow out of each eye. */
+.g-deepfry .flare { position: absolute; top: 53%; width: 0; height: 0; }
+.g-deepfry .flare.l { left: 31.25%; }
+.g-deepfry .flare.r { left: 68.75%; }
+.g-deepfry .flare::before { content: ''; position: absolute; left: -1.7em; top: -1.7em; width: 3.4em; height: 3.4em; background: radial-gradient(circle, #fff 0 15%, #ff2a1f 15% 36%, #ff2a1f77 36% 60%, #0000 60%); transform: scale(var(--glow)); }
+.g-deepfry .flare::after { content: ''; position: absolute; left: -3.3em; top: -0.15em; width: 6.6em; height: 0.3em; background: #fff; transform: rotate(-16deg) scaleX(var(--glow)); }
 
 /* A finished meme goes nuclear, takes its stamp and fades off the fresh one underneath. */
 .g-deepfry .ghost { z-index: 4; filter: saturate(6) hue-rotate(-24deg) contrast(2.2) brightness(1.25); animation: g-deepfry-crisp 0.55s ease-in forwards; }
 @keyframes g-deepfry-crisp { 0%, 70% { opacity: 1; transform: none; } 100% { opacity: 0; transform: scale(1.07) rotate(3deg); visibility: hidden; } }
-.g-deepfry .stamp { position: absolute; left: 0; right: 0; top: 50%; z-index: 5; margin-top: -0.6em; text-align: center; font-size: 2.1em; line-height: 1.2; font-weight: 900; font-style: italic; color: #fff; -webkit-text-stroke: 0.16em #000; paint-order: stroke fill; transform: rotate(-9deg); animation: g-deepfry-slam 0.2s cubic-bezier(0.2, 1.6, 0.4, 1); }
+.g-deepfry .stamp { position: absolute; left: 0; right: 0; top: 50%; z-index: 5; margin-top: -0.6em; text-align: center; font-size: 2.3em; line-height: 1.2; color: #fff; -webkit-text-stroke: 0.24em #0b1020; paint-order: stroke fill; text-shadow: 0.1em 0.12em 0 #0b1020; transform: rotate(-9deg); animation: g-deepfry-slam 0.2s cubic-bezier(0.2, 1.6, 0.4, 1); }
 @keyframes g-deepfry-slam { from { transform: rotate(-9deg) scale(3); opacity: 0; } }
 
-/* One dial per button: a ring of notches around a knob that turns as it fills. */
-.g-deepfry .dials { display: flex; gap: 0.5em; width: 100%; flex: none; }
-.g-deepfry .dial { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.3em; padding: 0.5em 0 0.3em; background: var(--bg); border: 0.14em solid var(--line); border-radius: 0.9em; }
-.g-deepfry .knob { --p: 0; --n: 8; position: relative; width: 4.4em; height: 4.4em; border-radius: 50%; background: conic-gradient(var(--c) calc(var(--p) * 1turn), var(--panel-2) 0); }
-.g-deepfry .knob::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: repeating-conic-gradient(from -2deg, var(--bg) 0 4deg, #0000 0 calc(360deg / var(--n))); }
-.g-deepfry .knob::after { content: ''; position: absolute; inset: 18%; border-radius: 50%; border: 0.16em solid var(--bg); background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--c) 55%, #fff), var(--c) 55%, var(--cd)); }
-.g-deepfry .knob i { position: absolute; inset: 18%; z-index: 1; transform: rotate(calc(var(--p) * 1turn)); transition: transform 0.06s linear; }
-.g-deepfry .knob i::after { content: ''; position: absolute; left: 50%; top: 10%; width: 0.36em; height: 36%; margin-left: -0.18em; border-radius: 1em; background: var(--bg); }
-.g-deepfry .knob.crank { animation: g-deepfry-crank 0.1s; }
-@keyframes g-deepfry-crank { 40% { transform: scale(1.12); } }
-.g-deepfry .name { font-size: 0.8em; font-weight: 900; letter-spacing: 0.08em; color: var(--c); }
-.g-deepfry .max { border-color: var(--gold); box-shadow: 0 0 1em color-mix(in srgb, var(--gold) 55%, transparent); }
-.g-deepfry .max .name { color: var(--gold); }
+/* The burner: flames stand on the fryer and grow behind the meme as it heats up. */
+.g-deepfry .fire { --heat: 0; position: relative; z-index: 0; flex: none; width: min(100%, 14em); height: 2.5em; display: flex; justify-content: space-between; align-items: flex-end; }
+.g-deepfry .flame { transform-origin: 50% 100%; transform: scale(calc(0.4 + var(--heat) * 0.62)); transition: transform 0.08s steps(2); }
+
+/* The fryer: a readout and one dial per button, each a ring of notches around a knob that turns as it fills. */
+.g-deepfry .fryer { position: relative; z-index: 2; flex: none; width: min(100%, 21em); display: flex; flex-direction: column; gap: 0.35em; padding: 0.35em 0.4em 0.4em; background: #dfe4f5; color: #0b1020; box-shadow: 0 0 0 0.22em #0b1020, 0.5em 0.6em 0 0 #0b102088; }
+.g-deepfry .readout { background: #0b1020; color: var(--gold); font-size: 0.8em; letter-spacing: 0.06em; text-align: center; padding: 0.05em 0.4em 0.15em; }
+.g-deepfry .readout.ding { animation: g-deepfry-ding 0.32s steps(2); }
+@keyframes g-deepfry-ding { from { background: var(--gold); color: #0b1020; } }
+.g-deepfry .dials { display: flex; gap: 0.5em; }
+.g-deepfry .dial { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.4em; padding: 0.45em 0 0.35em; background: #fff; box-shadow: 0 0 0 0.14em #0b1020; }
+.g-deepfry .knob { --p: 0; --n: 8; position: relative; width: 3.8em; height: 3.8em; border-radius: 50%; background: conic-gradient(var(--c) calc(var(--p) * 1turn), #c4cbe4 0); box-shadow: 0 0 0 0.16em #0b1020; }
+.g-deepfry .knob::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: repeating-conic-gradient(from -2.5deg, #0b1020 0 5deg, #0000 0 calc(360deg / var(--n))); }
+.g-deepfry .knob::after { content: ''; position: absolute; inset: 21%; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 0.16em #0b1020, inset -0.26em -0.26em 0 0 var(--cd), inset 0.22em 0.22em 0 0 #ffffff77; }
+.g-deepfry .knob i { position: absolute; inset: 21%; z-index: 1; transform: rotate(calc(var(--p) * 1turn)); transition: transform 0.06s linear; }
+.g-deepfry .knob i::after { content: ''; position: absolute; left: 50%; top: 6%; width: 0.34em; height: 40%; margin-left: -0.17em; background: #0b1020; }
+.g-deepfry .knob.crank { animation: g-deepfry-crank 0.1s steps(2); }
+@keyframes g-deepfry-crank { 50% { transform: scale(1.14); } }
+.g-deepfry .name { font-size: 0.74em; letter-spacing: 0.05em; line-height: 1.2; padding: 0 0.45em 0.08em; background: var(--c); color: #0b1020; box-shadow: 0 0 0 0.14em #0b1020; }
+/* A press wasted on a maxed dial lights up the dials that still want notches. */
+.g-deepfry .want { animation: g-deepfry-want 0.3s steps(3); }
+@keyframes g-deepfry-want { from { background: var(--c); transform: translateY(-0.25em); } }
+.g-deepfry .max { background: var(--gold); }
+.g-deepfry .max .name { background: #0b1020; color: var(--gold); }

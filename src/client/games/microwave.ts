@@ -1,18 +1,51 @@
 import './microwave.css';
-import { COLOR, clamp1000, h, pick, pulse, randBtn, randInt, type GameFactory } from './common';
+import { COLOR, clamp1000, dealer, defineSprite, h, padDots, person, pulse, randBtn, randInt, setSprite, shuffled, sprite, type GameFactory, type PersonOpts } from './common';
+
+defineSprite('microwave-burrito', `
+..kkkkkkkkkk..
+.kdwnnnnnnnnk.
+kdwdnnsnnnnnnk
+kdddnnnnnsnnnk
+kdwdnnnnnnnnNk
+.kddnNNNNNNNk.
+..kkkkkkkkkk..`);
+defineSprite('microwave-slice', `
+kkkkkkkkkkkkk
+knnnnnnnnnnNk
+kyyyryyyyyyok
+.kyyyyyryyok.
+.kyryyyyyyok.
+..kyyyyyyok..
+..kyyyryyok..
+...kyyyyok...
+...kyryyok...
+....kyyok....
+.....kok.....
+......k......`);
+defineSprite('microwave-noodles', `
+..kkkkkkkkkk..
+.kyyYyyyYyyyk.
+kyYyyyYyyyYyyk
+kkkkkkkkkkkkkk
+kwwwwwwwwwwwdk
+.kwwwwwwwwwdk.
+.kwwwwwwwwddk.
+..kwwwwwwddk..
+...kkkkkkkk...`);
 
 const SNACKS = [
-  ['wrap', 'freezer burrito'],
-  ['wrap', 'gas station burrito'],
-  ['slice', 'last slice (not yours)'],
-  ['slice', 'pizza from Tuesday'],
-  ['bowl', 'instant noodles'],
-  ['bowl', 'mystery leftovers'],
-  ['bowl', 'mac and cheese, day 3'],
-  ['mug', 'mug cake'],
-  ['mug', 'tea, reheated twice'],
-  ['mug', 'this morning’s coffee'],
+  ['microwave-burrito', 'freezer burrito'],
+  ['microwave-burrito', 'gas station burrito'],
+  ['microwave-slice', 'last slice (not yours)'],
+  ['microwave-slice', 'pizza from Tuesday'],
+  ['microwave-noodles', 'instant noodles'],
+  ['microwave-noodles', 'mystery leftovers'],
+  ['microwave-noodles', 'mac and cheese, day 3'],
+  ['cake', 'birthday cake, week 2'],
+  ['cookie', 'one frozen cookie'],
+  ['banana', 'a banana (why)'],
 ];
+const ROOMIES: PersonOpts[] = [{ tone: 'pink' }, { tone: 'gold', kind: 'cat' }, { tone: 'orange', kind: 'bear' }, { tone: 'teal', kind: 'bot' }];
 const NINJA = ['SILENT NINJA', 'NOT A SOUND', 'STEALTH SNACK', 'LIKE A SHADOW', 'ZERO BEEPS'];
 const COLD = ['STILL FROZEN', 'COLD IN THE MIDDLE', 'ICE CORE'];
 const WOKEN = ['IT IS 3 AM!', 'WHO IS COOKING?!', 'AGAIN?!', 'SERIOUSLY?'];
@@ -22,6 +55,7 @@ const BEEPING = 800; // ms the house suffers after a countdown reaches zero
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   const beat = 320 - level * 20; // ms per number
+  const snack = dealer(rng, SNACKS);
   let lastBtn = -1;
   const queue = Array.from({ length: 24 }, () => {
     let btn = randBtn(rng);
@@ -30,8 +64,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     const from = randInt(rng, 3, 5);
     // From level 2 the clock sometimes hangs on a number, to trip anyone pressing by rhythm alone.
     const hang = level >= 2 && rng() < 0.1 + level * 0.1 ? randInt(rng, 2, from) : 0;
-    const [shape, name] = pick(rng, SNACKS);
-    return { btn, from, hang, shape, label: `${randInt(rng, 1, 4)}:${randInt(rng, 10, 59)} AM · ${name}` };
+    const [art, name] = snack();
+    return { btn, from, hang, art, label: `${randInt(rng, 1, 4)}:${randInt(rng, 10, 59)} AM · ${name}` };
   });
 
   /** Microwave `i` as it would run from time `s`, or null when its 0:01 cannot finish before the bell. */
@@ -70,31 +104,41 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let wrong = 0;
   let beeps = 0;
 
-  const wrap = h('div', 'g-microwave');
+  // The scene: a sleeping house under the night sky, and down in the kitchen one
+  // microwave on the counter with tonight's snack going round inside.
+  const wrap = h('div', 'g-microwave scene-night');
   const house = h('div', 'house');
-  const rooms = [0, 1, 2, 3].map(() => house.appendChild(h('span', 'room', 'z z z')));
+  const rooms = shuffled(rng, ROOMIES).map((look) => {
+    const el = h('div', 'room');
+    const who = person({ ...look, mood: 'sleep', px: 0.2 });
+    const sign = sprite('zed', { px: 0.14 }, 'sign');
+    el.append(who.el, sign);
+    house.append(el);
+    return { el, who, sign };
+  });
   const oven = h('div', 'oven');
   const display = h('div', 'display');
   const digits = h('b');
   display.append(digits);
   const bay = h('div', 'bay');
   const cavity = h('div', 'cavity');
-  const steam = h('div', 'steam');
-  steam.append(h('i'), h('i'), h('i'));
-  const food = h('i', 'food');
-  cavity.append(steam, h('i', 'plate'), food);
+  const food = sprite('cookie', { px: 0.3 }, 'food');
+  cavity.append(food, h('i', 'plate'));
   const door = h('div', 'door');
-  door.append(h('i', 'handle'));
+  const which = h('span', 'which');
+  door.append(h('i', 'handle'), which);
   bay.append(cavity, door);
   const tally = h('div', 'tally');
-  const stars = [0, 1, 2, 3, 4, 5].map(() => tally.appendChild(h('i')));
+  const stars = [0, 1, 2, 3, 4, 5].map(() => tally.appendChild(sprite('star', { px: 0.13 })));
   const body = h('div', 'body');
   body.append(bay, tally);
   oven.append(display, body);
-  const note = h('div', 'g-note');
+  const counter = h('div', 'counter');
+  const kitchen = h('div', 'kitchen');
+  kitchen.append(oven, counter);
   const racket = h('div', 'racket');
   racket.append(h('b', '', 'BEEP'), h('b', '', 'BEEP'), h('b', '', 'BEEP'));
-  wrap.append(house, oven, note, racket);
+  wrap.append(house, kitchen, racket);
   root.append(wrap);
 
   function serve() {
@@ -104,8 +148,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     shown = cur.from;
     digits.textContent = `0:0${shown}`;
     oven.className = `oven c-${COLOR[cur.btn]}`;
-    food.className = `food ${cur.shape}`;
-    note.textContent = cur.label;
+    which.replaceChildren(padDots(cur.btn));
+    setSprite(food, cur.art, { px: 0.3 });
+    counter.textContent = cur.label;
     pulse(oven, 'pop-in');
   }
   serve();
@@ -116,10 +161,10 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     nextAt = t + ms;
     next = plan(served, nextAt);
     if (next) return;
-    if (beeps) note.textContent = beeps < rooms.length ? `${beeps} awake. Run.` : 'House meeting. Now.';
-    else if (!ninjas) note.textContent = 'Quiet. Also still frozen.';
+    if (beeps) counter.textContent = beeps < rooms.length ? `${beeps} awake. Run.` : 'House meeting. Now.';
+    else if (!ninjas) counter.textContent = 'Quiet. Also still frozen.';
     else {
-      note.textContent = 'Nobody woke up.';
+      counter.textContent = 'Nobody woke up.';
       fx.pop(house, 'NOBODY WOKE UP', 'gold');
       fx.burst(house, 'gold', 24);
       fx.flash('gold');
@@ -133,11 +178,14 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     rings = 0;
     oven.classList.remove('now');
     oven.classList.add('beep');
-    wrap.classList.add('loud');
+    wrap.className = 'g-microwave scene-sun'; // every light in the house snaps on
     const room = rooms[Math.min(beeps, rooms.length - 1)];
-    room.className = 'room awake';
-    room.textContent = '!?';
-    bad(house, WOKEN[beeps % WOKEN.length]);
+    room.el.className = 'room awake';
+    room.who.mood('angry');
+    setSprite(room.sign, 'bang', { px: 0.14 });
+    pulse(room.el, 'bump');
+    counter.textContent = WOKEN[beeps % WOKEN.length];
+    bad(room.el);
     fx.flash('white');
     beeps++;
     rest(t, BEEPING);
@@ -156,10 +204,12 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       }
       state = 'open';
       digits.textContent = `0:0${n}`;
-      oven.classList.add('open', n === 1 ? 'ninja' : n === 2 ? 'warm' : 'cold');
+      oven.classList.add('open');
+      if (n > 1) oven.classList.add(n === 2 ? 'warm' : 'cold');
       if (n === 1) {
         const star = stars[Math.min(ninjas, stars.length - 1)];
-        star.className = 'on';
+        star.classList.add('on');
+        fx.poof(food);
         good(oven, NINJA[ninjas % NINJA.length]);
         fx.burst(star, 'gold', 12);
         fx.sound('whoosh');
@@ -178,7 +228,10 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       }
       if (!cur || state !== 'live') {
         if (t < nextAt) return;
-        wrap.classList.remove('loud');
+        if (state === 'beep') {
+          state = 'open';
+          wrap.className = 'g-microwave scene-night';
+        }
         if (next) serve();
         return;
       }

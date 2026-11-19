@@ -67,6 +67,8 @@ export function runMatch(o: {
   setPads: (labels: [string, string, string]) => void;
   /** Light a pad for a beat (the announcer's words chase across the pads). */
   pulsePad?: (b: Btn) => void;
+  /** Which pads are physically down right now, so a pad held through the intro still counts. */
+  held?: () => readonly boolean[];
   /** Demo mode: a bot plays by following each game's hint(). Practice only. */
   autoplay?: { press: (b: Btn) => void; release: (b: Btn) => void };
   onRound?: (rounds: number[]) => void;
@@ -238,6 +240,8 @@ export function runMatch(o: {
       console.error(`mini-game ${round.id} failed to start`, err);
       inst = null;
     }
+    // A player who heard "HOLD!" may already be holding: tell the game.
+    o.held?.().forEach((isDown, b) => isDown && input('press', b as Btn));
   }
 
   function endPlay(ph: Phase) {

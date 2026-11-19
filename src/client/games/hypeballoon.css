@@ -10,19 +10,28 @@
 /* As big as the stage allows: 15em on a phone, a little less on a short desktop stage. */
 .g-hypeballoon .sky { position: relative; flex: 0 1 15em; min-height: 0; aspect-ratio: 1; }
 .g-hypeballoon .sky::before { content: ''; position: absolute; left: 50%; top: 50%; bottom: -0.4em; width: 0.14em; margin-left: -0.07em; background: var(--dim); }
+.g-hypeballoon .sky.empty::before { opacity: 0; }
 .g-hypeballoon .line { position: absolute; z-index: 1; inset: 0; border: 0.2em dashed var(--ink); border-radius: 50%; }
 .g-hypeballoon .line span { position: absolute; left: 50%; top: -0.75em; transform: translateX(-50%); padding: 0 0.5em; background: var(--panel); font-weight: 900; font-size: 0.7em; line-height: 1.3; letter-spacing: 0.1em; white-space: nowrap; }
 .g-hypeballoon .balloon { position: absolute; inset: 0; margin: auto; width: calc(34% + 66% * var(--f)); height: calc(34% + 66% * var(--f)); border-radius: 50%; background: radial-gradient(circle at 30% 26%, #fffb 0 7%, #fff0 20%), var(--c); box-shadow: inset -0.5em -0.7em 0 #0003; color: #071022; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .g-hypeballoon .balloon::after { content: ''; position: absolute; left: 50%; top: 100%; margin: -0.15em 0 0 -0.4em; border: 0.4em solid #0000; border-top: 0; border-bottom: 0.55em solid var(--cd); }
 .g-hypeballoon .balloon b { font-size: calc(0.95em + 1.5em * var(--f)); font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
-.g-hypeballoon .balloon span { font-size: calc(0.68em + 0.3em * var(--f)); font-weight: 800; line-height: 1.2; }
+.g-hypeballoon .balloon .cap { font-size: calc(0.68em + 0.3em * var(--f)); font-weight: 800; line-height: 1.2; }
+/* Left, middle or right pad: white on any balloon colour. */
+.g-hypeballoon .which { display: flex; margin-top: 0.3em; font-size: calc(1em + 0.8em * var(--f)); line-height: 1; }
+.g-hypeballoon .which .pad-dots i.on { background: #fff; }
+/* Kinked hose: dimmed, but the colour still reads. */
+.g-hypeballoon .balloon.jam { filter: brightness(0.55) saturate(0.75); }
 .g-hypeballoon .balloon.tense { animation: g-hypeballoon-tremble 0.07s linear infinite; filter: brightness(1.2); }
 .g-hypeballoon .balloon.fly { animation: g-hypeballoon-fly 0.2s ease-in forwards; }
 .g-hypeballoon .balloon.flop { animation: g-hypeballoon-flop 0.2s ease-in forwards; }
 .g-hypeballoon .balloon.fly > *, .g-hypeballoon .balloon.flop > * { visibility: hidden; }
 .g-hypeballoon .balloon.popped { display: none; }
+.g-hypeballoon .boom { position: absolute; left: 50%; top: 50%; display: none; font-size: 3.6em; font-weight: 900; font-style: italic; line-height: 1; letter-spacing: 0.03em; white-space: nowrap; color: var(--ink); text-shadow: 0.07em 0.07em 0 var(--red); transform: translate(-50%, -50%) rotate(-7deg); }
+.g-hypeballoon .sky.popped .boom { display: block; animation: g-hypeballoon-boom 0.22s ease-out; }
 @keyframes g-hypeballoon-tremble { 25% { transform: translate(-0.1em, 0.06em); } 75% { transform: translate(0.1em, -0.06em); } }
 @keyframes g-hypeballoon-fly { to { transform: translateY(-9em) scale(0.5); opacity: 0; } }
 @keyframes g-hypeballoon-flop { to { transform: translateY(3em) scale(0.15); opacity: 0; } }
+@keyframes g-hypeballoon-boom { from { transform: translate(-50%, -50%) rotate(-7deg) scale(0.3); opacity: 0; } 60% { transform: translate(-50%, -50%) rotate(-7deg) scale(1.15); opacity: 1; } }
 
 .g-hypeballoon .meter i { background: var(--gold); }

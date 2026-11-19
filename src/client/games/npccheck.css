@@ -1,6 +1,6 @@
 .g-npccheck .rule { font-size: 1.1em; }
 .g-npccheck .row { flex: 1; min-height: 0; max-height: 17em; width: 100%; max-width: 27em; display: flex; gap: 0.4em; }
-.g-npccheck .pod { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; background: var(--bg); border: 0.16em solid var(--cd); border-radius: 0.9em; padding: 0.3em 0.2em 0.5em; overflow: hidden; }
+.g-npccheck .pod { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; background: var(--bg); border: 0.16em solid var(--cd); border-radius: 0.9em; padding: 0.3em 0.2em 0.5em; overflow: hidden; isolation: isolate; }
 .g-npccheck .top { flex: none; position: relative; z-index: 1; height: 2.9em; display: flex; align-items: center; justify-content: center; }
 .g-npccheck .say { visibility: hidden; font-size: 0.7em; font-weight: 800; line-height: 1.15; text-align: center; white-space: pre-line; color: #071022; background: var(--ink); border-radius: 0.7em; padding: 0.2em 0.4em; }
 .g-npccheck .fig { flex: 1; min-height: 0; width: 100%; }
@@ -18,7 +18,7 @@
 /* NPC loops: two poses, swapped on the beat by the p1 class. */
 .g-npccheck .m-sway .body { transform: rotate(-10deg); }
 .g-npccheck .m-sway.p1 .body { transform: rotate(10deg); }
-.g-npccheck .m-bob.p1 .body { transform: translateY(-15%); }
+.g-npccheck .m-bob.p1 .body { transform: translateY(-12%); }
 .g-npccheck .m-jack.p1 .arm.l { transform: rotate(135deg); }
 .g-npccheck .m-jack.p1 .arm.r { transform: rotate(-135deg); }
 .g-npccheck .m-disco .arm.l { transform: rotate(105deg); }

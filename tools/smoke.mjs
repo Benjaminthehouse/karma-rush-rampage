@@ -40,6 +40,8 @@ async function run(chunk, n) {
   await page.goto(`http://localhost:${port}/game.html?u=smoke${n}&autoplay=1&games=${games.join(',')}`);
   await page.waitForTimeout(400);
   await page.keyboard.press('a'); // PRACTICE
+  await page.waitForTimeout(250);
+  await page.keyboard.press('s'); // RANDOM 5 (the lineup is forced by ?games=)
   if (shots) {
     // One mid-round screenshot per game, taken as each round is under way.
     for (let i = 0; i < 5; i++) {

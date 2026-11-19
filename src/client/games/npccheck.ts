@@ -151,7 +151,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         real.pod.classList.add('missed');
         real.say.textContent = 'over here!';
         pulse(pods[b].pod, 'shake');
-        bad(pods[b].fig, 'JUST AN NPC');
+        // Floated from the row, not the pod: words this long get cut off by the stage edge over an outer pod.
+        bad(row, 'JUST AN NPC');
       }
       progress();
       if (!cleared && score() === 1000) {

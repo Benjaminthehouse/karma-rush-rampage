@@ -1,5 +1,5 @@
 import './dumpsterfire.css';
-import { COLOR, h, pick, pulse, randBtn, randInt, ratio, type Btn, type GameFactory } from './common';
+import { COLOR, dealer, defineSprite, h, person, pulse, randBtn, randInt, ratio, setSprite, sprite, type Btn, type GameFactory } from './common';
 
 const TAKES = [
   'well, ACTUALLY',
@@ -18,52 +18,98 @@ const TAKES = [
   'do better',
 ];
 
-const LINE = 50; // a thread is under control below this
-const FLOOR = 20; // a hosed thread never quite goes out
-const KNOCK = 12; // what one spray takes off
-const LEAP = 60; // a hot take lifts embers to 80: three sprays to get back under the line
-const COOL = 16; // under the line a fire dies down by itself, % per second
+// One comment thread is one dumpster, in its button's colour.
+defineSprite('dumpsterfire-bin', `
+.kkkkkkkkkkkk.
+kLLLLLLLLLLLLk
+kAAAAAAAAAAAAk
+kkkkkkkkkkkkkk
+.kAAaAAaAAaAk.
+.kAAaAAaAAaAk.
+.kAAaAAaAAaAk.
+.kAAaAAaAAaAk.
+.kaaaaaaaaaak.
+.kkkkkkkkkkkk.
+..kk......kk..`);
+// The fire in it. Its second frame is the same flame mirrored.
+defineSprite('dumpsterfire-flame', `
+....k........
+...kok.......
+...kook......
+..koook...k..
+..kooyok.kok.
+.kooyyookook.
+.koyyyyooook.
+kooyyYyyooook
+koyyYYYyyoook
+koyyYYYYyyook
+koyYYWWYYyook
+koyYYWWYYyook
+kooyYWWYyyook
+.koyyYYyyook.
+.kooyyyyook..
+..kkooookk...`);
 
-const FLAME =
-  '<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">' +
-  '<path class="out" d="M50 0C55 18 82 30 88 58 93 82 74 100 50 100 26 100 7 82 12 58 15 44 24 40 28 28 34 38 40 36 50 0Z"/>' +
-  '<path class="in" d="M50 40C56 54 70 60 70 76 70 90 62 100 50 100 38 100 30 90 30 76 30 62 44 54 50 40Z"/></svg>';
+const LINE = 50; // a thread at or over this is on fire
+const KNOCK = 12; // what one spray takes off
+const FLARE = 78; // a hot take lights a calm thread this high: three sprays
+const GROW = 4; // a fire nobody hoses keeps growing, % per second: a fourth spray after two seconds
+const GRACE = 450; // ms after a fire goes out in which more sprays are only steam
+const ABUSE = 300; // ms of civil time a spray on a calm thread costs
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
-  const spread = 5 + level * 0.5; // over the line a fire keeps growing, % per second
-  const par = duration * (0.7 - level * 0.01); // ms of all-three-calm that earn 1000
-  const heat = [0, 1, 2].map(() => 52 + rng() * 6);
-  // Hot takes land in one thread at a time, never the same thread twice running.
+  const par = duration * (0.64 - level * 0.03); // ms of all-three-calm that earn 1000
+  const take = dealer(rng, TAKES);
+  // The round opens with all three smouldering: one spray each.
+  const heat = [0, 1, 2].map(() => 51 + rng() * 4);
+  // Then hot takes land in one thread at a time, never the same thread twice running.
   const flares: { at: number; lane: Btn; take: string }[] = [];
   let prev = -1;
-  for (let at = 1500 - level * 80; at < duration; at += randInt(rng, 1350, 1650) - level * 110) {
+  for (let at = 1300 - level * 50; at < duration; at += randInt(rng, 1200, 1450) - level * 70) {
     let lane = randBtn(rng);
     while (lane === prev) lane = randBtn(rng);
     prev = lane;
-    flares.push({ at, lane, take: pick(rng, TAKES) });
+    flares.push({ at, lane, take: take() });
   }
 
-  const wrap = h('div', 'g-dumpsterfire');
-  const sign = h('div', 'sign', 'DUMPSTER FIRE!');
+  // The scene: three dumpsters in an alley, the mod on the fire escape above
+  // whichever one was hosed last, and the sign that says how it is going.
+  const wrap = h('div', 'g-dumpsterfire scene-night');
+  const sign = h('div', 'sign');
+  const signText = h('b', '', 'DUMPSTER FIRE!');
+  const signL = sprite('flame1', { px: 0.13 });
+  const signR = sprite('flame2', { px: 0.13 });
+  sign.append(signL, signText, signR);
   const row = h('div', 'lanes');
-  const lanes = [0, 1, 2].map((i) => {
+  const mod = person({ tone: 'gold', hat: 'mod', mood: 'shock', px: 0.17 });
+  const lanes = ([0, 1, 2] as Btn[]).map((i) => {
     const el = h('div', `lane c-${COLOR[i]}`);
+    const perch = h('div', 'perch');
     const pit = h('div', 'pit');
     const flame = h('div', 'flame');
-    flame.innerHTML = FLAME;
-    pit.append(h('span', 'zone', 'FLAME WAR'), flame);
-    const take = h('div', 'take', pick(rng, TAKES));
-    el.append(pit, take);
+    const fire = sprite('dumpsterfire-flame');
+    const tip = h('i', 'tip');
+    flame.append(fire, tip);
+    const jet = h('i', 'jet');
+    const bin = sprite('dumpsterfire-bin', { tone: COLOR[i], px: 0.3 }, 'bin');
+    pit.append(flame, jet, bin);
+    const note = h('div', 'take');
+    const text = h('span', '', take());
+    note.append(text);
+    el.append(perch, pit, note);
     row.append(el);
-    return { el, pit, flame, take, ablaze: false };
+    return { el, perch, pit, fire, tip, jet, bin, note, text, outAt: -9999, ablaze: false };
   });
-  const meter = h('div', 'meter big');
+  lanes[1].perch.append(mod.el);
+  const hud = h('div', 'hud');
+  const bar = h('div', 'bar');
   const fill = h('i');
-  meter.append(fill);
-  const note = h('div', 'clock', 'CIVIL FOR ');
-  const clock = h('b');
-  note.append(clock);
-  wrap.append(sign, row, meter, note);
+  bar.append(fill);
+  const clock = h('div', 'clock', 'CIVIL FOR ');
+  const secs = h('b');
+  clock.append(secs);
+  hud.append(bar, clock);
+  wrap.append(sign, row, hud);
   root.append(wrap);
 
   let next = 0;
@@ -72,33 +118,52 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let calm = false;
   let civilMs = 0;
   let streak = 0;
+  let smugUntil = 0;
+  let frame = -1;
 
   const over = (i: number) => heat[i] >= LINE;
 
   function draw() {
     lanes.forEach((l, i) => {
-      l.flame.style.height = `${heat[i]}%`;
+      // 0 when out; a fire one spray from out is still a third of the way up.
+      l.pit.style.setProperty('--size', over(i) ? ((heat[i] - 30) / 70).toFixed(3) : '0');
       l.el.classList.toggle('over', over(i));
     });
     fill.style.width = `${Math.min(100, (civilMs / par) * 100)}%`;
-    clock.textContent = `${(civilMs / 1000).toFixed(1)}s`;
+    secs.textContent = `${(civilMs / 1000).toFixed(1)}s`;
   }
   draw();
 
   return {
-    press(b) {
+    press(b, t) {
       const l = lanes[b];
       aim = b;
-      pulse(l.flame, 'hit');
-      if (heat[b] <= FLOOR) {
+      if (mod.el.parentElement !== l.perch) l.perch.append(mod.el);
+      pulse(mod.el, 'bump');
+      pulse(l.jet, 'on');
+      if (over(b)) {
+        heat[b] -= KNOCK;
+        fx.poof(l.tip);
+        if (over(b)) good(l.tip);
+        else {
+          heat[b] = 0;
+          l.outAt = t;
+          l.text.textContent = '[removed]';
+          good(l.bin, 'REMOVED');
+          fx.sound('whoosh');
+        }
+      } else if (t - l.outAt < GRACE) {
+        // Still hosing the one that just went out: steam, nothing else.
+        fx.poof(l.bin);
         fx.sound('tick');
-        return;
+      } else {
+        civilMs = Math.max(0, civilMs - ABUSE);
+        streak = 0;
+        smugUntil = t + 500;
+        pulse(l.bin, 'shake');
+        bad(l.bin, 'MOD ABUSE!');
+        fx.pop(secs, '-0.3s', 'red');
       }
-      const wasOver = over(b);
-      heat[b] = Math.max(FLOOR, heat[b] - KNOCK);
-      fx.burst(l.flame, 'white', 3);
-      if (wasOver) good(l.flame);
-      else fx.sound('pop');
       draw();
     },
     tick(t) {
@@ -107,27 +172,32 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       while (flares[next] && t >= flares[next].at) {
         const f = flares[next++];
         const l = lanes[f.lane];
-        heat[f.lane] = Math.max(heat[f.lane], Math.min(heat[f.lane] + LEAP, FLOOR + LEAP + KNOCK));
-        l.take.textContent = f.take;
-        pulse(l.take, 'pop-in');
+        heat[f.lane] = over(f.lane) ? Math.min(100, heat[f.lane] + KNOCK * 2) : FLARE;
+        l.text.textContent = f.take;
+        pulse(l.note, 'pop-in');
         fx.pop(l.pit, 'HOT TAKE!', COLOR[f.lane]);
         fx.sound('zap');
         fx.shake();
       }
       lanes.forEach((l, i) => {
-        heat[i] = over(i) ? Math.min(100, heat[i] + (spread * dt) / 1000) : Math.max(FLOOR, heat[i] - (COOL * dt) / 1000);
+        if (!over(i)) return;
+        heat[i] = Math.min(100, heat[i] + (GROW * dt) / 1000);
         const ablaze = heat[i] >= 100;
-        if (ablaze && !l.ablaze) bad(row, 'Y’ALL CAN’T BEHAVE');
+        if (ablaze && !l.ablaze) bad(l.pit, 'Y’ALL CAN’T BEHAVE');
         l.ablaze = ablaze;
       });
       const now = !over(0) && !over(1) && !over(2);
       if (now !== calm) {
         calm = now;
         streak = 0;
-        sign.textContent = calm ? 'ALL CIVIL :)' : 'DUMPSTER FIRE!';
-        sign.classList.toggle('calm', calm);
+        signText.textContent = calm ? 'ALL CIVIL :)' : 'DUMPSTER FIRE!';
+        setSprite(signL, calm ? 'check' : 'flame1', { px: 0.13 });
+        setSprite(signR, calm ? 'check' : 'flame2', { px: 0.13 });
+        wrap.classList.toggle('calm', calm);
+        wrap.classList.toggle('scene-sky', calm);
+        wrap.classList.toggle('scene-night', !calm);
         if (calm) {
-          fx.pop(row, 'UNDER CONTROL!', 'green');
+          fx.pop(null, 'UNDER CONTROL!', 'green');
           fx.burst(sign, 'green', 16);
           fx.flash('green');
           fx.sound('ding');
@@ -138,20 +208,24 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         streak += dt;
         if (streak >= 500) {
           streak -= 500;
-          good(clock);
+          good(secs);
         }
+      }
+      mod.mood(t < smugUntil ? 'cool' : calm ? 'happy' : 'shock');
+      const f = Math.floor(t / 110) % 2;
+      if (f !== frame) {
+        frame = f;
+        lanes.forEach((l) => setSprite(l.fire, 'dumpsterfire-flame', { flip: f === 1 }));
       }
       draw();
     },
     score: () => ratio(civilMs, par),
     hint() {
-      // Put out whatever is over the line, finishing the one you are on; then soak the rest down to embers.
-      const worth = (i: number) => heat[i] > FLOOR + 3;
-      const top = ([0, 1, 2] as Btn[]).reduce((a, i) => (heat[i] > heat[a] ? i : a));
+      // Hose whatever is on fire, finishing the one you are on. Never a calm thread.
+      if (over(0) && over(1) && over(2)) return [0, 1, 2];
       if (over(aim)) return aim;
-      if (over(top)) return top;
-      if (worth(aim)) return aim;
-      return worth(top) ? top : null;
+      const top = ([0, 1, 2] as Btn[]).reduce((a, i) => (heat[i] > heat[a] ? i : a));
+      return over(top) ? top : null;
     },
   };
 };

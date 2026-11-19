@@ -1,5 +1,5 @@
 import './worksonmine.css';
-import { COLOR, clamp1000, h, pick, pulse, shuffled, type Btn, type GameFactory } from './common';
+import { COLOR, clamp1000, h, pick, pulse, randBtn, shuffled, type Btn, type GameFactory } from './common';
 
 const ERRORS = ['segfault', 'off by one', 'NaN', 'undefined', 'exit 1', 'it’s DNS', 'timeout', '404', 'bad merge', 'missing ;'];
 const EXCUSES = [
@@ -20,27 +20,23 @@ const PAIRS: Btn[][] = [
 ];
 const TICK = '<svg class="tick" viewBox="0 0 24 24"><path d="M4 13l5.5 5.5L20 6"/></svg>';
 const CROSS = '<svg class="cross" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg>';
-const SWAP_MS = [290, 265, 218, 200, 174]; // per level: later rounds add swaps and speed them up
-const SHOW_MS = 450; // the working laptop shows its tick
+const SWAP_MS = [290, 265, 225, 208, 190]; // per level: later rounds add swaps and speed them up
+const LEAD_MS = 1320; // tick on to question mark, the same at every level: faster swaps buy more swaps, not more picks
 const OK_MS = 350; // celebration before the next laptop lights up
 const OOPS_MS = 700; // a wrong pick also costs time
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const swaps = 3 + Math.floor(level / 2);
   const swapMs = SWAP_MS[level];
-  const par = 3.5 + level / 8; // correct picks that earn 1000
-  // More bouts than fit in a round. The answer visits every slot before it repeats, so no button is a safe bet.
-  const ends: Btn[] = [];
-  while (ends.length < 9) {
-    const block = shuffled(rng, [0, 1, 2] as Btn[]);
-    if (block[0] === ends[ends.length - 1]) block.reverse();
-    ends.push(...block);
-  }
+  const showMs = LEAD_MS - swaps * swapMs; // the tick stays up 450 ms at level 0, 370 at level 4
+  const par = 3.5 + level / 16; // correct picks that earn 1000
   const excuses = shuffled(rng, EXCUSES);
-  // The same laptop works all round: each bout starts where the last one ended.
-  let from = ends[2];
-  const bouts = ends.map((end) => {
+  // More bouts than fit in a round. The same laptop works all round: each bout starts where the last one
+  // ended, and it never ends a shuffle where it began, so no answer repeats and no button is a safe bet.
+  let from = randBtn(rng);
+  const bouts = Array.from({ length: 9 }, () => {
     const start = from;
+    const end = pick(rng, ([0, 1, 2] as Btn[]).filter((slot) => slot !== start));
     from = end;
     let moves: Btn[][];
     // Deal shuffles until one carries the working laptop to this bout's answer.
@@ -51,7 +47,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         if (pair !== moves[moves.length - 1]) moves.push(pair);
       }
     } while (moves.reduce((s, [a, b]) => (s === a ? b : s === b ? a : s), start) !== end);
-    return { start, end, moves, errors: [pick(rng, ERRORS), pick(rng, ERRORS)] };
+    return { start, end, moves, errors: shuffled(rng, ERRORS).slice(0, 2) };
   });
 
   let n = 0; // bouts finished
@@ -90,7 +86,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   });
   type Rig = (typeof rigs)[number];
   const builds = h('div', 'builds');
-  const pips = Array.from({ length: 5 }, () => {
+  // Four slots: nobody fits a fifth pick into a round.
+  const pips = Array.from({ length: 4 }, () => {
     const pip = h('i');
     builds.append(pip);
     return pip;
@@ -109,7 +106,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   };
 
   function begin(t: number) {
-    shuffleAt = t + SHOW_MS;
+    shuffleAt = t + showMs;
     askAt = shuffleAt + swaps * swapMs;
     step = 0;
     phase = 'show';
@@ -141,7 +138,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       // Full marks for a pick within 250 ms of the question mark, three quarters for a slow one.
       earned += 0.75 + 0.25 * Math.max(0, Math.min(1, 1 - (t - askAt - 250) / 650));
       right++;
-      const clean = right === 3 && !wrong;
+      const clean = right >= 3 && !wrong; // three for three, and a fourth keeps the gold
       face(mine, 'win', 'WORKS');
       banner.innerHTML = clean ? '<span class="stamp gold">CERTIFIED: WORKS EVERYWHERE</span>' : '<span class="stamp">WORKS ON MY MACHINE!</span>';
       good(mine.el, CHEERS[right % CHEERS.length]);
@@ -176,8 +173,10 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
 
   return {
     press(b, t) {
-      if (phase === 'ask') choose(b, t);
-      else pulse(pads[b], 'shake');
+      if (phase === 'ask') return choose(b, t);
+      // Too early: the slot's pad rattles, nothing is picked.
+      pulse(pads[b], 'shake');
+      fx.sound('tick');
     },
     tick(t) {
       if (phase === 'after' && t >= nextAt) begin(nextAt);

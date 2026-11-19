@@ -33,6 +33,7 @@ import oddlystack from './games/oddlystack';
 import peak from './games/peak';
 import poll from './games/poll';
 import popuppanic from './games/popuppanic';
+import rant from './games/rant';
 import regenerate from './games/regenerate';
 import repostradar from './games/repostradar';
 import rugpull from './games/rugpull';
@@ -85,6 +86,7 @@ export const CATALOG: GameMeta[] = [
   peak,
   poll,
   popuppanic,
+  rant,
   regenerate,
   repostradar,
   rugpull,

@@ -3,10 +3,10 @@ import { defineGame } from '../meta';
 export default defineGame({
   id: 'dumpsterfire',
   title: 'Dumpster Fire',
-  shout: 'KEEP ALL THREE FIRES SMALL!',
-  how: 'Each button hoses its own thread. You only score while all three are under the line.',
+  shout: 'HOSE DOWN THE FLAME WARS!',
+  how: 'Each button hoses its own thread. Put fires out fast. Hosing a calm thread is mod abuse.',
   labels: ['HOSE', 'HOSE', 'HOSE'],
   duration: 7000,
   kind: 'mash',
-  think: 250,
+  think: 330,
 });

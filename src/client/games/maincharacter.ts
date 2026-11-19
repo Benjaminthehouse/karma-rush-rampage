@@ -39,6 +39,8 @@ const CRINGE = [
   'Somebody clipped that.',
 ];
 const SLOW = ['The spotlight got bored and left.', 'Too slow. The moment passed.', 'The light found a new main character.'];
+const GRACE = 250; // ms after the light walks off in which a pose is late, not cringe
+const ENCORE = 160; // ms after a lit pose in which a second tap is the same pose, not a new one
 
 function figure(cls: string) {
   const el = h('div', cls);
@@ -73,6 +75,9 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let strides = 0;
   let frozen = false;
   let frozenUntil = 0;
+  let encoreUntil = 0;
+  let leftSpot = -1; // where the light last walked off from, and when
+  let leftAt = 0;
 
   const wrap = h('div', 'g-maincharacter');
   const aura = h('div', 'aura');
@@ -89,6 +94,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const ghost = figure('ghost');
   const hero = figure('hero');
   hero.draw(STAND);
+  // Green means pose: the cue only shows while the hero is standing in the light.
+  hero.el.append(h('b', 'cue', 'POSE!'));
   floor.append(ghost.el, hero.el);
   const marquee = h('i', 'marquee');
   const crowd = h('div', 'crowd');
@@ -117,15 +124,23 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     const s = Math.min(streak, 5);
     hero.cape.setAttribute('d', s ? `M15 19H25L${25 + s * 2} ${27 + s * 5}H${15 - s * 2}Z` : '');
   }
+  function thaw() {
+    frozen = false;
+    hero.el.classList.remove('cringe');
+    hero.draw(STAND);
+  }
   shine(0);
 
   return {
     press(b, t) {
       if (t < frozenUntil) return;
+      // A press can land before the frame that ends the freeze; stand up first so it is not drawn over.
+      if (frozen) thaw();
       if (b !== 1) {
         const to = pos + b - 1;
         if (to < 0 || to > 4) {
           pulse(hero.el, 'shake');
+          fx.sound('boing');
           return;
         }
         pos = to;
@@ -135,7 +150,15 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         fx.sound('tick');
         return;
       }
+      if (t < encoreUntil) return;
       if (pos !== light()) {
+        if (pos === leftSpot && t - leftAt < GRACE) {
+          // A beat too slow: the pose is wasted but not also fined (once per light).
+          leftSpot = -1;
+          pulse(hero.el, 'shake');
+          bad(marquee, 'TOO LATE!');
+          return;
+        }
         cringes++;
         streak = 0;
         frozen = true;
@@ -153,6 +176,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       posed++;
       streak++;
       missed = 0;
+      encoreUntil = t + ENCORE;
       hero.el.classList.add('posing');
       hero.draw(pose.limbs);
       // The freeze-frame lingers where the pose was struck.
@@ -161,9 +185,9 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       pulse(ghost.el, 'snap');
       pulse(crowd, 'flash');
       note.textContent = hype[posed % hype.length];
-      good(hero.el);
+      // The aura floats up off the hero; popped from the counter it left the top of a short stage.
+      good(hero.el, '+100');
       fx.pop(marquee, pose.name, 'gold');
-      fx.pop(aura, '+100', 'gold');
       if (streak % 3 === 0) {
         fx.burst(hero.el, 'gold', 22);
         fx.flash('gold');
@@ -174,15 +198,13 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       shine(t);
     },
     tick(t) {
-      if (frozen && t >= frozenUntil) {
-        frozen = false;
-        hero.el.classList.remove('cringe');
-        hero.draw(STAND);
-      }
+      if (frozen && t >= frozenUntil) thaw();
       const patience = stay + missed * 400;
       if (t - litAt >= patience) {
         note.textContent = SLOW[idx % SLOW.length];
         fx.sound('whoosh');
+        leftSpot = light();
+        leftAt = t;
         missed++;
         idx++;
         shine(t);

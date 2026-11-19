@@ -8,14 +8,19 @@
 .g-haikubot .flair { padding: 0.1em 0.5em; font-size: 0.75em; font-weight: 900; color: var(--dim); border: 0.14em solid var(--dim); border-radius: 0.4em; }
 
 .g-haikubot .poem { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.6em; }
-.g-haikubot .line { flex: 1; min-height: 2.6em; position: relative; display: flex; gap: 0.15em; padding: 0.25em; background: var(--bg); border: 0.16em solid var(--c); border-radius: 0.7em; }
+/* Lines are typed top to bottom. The one whose turn it is glows in its button's colour; the rest wait dimmed. */
+.g-haikubot .line { flex: 1; min-height: 2.6em; position: relative; display: flex; gap: 0.15em; padding: 0.25em; background: var(--bg); border: 0.16em solid color-mix(in srgb, var(--c) 45%, var(--bg)); border-radius: 0.7em; transition: border-color 0.08s, box-shadow 0.08s; }
+.g-haikubot .line.now { border-color: var(--c); box-shadow: 0 0 0.9em color-mix(in srgb, var(--c) 70%, transparent); }
 .g-haikubot .syl { flex: 1 1 auto; padding: 0 0.15em; display: grid; place-items: center; white-space: nowrap; font-size: 0.78em; font-weight: 800; color: var(--dim); background: var(--panel-2); border-radius: 0.5em; }
-.g-haikubot .syl.on { color: #071022; background: var(--c); box-shadow: inset 0 -0.25em 0 var(--cd); animation: g-haikubot-clack 0.1s ease-out; }
+.g-haikubot .line.now .syl { color: var(--ink); background: color-mix(in srgb, var(--c) 30%, var(--panel-2)); }
+.g-haikubot .line .syl.on { color: #071022; background: var(--c); box-shadow: inset 0 -0.25em 0 var(--cd); animation: g-haikubot-clack 0.1s ease-out; }
 .g-haikubot .line.full { border-color: var(--ink); box-shadow: 0 0 1em var(--c); }
 .g-haikubot .line.full::after { content: '✓'; position: absolute; right: -0.3em; top: -0.6em; width: 1.5em; height: 1.5em; display: grid; place-items: center; font-weight: 900; color: #071022; background: var(--ink); border-radius: 50%; }
 /* One tap too many: the line jolts and its syllables drain away. */
 .g-haikubot .line.spill { animation: g-haikubot-jolt 0.22s; }
 .g-haikubot .line.spill .syl:not(.on) { animation: g-haikubot-spill 0.25s ease-in; }
+/* A tap on a line that is not up yet: the line that is waves for attention. */
+.g-haikubot .line.nudge { animation: g-haikubot-nudge 0.2s ease-out; }
 
 .g-haikubot .foot .arrow { flex: none; width: 1.9em; height: 1.9em; color: var(--gold); }
 .g-haikubot .votes { font-size: 1.6em; font-weight: 900; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
@@ -24,3 +29,4 @@
 @keyframes g-haikubot-clack { from { transform: translateY(-0.4em) scale(1.15); } }
 @keyframes g-haikubot-jolt { 20% { transform: translateX(-0.5em); } 50% { transform: translateX(0.45em); } 80% { transform: translateX(-0.2em); } }
 @keyframes g-haikubot-spill { from { color: #071022; background: var(--c); transform: translateY(-0.3em) rotate(-5deg); } }
+@keyframes g-haikubot-nudge { 35% { transform: scale(1.05); filter: brightness(1.7); } }

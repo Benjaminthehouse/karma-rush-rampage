@@ -103,6 +103,7 @@ The checker enforces these.
 7. All text is at least 11px on a 360x640 phone and stays inside the stage.
    Hide things with `opacity`, `visibility` or `display`, never by parking them
    off-stage: anything positioned outside the stage counts as cut off.
+   A window that scrolls long content on purpose (see `rant`) sets `data-scroll`.
 
 ## Design rules
 

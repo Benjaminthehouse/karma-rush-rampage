@@ -68,8 +68,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     }
     return stares[cur];
   }
+  sync(0);
 
-  function feed(p: (typeof phones)[number]) {
+  function paint(p: (typeof phones)[number]) {
     p.tiles.forEach((tile, j) => (tile.className = `meme m${(p.skip + j) % KINDS}`));
   }
 
@@ -79,7 +80,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     // The more you get away with, the narrower the eyes.
     face.style.setProperty('--sus', String(Math.min(1, memes / par)));
   }
-  phones.forEach(feed);
+  phones.forEach(paint);
   show();
 
   return {
@@ -101,7 +102,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       on = b;
       p.lastAt = t;
       p.skip++;
-      feed(p);
+      paint(p);
       pulse(p.feed, 'scroll');
       good(p.el, memes % 10 === 5 ? LOLS[Math.floor(memes / 10) % LOLS.length] : undefined);
       if (memes % 10 === 0) {

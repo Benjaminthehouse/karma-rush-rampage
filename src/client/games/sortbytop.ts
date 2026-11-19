@@ -1,26 +1,28 @@
 import './sortbytop.css';
-import { COLOR, arrow, h, pick, pulse, randBtn, ratio, shuffled, type Btn, type GameFactory } from './common';
+import { COLOR, dealer, h, padDots, person, pick, postCard, pulse, randBtn, ratio, setSprite, sprite, type Btn, type GameFactory, type Mood, type Tone } from './common';
 
-const TITLES = [
-  'My cat pays rent',
-  'TIL soup is a drink',
-  'AITA for napping?',
-  'Rate my rock',
-  'I ate the homework',
-  'Dog files a patent',
-  'Bird stole my fries',
-  'ELI5: what is Monday',
-  'LPT: drink water',
-  'First post, be nice',
-  'Update: it got worse',
-  'Is this a good bean?',
+/** Community and title of every post the feed can deal. */
+const POSTS = [
+  ['r/CatJobs', 'My cat pays rent'],
+  ['r/SoupFacts', 'TIL soup is a drink'],
+  ['r/NapTime', 'AITA for napping?'],
+  ['r/RateMyRock', 'Rate my rock'],
+  ['r/Homework', 'I ate the homework'],
+  ['r/DogPatents', 'Dog files a patent'],
+  ['r/BirdCrimes', 'Bird stole my fries'],
+  ['r/Mondays', 'ELI5: what is Monday'],
+  ['r/DrinkWater', 'LPT: drink water'],
+  ['r/FirstPost', 'First post, be nice'],
+  ['r/ItGotWorse', 'Update: it got worse'],
+  ['r/BeanReview', 'Is this a good bean?'],
 ];
-/** The instruction for the first, second and third pick: [before, underlined, after]. */
-const ASKS = [
-  ['Tap the ', 'highest', ' score'],
-  ['Now the ', 'next highest', ''],
-  ['Then the ', 'last one', ''],
-];
+const FACES: Tone[] = ['gold', 'orange', 'pink', 'teal', 'brown', 'ink'];
+const KINDS = ['cat', 'plain', 'bear'] as const;
+const ASKS = ['TAP THE HIGHEST', 'NOW THE NEXT HIGHEST', 'THEN THE LAST ONE'];
+/** How an author takes coming first, second and last. */
+const PLACED: Mood[] = ['cool', 'happy', 'sad'];
+const BTNS: Btn[] = [0, 1, 2];
+const ARROW = 0.15; // sprite pixel size of a post's vote arrow, in em
 
 /** A score the way a feed shows it: 847, 1.2k, 12.4k. */
 function label(n: number): string {
@@ -33,6 +35,8 @@ const snap = (v: number) => (v < 1000 ? Math.round(v) : Math.round(v / 100) * 10
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const par = Math.round(27 + level * 1.5); // a flawless set is worth 5
   const spread = 1.1 - level * 0.22; // how many powers of ten the three scores may sit apart
+  const post = dealer(rng, POSTS);
+  const face = dealer(rng, FACES);
   const sets = Array.from({ length: 24 }, () => {
     // From level 3 some sets are downvoted: small numbers, two of them below zero.
     const sunk = level >= 3 && rng() < 0.3;
@@ -40,14 +44,14 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     do {
       // Later rounds huddle around 1k and 10k, where 999 meets 1.0k.
       const mid = sunk ? 1.3 : rng() < level * 0.15 ? pick(rng, [3, 4]) : 2 + rng() * 2.2;
-      vals = [0, 1, 2].map(() => snap(10 ** Math.min(4.95, mid + spread * (rng() * 2 - 1))));
+      vals = BTNS.map(() => snap(10 ** Math.min(4.95, mid + spread * (rng() * 2 - 1))));
     } while (new Set(vals).size < 3);
     if (sunk) {
       const keep = randBtn(rng);
       vals = vals.map((v, i) => (i === keep ? v : -v));
     }
-    const order = ([0, 1, 2] as Btn[]).sort((a, b) => vals[b] - vals[a]);
-    return { vals, order, titles: shuffled(rng, TITLES).slice(0, 3) };
+    const order = [...BTNS].sort((a, b) => vals[b] - vals[a]);
+    return { vals, order, posts: BTNS.map(() => post()), faces: BTNS.map(() => face()) };
   });
   let idx = 0;
   let picked: Btn[] = [];
@@ -58,95 +62,102 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let lockedUntil = 0;
   let dealAt = 0; // when the next set arrives; 0 while a set is in play
 
-  const wrap = h('div', 'g-sortbytop pix');
-  const rule = h('div', 'rule');
-  const row = h('div', 'row');
-  const cards = [0, 1, 2].map((i) => {
-    const el = h('div', `card c-${COLOR[i]}`);
-    const vote = arrow('up');
-    const num = h('b', 'num');
-    const title = h('span', 'title');
-    const stamp = h('em', 'stamp');
-    el.append(vote, stamp, num, title);
-    row.append(el);
-    return { el, vote, num, title, stamp };
+  // The scene: a feed of three posts under a banner that says which one to tap next.
+  // Each ranked post jumps to its place in the list, its author reacts, and every
+  // sorted feed puts a trophy on the shelf.
+  const wrap = h('div', 'g-sortbytop scene-feed');
+  const bar = h('div', 'bar');
+  const ask = h('span');
+  bar.append(sprite('trophy', { px: 0.12 }), ask, sprite('trophy', { px: 0.12 }));
+  const feed = h('div', 'feed');
+  const posts = BTNS.map((b) => {
+    const author = person({ kind: KINDS[b], px: 0.17 });
+    const card = postCard({ sub: '', title: '', tone: COLOR[b], avatar: author.el });
+    card.el.classList.add(`c-${COLOR[b]}`);
+    card.arrow.before(padDots(b));
+    const badge = h('b', 'badge');
+    card.el.append(badge);
+    feed.append(card.el);
+    return { card, author, badge };
   });
-  const meter = h('div', 'meter big');
-  const fill = h('i');
-  meter.append(fill);
-  const note = h('div', 'g-note');
-  wrap.append(rule, row, meter, note);
+  const shelf = h('div', 'shelf');
+  const note = h('div', 'count');
+  wrap.append(bar, feed, shelf, note);
   root.append(wrap);
 
-  const score = () => ratio(points, par);
   const current = () => sets[idx % sets.length];
 
-  function tally() {
-    const [before, key, after] = ASKS[picked.length % 3];
-    rule.replaceChildren(before, h('b', '', key), after);
-    fill.style.width = `${score() / 10}%`;
+  /** Ranked posts stack at the top in rank order; the rest keep their order underneath. */
+  function place() {
+    const list = [...picked, ...BTNS.filter((b) => !picked.includes(b))];
+    list.forEach((b, slot) => posts[b].card.el.style.setProperty('--shift', String(slot - b)));
+    ask.textContent = ASKS[picked.length % 3];
     note.textContent = done ? `${done} sorted, ${flawless} perfect` : 'Front page needs sorting!';
   }
 
-  function show() {
+  function deal() {
     const s = current();
-    cards.forEach((c, i) => {
-      c.el.classList.remove('ranked');
-      c.vote.classList.toggle('down', s.vals[i] < 0);
-      c.num.textContent = label(s.vals[i]);
-      c.title.textContent = s.titles[i];
+    posts.forEach((p, i) => {
+      p.card.el.classList.remove('ranked');
+      p.card.set({ sub: s.posts[i][0], title: s.posts[i][1] });
+      p.card.votes(label(s.vals[i]));
+      setSprite(p.card.arrow, 'up', s.vals[i] < 0 ? { tone: 'purple', flipY: true, px: ARROW } : { tone: COLOR[i], px: ARROW });
+      p.author.tone(s.faces[i]);
+      p.author.mood('idle');
     });
-    pulse(row, 'pop-in');
+    pulse(feed, 'pop-in');
+    place();
   }
-  show();
-  tally();
+  deal();
 
   return {
     press(b, t) {
       if (t < lockedUntil || dealAt) return;
       const s = current();
+      const p = posts[b];
+      if (picked.includes(b)) return pulse(p.card.el, 'shake');
       const want = s.order[picked.length];
-      const card = cards[b];
-      if (picked.includes(b)) return pulse(card.el, 'shake');
       if (b !== want) {
-        points = Math.max(0, points - 1);
+        points--;
         clean = false;
         lockedUntil = t + 400;
-        pulse(card.el, 'shake');
-        bad(row, `${label(s.vals[want])} > ${label(s.vals[b])}`);
-        tally();
+        p.author.mood('shock');
+        pulse(p.card.el, 'shake');
+        bad(p.card.el, `${label(s.vals[want])} > ${label(s.vals[b])}`);
         return;
       }
+      p.author.mood(PLACED[picked.length]);
       picked.push(b);
       points++;
-      card.stamp.textContent = `#${picked.length}`;
-      card.el.classList.add('ranked');
-      good(card.el);
+      p.badge.textContent = `#${picked.length}`;
+      p.card.el.classList.add('ranked');
+      fx.poof(p.badge);
+      good(p.card.arrow);
       if (picked.length === 3) {
         done++;
-        dealAt = t + 200;
-        fx.pop(row, clean ? 'PERFECT SORT! +2' : 'SORTED', clean ? 'gold' : 'white');
+        dealAt = t + 250;
+        fx.pop(feed, clean ? 'PERFECT SORT! +2' : 'SORTED', clean ? 'gold' : 'white');
         fx.sound(clean ? 'coin' : 'ding');
+        if (shelf.childElementCount < 12) shelf.append(sprite(clean ? 'trophy' : 'check', { px: 0.1 }));
         if (clean) {
           points += 2;
           flawless++;
-          fx.burst(row, 'gold', 20);
+          fx.burst(shelf.lastElementChild, 'gold', 20);
         }
       }
-      tally();
+      place();
     },
     tick(t) {
-      row.classList.toggle('locked', t < lockedUntil);
+      feed.classList.toggle('locked', t < lockedUntil);
       if (!dealAt || t < dealAt) return;
       dealAt = 0;
       idx++;
       picked = [];
       clean = true;
-      show();
-      tally();
+      deal();
       fx.sound('whoosh');
     },
-    score,
+    score: () => ratio(points, par),
     hint: (t) => (t < lockedUntil || dealAt ? null : current().order[picked.length]),
   };
 };
