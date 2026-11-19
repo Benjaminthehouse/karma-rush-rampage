@@ -94,6 +94,8 @@ function lintMeta(m, id, fail) {
 
 const avg = (a) => Math.round(a.reduce((x, y) => x + y, 0) / Math.max(1, a.length));
 
+const ART = process.argv.includes('--art');
+
 async function checkGame(id, browser) {
   const fails = [];
   const warns = [];
@@ -117,6 +119,9 @@ async function checkGame(id, browser) {
   if (!code.includes(`import './${id}.css'`)) fail(`code: must import './${id}.css'`);
   if (!/export const create\b/.test(code)) fail('code: must `export const create: GameFactory`');
   if (!code.includes(`g-${id}`)) fail(`code: the wrapper element needs the class g-${id}`);
+  for (const m of code.matchAll(/defineSprite\(\s*['"`]([^'"`]+)['"`]/g)) {
+    if (!m[1].startsWith(`${id}-`)) fail(`code: sprite "${m[1]}" must be named ${id}-something so games never overwrite each other's art`);
+  }
   const lines = src.split('\n').length;
   if (lines > 260) warn(`code: ${lines} lines; aim for under 200`);
   lintCss(fs.readFileSync(files.css, 'utf8'), id, fail);
@@ -153,6 +158,7 @@ async function checkGame(id, browser) {
       format: 'iife',
       target: 'es2020',
       alias: { '@game': files.ts, '@meta': files.meta },
+      loader: { '.woff2': 'dataurl', '.woff': 'dataurl' },
       logLevel: 'silent',
     });
   } catch (err) {
@@ -222,7 +228,7 @@ async function checkGame(id, browser) {
     VIEWPORTS.map(async (vp) => {
       const p = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
       p.on('pageerror', (e) => pageErrors.push(String(e).split('\n')[0]));
-      await p.goto(pathToFileURL(html).href);
+      await p.goto(pathToFileURL(html).href + (ART ? '?art=1' : ''));
       await p.evaluate(([l, s]) => window.__h.live(l, s), [vp.level, vp.seed]);
       for (const frac of [0.4, 0.8]) {
         await p.waitForFunction((f) => window.__h.liveState().t >= window.__h.meta.duration * f || !window.__h.liveState().running, frac, { timeout: 15000 });

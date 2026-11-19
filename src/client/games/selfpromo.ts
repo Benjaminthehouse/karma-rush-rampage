@@ -1,5 +1,5 @@
 import './selfpromo.css';
-import { h, pick, pulse, randInt, ratio, type GameFactory } from './common';
+import { dealer, h, person, postCard, pulse, randInt, ratio, setSprite, sprite, type GameFactory } from './common';
 
 const PITCHES = [
   'I vibecoded this in a weekend!',
@@ -12,6 +12,8 @@ const PITCHES = [
   'Honest feedback? (say it’s good)',
 ];
 const SUBS = ['r/ShipIt', 'r/VibeCoders', 'r/RoastMyApp', 'r/WeekendApps', 'r/IndieBuilds', 'r/JustLaunched'];
+const MOOD = { nap: 'sleep', warn: 'wink', watch: 'angry' } as const;
+const SIGN = { nap: 'zed', warn: 'quest', watch: 'bang' } as const;
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   // The mod alternates between napping and watching. `warn` is the tell before they look.
@@ -29,29 +31,28 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     at += look;
   }
   const par = Math.round((awayMs / 1000) * (6.2 + level * 0.3));
-  const pitches = Array.from({ length: 30 }, () => ({ text: pick(rng, PITCHES), sub: pick(rng, SUBS) }));
+  const pitch = dealer(rng, PITCHES);
+  const subName = dealer(rng, SUBS);
+  const pitches = Array.from({ length: 30 }, () => ({ text: pitch(), sub: subName() }));
 
   let posts = 0;
   let lockedUntil = 0;
-  let state = '';
+  let state: keyof typeof MOOD | '' = '';
 
-  const wrap = h('div', 'g-selfpromo');
-  const mod = h('div', 'mod');
-  const eyes = h('div', 'eyes');
-  eyes.append(h('i'), h('i'));
-  const badge = h('span', 'badge', 'MOD');
-  const mark = h('b', 'mark');
-  mod.append(eyes, badge, mark);
-  const post = h('div', 'post');
-  const sub = h('span', 'sub');
-  const title = h('div', 'title');
-  const link = h('span', 'link', '↗ my-app.example');
-  post.append(sub, title, link);
-  const meter = h('div', 'meter big');
-  const fill = h('i');
-  meter.append(fill);
-  const note = h('div', 'g-note');
-  wrap.append(mod, post, meter, note);
+  // The scene: the mod dozing at the mod desk up top, you and your megaphone below,
+  // and your spam piling up in the feed between you.
+  const wrap = h('div', 'g-selfpromo scene-office');
+  const desk = h('div', 'desk');
+  const mod = person({ tone: 'brown', kind: 'bear', hat: 'mod', mood: 'sleep', px: 0.5 });
+  const sign = sprite('zed', { px: 0.3 }, 'sign');
+  desk.append(mod.el, sign, h('span', 'plate', 'MOD DESK'));
+  const pile = h('div', 'pile');
+  const you = h('div', 'you');
+  const horn = sprite('megaphone', { px: 0.32 }, 'horn');
+  const card = postCard({ sub: '', user: 'totally_not_an_ad', title: '', tone: 'blue' });
+  you.append(horn, card.el);
+  const note = h('div', 'count');
+  wrap.append(desk, pile, you, note);
   root.append(wrap);
 
   const spanAt = (t: number) => spans.find((s) => t >= s.from && t < s.to) ?? spans[spans.length - 1];
@@ -62,10 +63,12 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
 
   function show() {
     const p = pitches[Math.floor(posts / 3) % pitches.length];
-    sub.textContent = p.sub;
-    title.textContent = p.text;
-    fill.style.width = `${Math.min(100, (posts / par) * 100)}%`;
-    note.textContent = `${posts} plug${posts === 1 ? '' : 's'} landed`;
+    card.set({ sub: p.sub, title: p.text, comments: 0 });
+    card.votes(Math.max(1, posts));
+    // One little window in the feed for every plug that is still up.
+    while (pile.childElementCount < Math.min(posts, 48)) pile.append(sprite('window', { px: 0.09 }, 'plug'));
+    while (pile.childElementCount > posts) pile.lastElementChild!.remove();
+    note.textContent = `${posts} plug${posts === 1 ? '' : 's'} still up`;
   }
   show();
 
@@ -75,28 +78,35 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       if (stateAt(t) === 'watch') {
         posts = Math.max(0, posts - 4);
         lockedUntil = t + 500;
-        pulse(post, 'shake');
-        bad(post, 'REMOVED: RULE 4');
+        pulse(card.el, 'shake');
+        fx.poof(pile);
+        bad(you, 'REMOVED: RULE 4');
         fx.flash('red');
         show();
         return;
       }
       posts++;
-      pulse(link, 'bump');
-      good(link);
+      pulse(horn, 'bump');
+      show();
+      fx.poof(pile.lastElementChild);
+      good(horn);
       if (posts % 10 === 0) {
-        fx.pop(post, `${posts} PLUGS!`, 'gold');
+        fx.pop(you, `${posts} PLUGS!`, 'gold');
         fx.sound('coin');
       }
-      show();
     },
     tick(t) {
       const now = stateAt(t);
       if (now === state) return;
       state = now;
-      mod.className = `mod ${now}`;
-      mark.textContent = now === 'watch' ? '!' : now === 'warn' ? '?' : 'z z z';
-      if (now === 'watch') fx.sound('zap');
+      mod.mood(MOOD[now]);
+      setSprite(sign, SIGN[now], { px: 0.3 });
+      wrap.classList.toggle('alarm', now === 'watch');
+      wrap.classList.toggle('stir', now === 'warn');
+      if (now === 'watch') {
+        pulse(mod.el, 'bump');
+        fx.sound('zap');
+      }
       if (now === 'nap') fx.sound('whoosh');
     },
     score: () => ratio(posts, par),

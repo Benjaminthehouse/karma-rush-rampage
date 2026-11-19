@@ -5,3 +5,4 @@
 .g-servers .unit.up .host { color: var(--green); }
 .g-servers .unit b { flex: 1; min-width: 1em; height: 0.3em; background: var(--line); border-radius: 99px; }
 .g-servers .unit.up i { background: var(--green); box-shadow: 0 0 0.5em var(--green); }
+.g-servers .rule { font-size: 1.1em; text-wrap: balance; }

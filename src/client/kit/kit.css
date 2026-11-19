@@ -1,0 +1,68 @@
+@import '@fontsource/pixelify-sans/500.css';
+@import '@fontsource/pixelify-sans/700.css';
+
+/* Pixel-art kit: sprites, chunky panels, forum furniture, scene backdrops. */
+.px { display: inline-block; flex: none; background-repeat: no-repeat; background-size: 100% 100%; image-rendering: pixelated; image-rendering: crisp-edges; image-rendering: pixelated; vertical-align: middle; }
+
+/* A panel with stepped pixel corners and a hard drop shadow. Set --pb for the frame colour. */
+.pxbox {
+  --pb: #0b1020; --pw: 0.2em; position: relative; border-radius: 0;
+  box-shadow: 0 calc(var(--pw) * -1) 0 0 var(--pb), 0 var(--pw) 0 0 var(--pb), calc(var(--pw) * -1) 0 0 0 var(--pb), var(--pw) 0 0 0 var(--pb), var(--pw) calc(var(--pw) * 2.4) 0 0 #0006;
+}
+
+/* Pixel lettering. Put `pix` on a game's wrapper (the scene classes include it). */
+.pix, [class*='scene-'] { font-family: 'Pixelify Sans', 'Trebuchet MS', system-ui, sans-serif; font-weight: 700; letter-spacing: 0.01em; }
+
+/* ---- a post in a feed: a bright card with a vote rail, drawn chunky ---- */
+.rx-post { display: flex; align-items: stretch; width: min(100%, 22em); background: #ffffff; color: #1a1f3a; --acc: #ff8a3d;
+  --pb: #0b1020; --pw: 0.22em; box-shadow: 0 calc(var(--pw) * -1) 0 0 var(--pb), 0 var(--pw) 0 0 var(--pb), calc(var(--pw) * -1) 0 0 0 var(--pb), var(--pw) 0 0 0 var(--pb), calc(var(--pw) * 1.5) calc(var(--pw) * 2.6) 0 0 #0b102066; }
+.rx-post.tone-red { --acc: var(--red); }
+.rx-post.tone-green { --acc: #17b85a; }
+.rx-post.tone-blue { --acc: var(--blue); }
+.rx-post.tone-gold { --acc: #e0a800; }
+.rx-post.tone-purple { --acc: var(--purple); }
+.rx-post.tone-grey { --acc: #8a93bd; }
+.rx-rail { flex: none; min-width: 2.7em; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.1em; background: #eef1fb; border-right: 0.2em solid #0b1020; padding: 0.3em 0.25em; }
+.rx-score { font-size: 1em; font-weight: 700; color: var(--acc); font-variant-numeric: tabular-nums; line-height: 1; }
+.rx-down { opacity: 0.5; }
+.rx-body { flex: 1; min-width: 0; padding: 0.45em 0.6em; display: flex; flex-direction: column; justify-content: center; gap: 0.25em; text-align: left; }
+.rx-meta { font-size: 0.7em; color: #6a7399; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rx-meta b { color: #1a1f3a; }
+.rx-title { font-size: 1em; font-weight: 700; line-height: 1.1; }
+.rx-bar { display: flex; align-items: center; gap: 0.35em; font-size: 0.7em; color: #6a7399; }
+.rx-bar .px + span { margin-right: 0.5em; }
+.rx-avatar { flex: none; align-self: center; margin-right: 0.4em; }
+/* Big variant: the star of the scene. */
+.rx-post.big .rx-rail { min-width: 4.2em; }
+.rx-post.big .rx-score { font-size: 1.5em; }
+.rx-post.big .rx-title { font-size: 1.15em; }
+
+/* ---- a comment ---- */
+.rx-comment { display: flex; gap: 0.5em; align-items: center; background: #ffffff; color: #1a1f3a; border-left: 0.3em solid #c4cbe4; padding: 0.35em 0.5em; text-align: left; box-shadow: 0.15em 0.3em 0 0 #0b102055; }
+.rx-cbody { flex: 1; min-width: 0; }
+.rx-who { font-size: 0.7em; color: #6a7399; }
+.rx-tag { font-style: normal; font-size: 0.9em; margin-left: 0.4em; padding: 0 0.3em; color: #fff; }
+.rx-tag.op { background: var(--blue); }
+.rx-tag.mod { background: #17b85a; }
+.rx-text { font-size: 0.95em; line-height: 1.12; }
+
+/* Which pad a colour means: three squares, one lit. */
+.pad-dots { display: inline-flex; gap: 0.15em; vertical-align: middle; }
+.pad-dots i { width: 0.5em; height: 0.5em; background: #0b102033; box-shadow: 0 0 0 0.08em #0b1020; }
+.pad-dots i.on { background: var(--c); }
+
+/* ---- effects ---- */
+.fx-layer > .poof { position: absolute; width: 3.2rem; height: 2.7rem; margin: -1.35rem 0 0 -1.6rem; background-size: 300% 100%; background-repeat: no-repeat; image-rendering: pixelated; animation: kit-poof 0.32s steps(3) forwards; }
+@keyframes kit-poof { to { background-position: 150% 0; } }
+
+/* ---- scene backdrops: put one on the game's wrapper ---- */
+.scene-sky { background: linear-gradient(#2f9bff 0 24%, #4fb2ff 24% 46%, #7cc8ff 46% 68%, #a9dcff 68% 86%, #cfeeff 86%); }
+.scene-dusk { background: linear-gradient(#2a1a5e 0 22%, #5a2a7e 22% 42%, #a8407e 42% 62%, #e8685a 62% 82%, #ffab5a 82%); }
+.scene-night { background: radial-gradient(0.14em 0.14em at 12% 18%, #fff 50%, #0000 51%), radial-gradient(0.14em 0.14em at 71% 9%, #fff 50%, #0000 51%), radial-gradient(0.1em 0.1em at 38% 31%, #fff 50%, #0000 51%), radial-gradient(0.14em 0.14em at 88% 40%, #fff 50%, #0000 51%), radial-gradient(0.1em 0.1em at 22% 52%, #fff 50%, #0000 51%), radial-gradient(0.1em 0.1em at 58% 64%, #fff 50%, #0000 51%), linear-gradient(#0b0f2a 0 40%, #141a4a 40% 70%, #1f2468 70%); }
+.scene-feed { background: #dfe4f5; background-image: linear-gradient(#cfd6ee 0 0.2em, #0000 0.2em); background-size: 100% 3em; }
+.scene-grid { background: linear-gradient(#0000 calc(100% - 0.14em), #ff4bd0aa 0) 0 0 / 2.2em 2.2em, linear-gradient(90deg, #0000 calc(100% - 0.14em), #ff4bd0aa 0) 0 0 / 2.2em 2.2em, linear-gradient(#1a0a44 0 50%, #3a1474 50%); }
+.scene-office { background: linear-gradient(#ffe9c2 0 60%, #c98a4a 60% 64%, #8a5a2c 64%); }
+.scene-danger { background: repeating-linear-gradient(135deg, #ff4b55 0 1.2em, #c8323c 1.2em 2.4em); }
+.scene-grass { background: linear-gradient(#4fb2ff 0 30%, #7cc8ff 30% 56%, #58c45a 56% 62%, #3fa348 62%); }
+.scene-mint { background: linear-gradient(#7af0c8 0 50%, #52d9ac 50%); }
+.scene-sun { background: linear-gradient(#ffd84a 0 40%, #ffb03a 40% 72%, #ff8a3d 72%); }

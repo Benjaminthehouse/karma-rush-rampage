@@ -57,8 +57,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let par = 0;
   for (let m = plan(0, FIRST); m; m = plan(par, m.ends[1] + GAP)) par++;
 
-  let cur: Oven | null = null; // null once the kitchen is closed for the night
-  let state: 'live' | 'open' | 'beep' = 'live';
+  let cur: Oven | null = null; // the microwave on the counter
+  let next = plan(0, FIRST); // the one after it; null once the kitchen has closed for the night
+  let state: 'live' | 'open' | 'beep' = 'open';
   let served = 0;
   let shown = 0;
   let nextAt = 0;
@@ -96,10 +97,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   wrap.append(house, oven, note, racket);
   root.append(wrap);
 
-  function serve(t: number) {
-    wrap.classList.remove('loud');
-    cur = plan(served, t);
-    if (!cur) return closeKitchen();
+  function serve() {
+    cur = next;
+    if (!cur) return;
     state = 'live';
     shown = cur.from;
     digits.textContent = `0:0${shown}`;
@@ -108,13 +108,19 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     note.textContent = cur.label;
     pulse(oven, 'pop-in');
   }
+  serve();
 
-  function closeKitchen() {
+  /** This microwave is done: line up the next one, or close the kitchen if none fits before the bell. */
+  function rest(t: number, ms: number) {
+    served++;
+    nextAt = t + ms;
+    next = plan(served, nextAt);
+    if (next) return;
     if (beeps) note.textContent = beeps < rooms.length ? `${beeps} awake. Run.` : 'House meeting. Now.';
     else if (!ninjas) note.textContent = 'Quiet. Also still frozen.';
     else {
       note.textContent = 'Nobody woke up.';
-      fx.pop(oven, 'NOBODY WOKE UP', 'gold');
+      fx.pop(house, 'NOBODY WOKE UP', 'gold');
       fx.burst(house, 'gold', 24);
       fx.flash('gold');
       fx.sound('coin');
@@ -125,19 +131,17 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     state = 'beep';
     beepAt = t;
     rings = 0;
-    nextAt = t + BEEPING;
-    served++;
+    oven.classList.remove('now');
     oven.classList.add('beep');
     wrap.classList.add('loud');
     const room = rooms[Math.min(beeps, rooms.length - 1)];
     room.className = 'room awake';
     room.textContent = '!?';
-    bad(room, WOKEN[beeps % WOKEN.length]);
+    bad(house, WOKEN[beeps % WOKEN.length]);
     fx.flash('white');
     beeps++;
+    rest(t, BEEPING);
   }
-
-  serve(FIRST);
 
   return {
     press(b, t) {
@@ -151,31 +155,31 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         return;
       }
       state = 'open';
-      nextAt = t + GAP;
-      served++;
       digits.textContent = `0:0${n}`;
       oven.classList.add('open', n === 1 ? 'ninja' : n === 2 ? 'warm' : 'cold');
       if (n === 1) {
         const star = stars[Math.min(ninjas, stars.length - 1)];
         star.className = 'on';
-        good(star, NINJA[ninjas % NINJA.length]);
-        fx.burst(bay, 'gold', 14);
+        good(oven, NINJA[ninjas % NINJA.length]);
+        fx.burst(star, 'gold', 12);
         fx.sound('whoosh');
         ninjas++;
       } else if (n === 2) {
         warm++;
-        fx.pop(bay, 'LUKEWARM', 'white');
-        fx.sound('pop');
-      } else bad(bay, COLD[served % COLD.length]);
+        fx.pop(oven, 'LUKEWARM', 'white');
+        fx.sound('boing');
+      } else bad(oven, COLD[served % COLD.length]);
+      rest(t, GAP);
     },
     tick(t) {
-      if (!cur) return;
       if (state === 'beep' && rings < 3 && t >= beepAt + rings * 170) {
         rings++;
         fx.sound('ding');
       }
-      if (state !== 'live') {
-        if (t >= nextAt) serve(t);
+      if (!cur || state !== 'live') {
+        if (t < nextAt) return;
+        wrap.classList.remove('loud');
+        if (next) serve();
         return;
       }
       const n = numberAt(cur, t);
@@ -185,7 +189,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       if (n === 0) return beep(t);
       oven.classList.toggle('now', n === 1);
       pulse(digits, 'bump');
-      fx.sound('tick');
+      fx.sound(n === 1 ? 'pop' : 'tick');
     },
     score: () => clamp1000((1000 * (ninjas + 0.4 * warm - 0.25 * wrong)) / par),
     hint: (t) => (cur && state === 'live' && numberAt(cur, t) === 1 ? cur.btn : null),

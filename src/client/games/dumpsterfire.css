@@ -1,7 +1,8 @@
 .g-dumpsterfire { gap: 0.55em !important; }
 .g-dumpsterfire .sign { width: 100%; text-align: center; font-size: 1.55em; font-weight: 900; font-style: italic; line-height: 1; letter-spacing: 0.02em; padding: 0.32em 0.3em; border-radius: 0.5em; color: var(--bg); background: linear-gradient(var(--gold), #ff7a3d); box-shadow: 0 0 1em #ff7a3d99; animation: g-dumpsterfire-alarm 0.26s steps(2) infinite; }
-.g-dumpsterfire .sign.calm { background: var(--green); box-shadow: 0 0 1em #2fd66f99; animation-name: bump; animation-duration: 0.12s; animation-iteration-count: 1; }
+.g-dumpsterfire .sign.calm { background: var(--green); box-shadow: 0 0 1em #2fd66f99; animation: g-dumpsterfire-flip 0.16s ease-out; }
 @keyframes g-dumpsterfire-alarm { 50% { filter: brightness(1.35); } }
+@keyframes g-dumpsterfire-flip { from { transform: scaleY(0.3); filter: brightness(2); } }
 
 .g-dumpsterfire .lanes { flex: 1; min-height: 0; width: 100%; display: flex; gap: 0.5em; }
 .g-dumpsterfire .lane { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; border-radius: 0.8em; border: 0.16em solid var(--line); background: var(--bg); transition: border-color 0.1s, box-shadow 0.1s; }
@@ -10,9 +11,11 @@
 /* The top half is the danger zone; its lower edge is the line. */
 .g-dumpsterfire .pit::before { content: ''; position: absolute; inset: 0 0 50%; border-bottom: 0.16em dashed var(--ink); background: repeating-linear-gradient(135deg, #ffffff12 0 0.45em, #0000 0.45em 0.9em); }
 .g-dumpsterfire .lane.over .pit::before { background-color: color-mix(in srgb, var(--c) 24%, transparent); }
+.g-dumpsterfire .zone { position: absolute; top: 0.7em; left: 0; right: 0; z-index: 1; text-align: center; font-size: 0.7em; font-weight: 900; color: var(--dim); opacity: 0.55; }
+.g-dumpsterfire .lane.over .zone { color: var(--ink); opacity: 1; animation: g-dumpsterfire-alarm 0.26s steps(2) infinite; }
 
-.g-dumpsterfire .flame { position: absolute; left: 0; right: 0; bottom: 0; margin: 0 auto; max-width: 7.5em; opacity: 0.8; transform-origin: 50% 100%; transition: height 0.09s ease-out, width 0.09s ease-out; }
-.g-dumpsterfire .lane.over .flame { opacity: 1; filter: drop-shadow(0 0 0.5em var(--c)); }
+.g-dumpsterfire .flame { position: absolute; left: 50%; bottom: 0; translate: -50% 0; aspect-ratio: 0.62; max-width: 92%; transform-origin: 50% 100%; transition: height 0.09s ease-out; }
+.g-dumpsterfire .lane.over .flame { filter: drop-shadow(0 0 0.5em var(--c)); }
 .g-dumpsterfire .flame svg { display: block; width: 100%; height: 100%; overflow: visible; transform-origin: 50% 100%; animation: g-dumpsterfire-flicker 0.34s ease-in-out infinite; }
 .g-dumpsterfire .lane:nth-child(2) .flame svg { animation-duration: 0.29s; }
 .g-dumpsterfire .lane:nth-child(3) .flame svg { animation-duration: 0.4s; }
@@ -20,6 +23,8 @@
 .g-dumpsterfire .flame .in { fill: #ffe58a; }
 .g-dumpsterfire .flame.hit { animation: g-dumpsterfire-hit 0.12s ease-out; }
 @keyframes g-dumpsterfire-flicker { 50% { transform: scaleX(0.88) skewX(-4deg); } }
-@keyframes g-dumpsterfire-hit { from { transform: scale(1.15, 0.8); filter: brightness(2.2); } }
+@keyframes g-dumpsterfire-hit { from { transform: scale(1.2, 0.78); filter: brightness(1.7); } }
 
 .g-dumpsterfire .take { flex: none; height: 3.3em; display: flex; align-items: center; justify-content: center; padding: 0 0.3em; text-align: center; font-size: 0.72em; font-weight: 800; line-height: 1.1; background: var(--panel-2); border-top: 0.22em solid var(--c); }
+.g-dumpsterfire .clock { font-weight: 800; font-size: 0.85em; letter-spacing: 0.08em; color: var(--dim); line-height: 1; }
+.g-dumpsterfire .clock b { font-size: 1.7em; font-weight: 900; font-style: italic; color: var(--gold); font-variant-numeric: tabular-nums; letter-spacing: 0; }

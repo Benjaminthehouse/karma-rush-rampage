@@ -1,5 +1,6 @@
 .g-votemath .row { display: flex; gap: 0.5em; width: 100%; }
-.g-votemath .card { flex: 1; min-width: 0; background: var(--panel-2); border: 0.16em solid var(--line); border-radius: 0.8em; padding: 0.8em 0.2em; display: flex; flex-direction: column; align-items: center; gap: 0.5em; }
+.g-votemath .card { flex: 1; min-width: 0; background: var(--panel-2); border: 0.16em solid var(--line); border-radius: 0.8em; padding: 0.8em 0.2em; display: flex; flex-direction: column; align-items: center; gap: 0.5em; position: relative; }
+.g-votemath .pin { position: absolute; top: 0; left: 50%; }
 .g-votemath .line { display: flex; align-items: center; gap: 0.25em; font-size: 1.7em; font-weight: 900; font-variant-numeric: tabular-nums; }
 .g-votemath .line .arrow { width: 0.9em; height: 0.9em; }
 .g-votemath .line.up { color: var(--green); }

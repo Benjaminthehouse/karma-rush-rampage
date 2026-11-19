@@ -1,5 +1,5 @@
 import './haikubot.css';
-import { COLOR, h, pulse, ratio, shuffled, type Btn, type GameFactory } from './common';
+import { COLOR, arrow, h, pulse, ratio, shuffled, type Btn, type GameFactory } from './common';
 
 // Spaces split words, hyphens split the syllables inside a word: 5, 7, 5.
 const HAIKUS = [
@@ -30,11 +30,11 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let posted = 0;
 
   const wrap = h('div', 'g-haikubot');
+  const card = h('div', 'card');
   const head = h('div', 'head');
   const face = h('div', 'face');
   face.append(h('i'), h('i'));
-  const tally = h('div', 'tally');
-  head.append(face, h('b', 'name', 'u/haiku_bot'), tally);
+  head.append(face, h('b', 'name', 'u/haiku_bot'), h('span', 'flair', 'BOT'));
   const poem = h('div', 'poem');
   const lines = SIZES.map((size, i) => {
     const line = h('div', `line c-${COLOR[i]}`);
@@ -43,13 +43,21 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     poem.append(line);
     return { line, cells };
   });
-  wrap.append(head, poem);
+  // The comment's vote count is the syllable count: it climbs with every tap.
+  const foot = h('div', 'foot');
+  const votes = h('b', 'votes');
+  const tally = h('div', 'tally');
+  foot.append(arrow('up'), votes, tally);
+  card.append(head, poem, foot);
+  wrap.append(card);
   root.append(wrap);
+  const typed = () => posted * ALL + filled[0] + filled[1] + filled[2];
 
   function wipe(b: number) {
     filled[b] = 0;
-    lines[b].line.classList.remove('full');
+    lines[b].line.classList.remove('full', 'spill');
     lines[b].cells.forEach((cell) => cell.classList.remove('on'));
+    votes.textContent = String(typed());
   }
 
   function deal() {
@@ -69,12 +77,13 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       if (filled[b] === SIZES[b]) {
         // One syllable too many: the whole line falls off.
         wipe(b);
-        pulse(line, 'shake');
+        pulse(line, 'spill');
         bad(line, 'BAD BOT');
         return;
       }
       const cell = cells[filled[b]++];
       cell.classList.add('on');
+      votes.textContent = String(typed());
       good(cell);
       if (filled[b] < SIZES[b]) return;
       if (filled.every((n, i) => n === SIZES[i])) {
@@ -93,7 +102,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       fx.sound('ding');
     },
     tick() {},
-    score: () => ratio(posted * ALL + filled[0] + filled[1] + filled[2], par),
+    score: () => ratio(typed(), par),
     hint: () => ([0, 1, 2] as Btn[]).find((b) => filled[b] < SIZES[b]) ?? null,
   };
 };

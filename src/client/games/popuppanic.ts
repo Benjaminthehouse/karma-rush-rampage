@@ -1,5 +1,5 @@
 import './popuppanic.css';
-import { COLOR, h, pick, pulse, randBtn, ratio, type Btn, type GameFactory } from './common';
+import { COLOR, h, pick, pulse, ratio, type Btn, type GameFactory } from './common';
 
 const ADS = [
   ['YOU ARE VISITOR 1,000,000', 'CLAIM'],
@@ -21,27 +21,33 @@ const ADS = [
 const SKINS = ['gold', 'pink', 'orange', 'lilac'] as const;
 const SURE = ['ARE YOU SURE?', 'REALLY CLOSE?', 'LAST CHANCE!', 'BUT WHY?', 'PLEASE STAY', 'ONE MORE AD?'] as const;
 const ESSAY_MS = 950; // an essay saves itself and leaves after this long
+const ARRIVES = { ad: 'pop', sure: 'boing', essay: 'whoosh' } as const;
 
 type Kind = 'ad' | 'sure' | 'essay';
 type Spawn = { at: number; col: Btn; essay: boolean; nested: boolean; ad: readonly [string, string]; skin: string; sure: string; y: number; tilt: number };
-type Col = { el: HTMLElement; poof: HTMLElement; kind: Kind | null; win: HTMLElement | null; from: Spawn | null };
+type Col = { el: HTMLElement; poof: HTMLElement; pop: { win: HTMLElement; kind: Kind; from: Spawn } | null };
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   // Pop-ups arrive on a schedule that speeds up. One fits per column: an ad aimed
   // at a column that is still covered is an ad you never got to close.
   const gapStart = 480 - level * 25;
   const gapEnd = 280 - level * 20;
-  const spawns: Spawn[] = [];
-  let prev = -1;
-  for (let at = 0; at < duration - 250; at += gapStart + (gapEnd - gapStart) * (at / duration)) {
-    let col = randBtn(rng);
-    while (col === prev) col = randBtn(rng);
-    prev = col;
-    spawns.push({ at, col, essay: false, nested: rng() < 0.3 + level * 0.03, ad: pick(rng, ADS), skin: pick(rng, SKINS), sure: pick(rng, SURE), y: rng(), tilt: Math.round(rng() * 8 - 4) });
-  }
   // The traps are spread through the round, never in the opening second.
   const essays = level < 2 ? 2 : 3;
-  for (let k = 0; k < essays; k++) spawns[4 + Math.floor(((k + rng()) * (spawns.length - 5)) / essays)].essay = true;
+  const essayDue = Array.from({ length: essays }, (_, k) => 1200 + ((k + rng() * 0.5) * (duration - 2000)) / essays);
+  const spawns: Spawn[] = [];
+  let prev = -1;
+  let trap = { col: -1, until: 0 };
+  for (let at = 0; at < duration - 250; at += gapStart + (gapEnd - gapStart) * (at / duration)) {
+    const essay = at >= trap.until && at >= (essayDue[0] ?? duration);
+    if (essay) essayDue.shift();
+    // Never the column just used, and never one where an essay is still saving.
+    const col = pick(rng, ([0, 1, 2] as Btn[]).filter((c) => c !== prev && (c !== trap.col || at >= trap.until)));
+    if (essay) trap = { col, until: at + ESSAY_MS };
+    prev = col;
+    spawns.push({ at, col, essay, nested: rng() < 0.3 + level * 0.03, ad: pick(rng, ADS), skin: pick(rng, SKINS), sure: pick(rng, SURE), y: rng(), tilt: Math.round(rng() * 6 - 3) });
+  }
+  // Par is 85% of everything there is to close: each ad, plus each ARE YOU SURE behind one.
   const ads = spawns.filter((s) => !s.essay);
   const par = Math.round(0.85 * (ads.length + ads.filter((s) => s.nested).length));
 
@@ -64,12 +70,12 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     const poof = h('i', 'poof');
     el.append(poof);
     desk.append(el);
-    return { el, poof, kind: null, win: null, from: null };
+    return { el, poof, pop: null };
   });
   wrap.append(hud, desk);
   root.append(wrap);
 
-  const score = () => ratio(closed - misses * 0.5 - lost * 3, par);
+  const score = () => ratio(closed - misses - lost * 3, par);
 
   function open(c: Col, kind: Kind, s: Spawn) {
     const win = h('div', `win ${kind} ${kind === 'ad' ? s.skin : ''}`);
@@ -87,25 +93,26 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     c.el.style.setProperty('--y', String(s.y));
     c.el.style.setProperty('--tilt', `${s.tilt}deg`);
     c.el.append(win);
-    Object.assign(c, { kind, win, from: s });
+    c.pop = { win, kind, from: s };
+    fx.sound(ARRIVES[kind]);
   }
 
   function shut(c: Col) {
-    c.win?.remove();
-    Object.assign(c, { kind: null, win: null, from: null });
+    c.pop?.win.remove();
+    c.pop = null;
   }
 
   function advance(t: number) {
     for (const c of cols) {
-      if (c.kind === 'essay' && t >= c.from!.at + ESSAY_MS) {
-        fx.pop(c.win, 'SAVED', 'white');
+      if (c.pop?.kind === 'essay' && t >= c.pop.from.at + ESSAY_MS) {
+        fx.pop(c.pop.win, 'SAVED', 'white');
         fx.sound('ding');
         shut(c);
       }
     }
     while (next < spawns.length && t >= spawns[next].at) {
       const s = spawns[next++];
-      if (!cols[s.col].kind) open(cols[s.col], s.essay ? 'essay' : 'ad', s);
+      if (!cols[s.col].pop) open(cols[s.col], s.essay ? 'essay' : 'ad', s);
     }
   }
   advance(0);
@@ -113,35 +120,32 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   return {
     press(b) {
       const c = cols[b];
-      const { kind, win, from } = c;
-      if (!kind || !from) {
+      const p = c.pop;
+      if (!p) {
         misses++;
         streak = 0;
         pulse(c.el, 'shake');
         bad(c.el, 'NOTHING THERE');
-      } else if (kind === 'essay') {
+      } else if (p.kind === 'essay') {
         lost++;
         streak = 0;
-        bad(win, 'ESSAY DELETED!');
+        bad(p.win, 'ESSAY DELETED!');
         fx.flash('red');
         fx.sound('thud');
         shut(c);
       } else {
         closed++;
         streak++;
-        good(win);
-        fx.burst(win, COLOR[b], kind === 'sure' ? 18 : 8);
+        good(p.win);
+        fx.burst(p.win, COLOR[b], p.kind === 'sure' ? 18 : 8);
         shut(c);
         pulse(c.poof, 'go');
-        if (kind === 'sure') {
+        if (p.kind === 'sure') {
           fx.pop(c.poof, 'CHAIN x2', COLOR[b]);
           fx.sound('coin');
-        } else if (from.nested) {
-          open(c, 'sure', from);
-          fx.sound('boing');
-        }
+        } else if (p.from.nested) open(c, 'sure', p.from);
+        // Ten clean closes in a row lands with the engine's combo flash.
         if (streak % 10 === 0) {
-          fx.flash('gold');
           fx.pop(desk, 'AD-FREE!', 'gold');
           fx.sound('power');
         }
@@ -158,8 +162,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     hint() {
       let best: Btn | null = null;
       for (const b of [0, 1, 2] as Btn[]) {
-        const s = cols[b].kind === 'essay' ? null : cols[b].from;
-        if (s && (best === null || s.at < cols[best].from!.at)) best = b;
+        const p = cols[b].pop;
+        if (p && p.kind !== 'essay' && (best === null || p.from.at < cols[best].pop!.from.at)) best = b;
       }
       return best;
     },

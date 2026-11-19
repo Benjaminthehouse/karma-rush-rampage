@@ -1,0 +1,48 @@
+.g-modmail .ban, .g-modmail .reply, .g-modmail .mail, .g-modmail .keys { width: min(100%, 22em); }
+.g-modmail .ban { display: flex; flex-direction: column; gap: 0.4em; background: var(--bg); border: 0.14em solid var(--line); border-radius: 0.9em; padding: 0.45em 0.8em 0.6em; }
+.g-modmail .now { display: flex; align-items: center; justify-content: center; gap: 0.6em; }
+.g-modmail .now span { font-size: 0.72em; font-weight: 800; letter-spacing: 0.1em; color: var(--dim); }
+.g-modmail .now b { display: inline-block; font-size: 1.8em; font-weight: 900; font-style: italic; line-height: 1; white-space: nowrap; }
+.g-modmail .steps { display: flex; gap: 0.3em; }
+.g-modmail .steps i { flex: 1; height: 0.5em; border-radius: 99px; background: var(--panel-2); }
+.g-modmail .steps i.on { background: var(--gold); box-shadow: 0 0 0.5em var(--gold); }
+.g-modmail .ban.free { border-color: var(--gold); }
+.g-modmail .ban.free b { color: var(--gold); text-shadow: 0 0 0.5em var(--gold); }
+
+.g-modmail .reply { display: flex; align-items: center; gap: 0.45em; font-weight: 800; }
+.g-modmail .shield { flex: none; width: 1.5em; height: 1.7em; background: var(--purple); clip-path: polygon(50% 0, 100% 16%, 100% 58%, 50% 100%, 0 58%, 0 16%); }
+.g-modmail .reply b { font-size: 0.72em; font-weight: 900; letter-spacing: 0.1em; color: var(--purple); }
+.g-modmail .reply span { min-width: 0; background: var(--panel-2); border-radius: 0.3em 0.9em 0.9em 0.9em; padding: 0.35em 0.75em; font-size: 0.95em; line-height: 1.15; transform-origin: 0 50%; }
+.g-modmail .reply span.new { animation: g-modmail-say 0.18s ease-out; }
+@keyframes g-modmail-say { from { transform: scale(1.35) rotate(-3deg); background: var(--purple); } }
+
+.g-modmail .mail { background: var(--ink); color: #071022; border-radius: 0.9em; padding: 0.5em 0.5em 0.7em; box-shadow: 0 0.35em 0 #c4cbe4; }
+.g-modmail .to { font-size: 0.7em; font-weight: 800; letter-spacing: 0.1em; color: #6a7399; padding-left: 0.4em; }
+.g-modmail .line { font: 900 2.1em/1.35 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; white-space: pre; text-align: center; }
+.g-modmail .line i { display: inline-block; font-style: normal; color: #b4bbd6; }
+.g-modmail .line i.on { color: #071022; animation: g-modmail-type 0.1s ease-out; }
+@keyframes g-modmail-type { from { transform: translateY(-0.3em) scale(1.4); } }
+/* The next letter wears the colour of the pad that types it; a finished appeal goes green for SEND. */
+.g-modmail .line i.next { color: var(--c); box-shadow: 0 0.12em 0 var(--c); }
+.g-modmail .mail.ready { box-shadow: 0 0 0 0.22em var(--green), 0 0 1.2em var(--green); }
+.g-modmail .mail.ready .line i { color: var(--green-d); }
+
+/* Three keys above the three pads: the lit one is the pad to press. */
+.g-modmail .keys { display: flex; gap: 0.5em; height: 4.6em; }
+.g-modmail .key { flex: 1; min-width: 0; display: grid; place-items: center; border-radius: 0.5em; background: color-mix(in srgb, var(--c) 20%, var(--bg)); border: 0.07em solid color-mix(in srgb, var(--c) 50%, var(--bg)); color: color-mix(in srgb, var(--c) 70%, var(--bg)); font: 900 2em/1 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; transition: transform 0.05s; }
+.g-modmail .key.c-green { font-size: 1.5em; letter-spacing: 0.04em; }
+.g-modmail .key.lit { background: var(--c); border-color: var(--ink); color: #071022; box-shadow: inset 0 -0.18em 0 var(--cd), 0 0 0.5em var(--c); transform: translateY(-0.1em) scale(1.05); }
+.g-modmail .key.c-green.lit { animation: g-modmail-ready 0.22s ease-in-out infinite alternate; }
+@keyframes g-modmail-ready { to { transform: translateY(-0.1em) scale(1.14); } }
+
+/* A tall phone has room to spare: bigger type, bigger keys. */
+@container (max-aspect-ratio: 3/5) {
+  .g-modmail { gap: 1.3em !important; }
+  .g-modmail .ban { padding: 0.7em 0.8em 0.85em; gap: 0.6em; }
+  .g-modmail .now b { font-size: 2.1em; }
+  .g-modmail .steps i { height: 0.7em; }
+  .g-modmail .reply span { font-size: 1.1em; }
+  .g-modmail .mail { padding: 0.7em 0.5em 1em; }
+  .g-modmail .line { font-size: 2.3em; }
+  .g-modmail .keys { height: 6.4em; }
+}

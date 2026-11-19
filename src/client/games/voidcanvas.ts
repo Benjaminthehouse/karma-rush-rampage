@@ -6,15 +6,17 @@ const COLS = 20;
 // r red, o orange, y gold, g green, b blue, p purple, n pink, k ink, dot blank.
 const ART = [
   '....................',
-  '........g...yyyy....',
-  '..rr.rr....yyyyyy..b',
-  '.rrrrrrr..yykyykyy..',
-  '.rrrrrrr..yykyykyy..',
-  '..rrrrr...yyyyyyyy..',
-  '...rrr....ykyyyyky.p',
-  '....r......ykkkky...',
-  '.b......p...ynny....',
+  '........g...yyyyy...',
+  '..rr.rr....yyyyyyy.b',
+  '.rrrrrrr..yykyyykyy.',
+  '.rrrrrrr..yykyyykyy.',
+  '..rrrrr...yyyyyyyyy.',
+  '...rrr....ykyyyyyky.',
+  '....r.....yykkkkkyy.',
+  '.b.....p...yynnnyy..',
+  '............yyyyy...',
   '....................',
+  '...p....g..........b',
   'rrooyyggbbpprrooyygg',
   'rrooyyggbbpprrooyygg',
 ];
@@ -22,7 +24,7 @@ const CHAT = [
   'the heart is non-negotiable',
   'who keeps placing black pixels??',
   'hold the line, the smiley needs us',
-  'alliance with rainbow road confirmed',
+  'rainbow gang alliance confirmed',
   'one pixel every five minutes. worth it',
   'mods, the void is griefing again',
   'we lost a column. we ride at dawn',
@@ -46,8 +48,9 @@ function artSvg() {
 }
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
-  // The void bites faster the more canvas you hold, so every pace finds its own frontline.
-  const biteGap = (cols: number) => 1000 / (0.4 + level * 0.27 + cols * 0.2);
+  // The void bites harder the more canvas you hold, so every pace finds its own frontline
+  // and only a fast painter can pin it against the edge.
+  const biteGap = (cols: number) => 1000 / (1.3 + level * 0.15 + 4.3 * (cols / COLS) ** 2);
   const seq: Btn[] = [];
   while (seq.length < 120) {
     const b = randBtn(rng);
@@ -64,7 +67,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let held = COLS / 2; // columns that are still ours, counted from the left
   let idx = 0;
   let lockedUntil = 0;
-  let nextBite = biteGap(held);
+  let nextBite = 400 + biteGap(held); // a breath to find the first colour
   let raid = 0;
   let proud = true; // the big cheer fires once per comeback, not on every flicker at the edge
   let line = -1;
@@ -75,8 +78,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   const canvas = h('div', 'canvas');
   canvas.innerHTML = artSvg();
   const splat = h('i', 'splat');
+  const bite = h('i', 'bite');
   const front = h('i', 'front');
-  canvas.append(h('i', 'void'), splat, front);
+  canvas.append(h('i', 'void'), bite, splat, front);
   const ours = h('b', 'ours');
   const theirs = h('b', 'theirs');
   const tally = h('div', 'tally');
@@ -99,12 +103,22 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     });
     front.className = `front c-${COLOR[want()]}`;
     canvas.style.setProperty('--held', String(held));
-    canvas.classList.toggle('full', held === COLS);
+    wrap.classList.toggle('full', held === COLS);
     const pct = Math.round((held / COLS) * 100);
     ours.textContent = `${pct}%`;
     theirs.textContent = `${100 - pct}%`;
   }
   show();
+
+  /** The void takes up to `n` columns back, with a purple flash where they were. */
+  function eat(n: number) {
+    const took = Math.min(n, held);
+    if (!took) return;
+    held -= took;
+    bite.style.left = `${held * 5}%`;
+    bite.style.width = `${took * 5}%`;
+    pulse(bite, 'go');
+  }
 
   return {
     press(b, t) {
@@ -133,11 +147,10 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     },
     tick(t) {
       if (t >= lockedUntil) wrap.classList.remove('locked');
-      let moved = false;
+      const before = held;
       while (raid < raids.length && t >= raids[raid]) {
         raid++;
-        held = Math.max(0, held - 3);
-        moved = true;
+        eat(3);
         pulse(canvas, 'shake');
         fx.pop(canvas, 'VOID RAID!', 'purple');
         fx.flash('purple');
@@ -145,14 +158,11 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         fx.sound('thud');
       }
       while (t >= nextBite) {
-        if (held > 0) {
-          held--;
-          moved = true;
-        }
+        eat(1);
         nextBite += biteGap(held);
       }
       if (held <= COLS - 3) proud = true;
-      if (moved) show();
+      if (held !== before) show();
       const now = Math.floor(t / 1700) % chat.length;
       if (now !== line) {
         line = now;

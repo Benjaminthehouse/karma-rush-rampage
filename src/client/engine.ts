@@ -222,6 +222,7 @@ export function runMatch(o: {
         fx: {
           burst: fx.burst,
           pop: fx.pop,
+          poof: fx.poof,
           flash: fx.flash,
           shake: fx.shake,
           sound: (name) => sfx.named(name),

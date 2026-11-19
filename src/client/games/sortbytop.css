@@ -1,0 +1,21 @@
+.g-sortbytop .row { flex: 1; min-height: 0; max-height: 15em; width: min(100%, 30em); display: flex; gap: 0.45em; transition: opacity 0.1s; }
+.g-sortbytop .row.locked { opacity: 0.55; }
+.g-sortbytop .card { flex: 1; min-width: 0; background: var(--panel-2); border: 0.2em solid var(--c); border-radius: 0.9em; padding: 0.6em 0.2em; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4em; text-align: center; }
+.g-sortbytop .card .arrow { flex: none; width: 2.6em; height: 2.6em; }
+.g-sortbytop .num { font-size: 1.5em; font-weight: 900; line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.g-sortbytop .title { font-size: 0.72em; font-weight: 700; line-height: 1.15; min-height: 2.3em; color: var(--dim); }
+.g-sortbytop .stamp { display: none; font-size: 2.6em; font-weight: 900; line-height: 1; color: var(--gold); -webkit-text-stroke: 0.1em var(--bg); paint-order: stroke fill; transform: rotate(-8deg); }
+.g-sortbytop .card.ranked { border-color: var(--gold); background: var(--bg); }
+.g-sortbytop .card.ranked .arrow { display: none; }
+.g-sortbytop .card.ranked .stamp { display: block; animation: g-sortbytop-stamp 0.14s ease-out; }
+.g-sortbytop .card.ranked .num, .g-sortbytop .card.ranked .title { opacity: 0.5; }
+.g-sortbytop .meter { --c: var(--gold); }
+@keyframes g-sortbytop-stamp { from { transform: rotate(-8deg) scale(1.35); opacity: 0.2; } }
+
+/* Tall phone stage: taller cards with a bigger arrow and stamp. */
+@container (max-aspect-ratio: 3/4) {
+  .g-sortbytop .row { max-height: 17em; }
+  .g-sortbytop .card { gap: 0.55em; }
+  .g-sortbytop .card .arrow { width: 3.2em; height: 3.2em; }
+  .g-sortbytop .stamp { font-size: 3.2em; }
+}

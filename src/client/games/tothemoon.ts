@@ -1,7 +1,7 @@
 import './tothemoon.css';
 import { COLOR, clamp1000, h, randBtn, type Btn, type GameFactory } from './common';
 
-const TICKERS = ['$KARMA', '$DOGE-ISH', '$STONK', '$HODL', '$CATCOIN', '$UPVOTE', '$COPIUM', '$BANANA'];
+const TICKERS = ['$KARMA', '$DOGGO', '$STONK', '$HODL', '$CATCOIN', '$UPVOTE', '$COPIUM', '$BANANA'];
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const climbMs = 1050 - level * 95; // hold time from the pad to the top of the lane
@@ -25,11 +25,15 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const wrap = h('div', 'g-tothemoon');
   const lanes = [0, 1, 2].map((i) => {
     const lane = h('div', `lane c-${COLOR[i]}`);
+    // The track is the lane minus half a rocket at each end, and the rocket hangs half below
+    // its own position, so the rocket's centre is drawn exactly at its judged height.
+    const track = h('div', 'track');
     const zone = h('div', 'zone', 'MOON');
     const rocket = h('div', 'rocket');
     rocket.append(h('i'));
     const tag = h('div', 'ticker');
-    lane.append(zone, rocket, tag);
+    track.append(zone, rocket);
+    lane.append(track, tag);
     wrap.append(lane);
     return { lane, zone, rocket, tag };
   });
@@ -97,7 +101,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       if (phase === 'wait' && t >= nextAt) arm();
       if (phase !== 'climb') return;
       const y = height(t);
-      lanes[cur().col].rocket.style.bottom = `${Math.min(1, y) * 86}%`;
+      lanes[cur().col].rocket.style.bottom = `${Math.min(1, y) * 100}%`;
       if (y >= 1.06) settle(t, false, 'TOO GREEDY');
     },
     score: () => clamp1000((1000 * (landed - misses / 2)) / par),

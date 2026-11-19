@@ -23,7 +23,7 @@ const POPS = [
   'zero paying users',
   'the founder logged off',
 ];
-const STAGES = ['we’re live', 'trending', 'UNICORN??'];
+const BUZZ = ['we’re live', 'trending', 'UNICORN??']; // the launch post's status as the balloon swells
 const GAP = 200; // ms before the next balloon arrives
 const POP_MS = 500; // extra pause after a pop
 const KINK_MS = 350; // the pump jams after a wrong-colour press
@@ -32,7 +32,7 @@ const SURGE = (2 * Math.PI) / 700; // how fast the pump surges and stalls, in ra
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const speed = (70 + 12 * level) / 100000; // share of the balloon filled per ms of holding
   const sway = level >= 2 ? 0.25 : 0; // later rounds: the fill rate swings by a quarter
-  const par = 340 + 50 * level;
+  const par = 360 + 50 * level; // four launches let go at 95% on level 0, six on level 4
   const apps = shuffled(rng, APPS);
   const pops = shuffled(rng, POPS);
   let prev = -1;
@@ -49,7 +49,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let jamUntil = 0;
   let hype = 0; // banked
   let live = 0; // what the balloon being pumped would bank right now
-  let stage = -1;
+  let buzz = -1;
 
   const wrap = h('div', 'g-hypeballoon');
   const post = h('div', 'post');
@@ -83,10 +83,10 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     balloon.classList.toggle('tense', f >= 0.8);
     count.textContent = Math.round(12 * 4000 ** f).toLocaleString('en-US');
     const s = f < 0.5 ? 0 : f < 0.85 ? 1 : 2;
-    if (s === stage) return;
-    stage = s;
+    if (s === buzz) return;
+    buzz = s;
     tag.className = `tag s${s}`;
-    tag.textContent = STAGES[s];
+    tag.textContent = BUZZ[s];
     if (s) {
       pulse(tag, 'pop-in');
       fx.sound('tick');
@@ -101,7 +101,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   function arm() {
     idx++;
     state = 'ready';
-    stage = -1;
+    buzz = -1;
     balloon.className = `balloon c-${COLOR[cur().col]}`;
     app.textContent = cur().app;
     paint(0);
@@ -121,7 +121,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     bank();
     if (f < 0.5) {
       balloon.classList.add('flop');
-      bad(balloon, `FLOP +${pts}`);
+      bad(balloon, pts ? `FLOP +${pts}` : 'FLOP');
       return;
     }
     balloon.classList.add('fly');
@@ -189,8 +189,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     hint(t) {
       if (state === 'ready') return t < jamUntil ? null : { hold: [cur().col] };
       if (state !== 'pump') return null;
-      // Let go on the last frame or two before the pop line.
-      return fillAt(t + 34) < 1 ? { hold: [cur().col] } : { hold: [] };
+      // Let go about three frames before the pop line.
+      return fillAt(t + 50) < 1 ? { hold: [cur().col] } : { hold: [] };
     },
   };
 };

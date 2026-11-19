@@ -27,7 +27,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     pops.push({ at, hole, alt, face, hue, name: pick(rng, NAMES), done: false });
     at += randInt(rng, 560, 760) - level * 55;
   }
-  const alts = Math.max(1, pops.filter((p) => p.alt).length);
+  // An alt that pops too close to the bell for its full window is a bonus, not part of the par.
+  const alts = Math.max(1, pops.filter((p) => p.alt && p.at + up <= duration).length);
+  const GRACE = 250; // ms after a head ducks in which a press is late, not a mistake
   let bans = 0;
   let wrong = 0;
 
@@ -53,8 +55,11 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     press(b, t) {
       const i = active(t, b);
       if (i < 0) {
-        wrong++;
-        bad(holes[b].hole, 'NOBODY THERE');
+        // A beat too slow loses the ban but is not also fined (once per head).
+        const late = pops.find((p) => !p.done && p.hole === b && t >= p.at + up && t < p.at + up + GRACE);
+        if (late) late.done = true;
+        else wrong++;
+        bad(holes[b].hole, late ? 'TOO LATE' : 'NOBODY!');
         return;
       }
       const p = pops[i];
@@ -66,7 +71,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         fx.sound('thud');
       } else {
         wrong++;
-        bad(holes[b].head, 'THAT WAS A REGULAR');
+        bad(holes[b].head, 'REGULAR!');
       }
     },
     tick(t) {
@@ -80,7 +85,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
           hole.tag.textContent = `u/${pops[j].name}`;
         }
       });
-      note.textContent = `${bans} alts banned`;
+      note.textContent = `${bans} alt${bans === 1 ? '' : 's'} banned`;
     },
     score: () => clamp1000((1000 * (bans - wrong)) / alts),
     hint(t) {

@@ -5,12 +5,15 @@ export const create: GameFactory = ({ root, rng, level, good, bad }) => {
   const byWord = rng() < 0.5;
   const par = 14 + level;
   const n = 44;
-  const cards = Array.from({ length: n }, () => {
+  const cards: { word: Btn; ink: Btn }[] = [];
+  while (cards.length < n) {
     const word = randBtn(rng);
     let ink = randBtn(rng);
     if (ink === word && rng() < 0.75) ink = ((word + 1 + Math.floor(rng() * 2)) % 3) as Btn;
-    return { word, ink };
-  });
+    // Never the same flair twice running: that reads as "my press did nothing".
+    const last = cards[cards.length - 1];
+    if (!last || last.word !== word || last.ink !== ink) cards.push({ word, ink });
+  }
   let idx = 0;
   let right = 0;
   let wrong = 0;
@@ -49,7 +52,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad }) => {
         good(pill);
       } else {
         wrong++;
-        bad(pill, 'NOPE');
+        // From the rule line, so the verdict never covers the next flair.
+        bad(rule, 'NOPE');
       }
       idx++;
       show();

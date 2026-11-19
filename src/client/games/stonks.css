@@ -2,22 +2,22 @@
 .g-stonks .board { width: min(100%, 24em); display: flex; flex-direction: column; align-items: center; gap: 0.25em; }
 .g-stonks .rank { font-size: 0.8em; font-weight: 900; letter-spacing: 0.16em; color: var(--dim); }
 .g-stonks .cash { font-size: 2.6em; font-weight: 900; font-style: italic; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; text-shadow: 0.05em 0.07em 0 #000; }
-.g-stonks .board.loss .cash { color: var(--purple); }
+.g-stonks .board.loss .cash, .g-stonks .board.loss .rank { color: var(--purple); }
 .g-stonks .track { width: 100%; display: flex; align-items: center; gap: 0.4em; }
 .g-stonks .track .meter { flex: 1; --c: var(--gold); }
 .g-stonks .moon { flex: none; width: 1.9em; height: 1.9em; border-radius: 50%; opacity: 0.55; background: radial-gradient(circle at 32% 34%, #b9a45c 0 0.2em, #0000 0.22em), radial-gradient(circle at 66% 62%, #b9a45c 0 0.28em, #0000 0.3em), radial-gradient(circle at 60% 22%, #b9a45c 0 0.12em, #0000 0.14em), #fff1bd; transition: transform 0.15s; }
 .g-stonks .board.landed .rank { color: var(--gold); }
 .g-stonks .board.landed .moon { opacity: 1; transform: scale(1.25); box-shadow: 0 0 1.2em var(--gold); }
 
-.g-stonks .row { flex: 1; min-height: 0; max-height: 19em; width: min(100%, 30em); display: flex; gap: 0.45em; }
-.g-stonks .col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.3em; padding: 0.5em 0.3em; border-radius: 0.9em; border: 0.18em solid var(--line); background: var(--panel-2); transition: transform 0.06s; }
+.g-stonks .row { flex: 1; min-height: 0; max-height: 21em; width: min(100%, 30em); display: flex; gap: 0.45em; }
+.g-stonks .col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.3em; padding: 0.5em 0.2em; border-radius: 0.9em; border: 0.18em solid var(--line); background: var(--panel-2); transition: transform 0.06s; }
 .g-stonks .name { font-size: 0.9em; font-weight: 900; }
 .g-stonks .chart { flex: 1; min-height: 0; width: 100%; position: relative; overflow: hidden; border-radius: 0.5em; background: repeating-linear-gradient(#0000 0 1.9em, var(--line) 1.9em 2em), var(--bg); }
 .g-stonks .chart i { position: absolute; width: 10%; border-radius: 0.12em; background: var(--dim); }
 .g-stonks .chart i::before { content: ''; position: absolute; left: 40%; width: 20%; top: -0.35em; bottom: -0.35em; border-radius: 1em; background: inherit; }
 .g-stonks .chart i.gain { background: var(--c); }
 .g-stonks .col .arrow { flex: none; width: 2.6em; height: 2.6em; transition: transform 0.1s; }
-.g-stonks .tag { font-size: 0.7em; font-weight: 900; letter-spacing: 0.04em; white-space: nowrap; padding: 0.25em 0.5em; border-radius: 99em; }
+.g-stonks .tag { font-size: 0.68em; font-weight: 900; white-space: nowrap; padding: 0.25em 0.4em; border-radius: 99em; }
 
 .g-stonks .col.up { border-color: var(--c); background: color-mix(in srgb, var(--c) 24%, var(--panel-2)); box-shadow: 0 0 1.4em color-mix(in srgb, var(--c) 65%, transparent); }
 .g-stonks .col.up .arrow { animation: g-stonks-rise 0.45s ease-in-out infinite; }
@@ -34,11 +34,22 @@
 .g-stonks .col.down .name, .g-stonks .col.down .tag { color: var(--dim); }
 .g-stonks .col.down .chart i { background: var(--dim); }
 .g-stonks .col.down .arrow { color: var(--dim); transform: rotate(180deg); }
-.g-stonks .col.down.held { border-color: var(--purple); }
-.g-stonks .col.down.held .tag { background: var(--purple); color: var(--ink); }
-
-.g-stonks .col.held { transform: translateY(0.25em) scale(0.97); }
+.g-stonks .col.held, .g-stonks .col.bag { transform: translateY(0.25em) scale(0.97); }
+.g-stonks .col.bag { border-color: var(--purple); background: var(--panel); box-shadow: none; }
+.g-stonks .col.bag .tag { background: var(--purple); color: var(--ink); }
 
 @keyframes g-stonks-rise { 50% { transform: translateY(-0.35em); } }
 @keyframes g-stonks-burn { 50% { filter: brightness(1.3); } }
 @keyframes g-stonks-wobble { 25% { transform: translateX(-0.1em) rotate(-1.2deg); } 75% { transform: translateX(0.1em) rotate(1.2deg); } }
+
+/* Tall phone stage: bigger number and arrows. Wide desktop stage: the board becomes one row so the charts get the height. */
+@container (max-aspect-ratio: 3/4) {
+  .g-stonks .cash { font-size: 3em; }
+  .g-stonks .col .arrow { width: 3.2em; height: 3.2em; }
+}
+@container (min-aspect-ratio: 5/4) {
+  .g-stonks .board { flex-direction: row; width: min(100%, 34em); gap: 0.7em; }
+  .g-stonks .rank { width: 6.4em; text-align: right; line-height: 1.1; }
+  .g-stonks .cash { min-width: 4.5em; text-align: center; }
+  .g-stonks .track { flex: 1; width: auto; }
+}

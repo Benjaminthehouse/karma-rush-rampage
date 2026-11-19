@@ -1,14 +1,13 @@
 import './sortbynew.css';
-import { clamp1000, h, pick, pulse, shuffled, type Btn, type GameFactory } from './common';
+import { clamp1000, h, pulse, shuffled, type Btn, type GameFactory } from './common';
 
 const TITLES = ['Is this normal?', 'Look what I found', 'Help me identify this', 'Update: it got worse', 'Finally finished it', 'Rate my setup', 'Quick question', 'This aged well'];
 
-/** Minutes → the label a post would show. */
+/** Minutes → the age a post would show. The card prints "ago" underneath (see the CSS). */
 function age(mins: number): string {
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  if (mins < 1440) return `${Math.floor(mins / 60)}h ago`;
-  return `${Math.floor(mins / 1440)}d ago`;
+  if (mins < 60) return `${mins}m`;
+  if (mins < 1440) return `${Math.floor(mins / 60)}h`;
+  return `${Math.floor(mins / 1440)}d`;
 }
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
@@ -26,7 +25,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     const mins = shuffled(rng, base.map((m) => Math.max(0, Math.round(m * (0.8 + rng() * 0.4)))));
     // Labels must differ, or the round would be a coin flip.
     while (new Set(mins.map(age)).size < 3) mins[Math.floor(rng() * 3)] += 61;
-    return { mins, win: mins.indexOf(Math.min(...mins)) as Btn, titles: mins.map(() => pick(rng, TITLES)) };
+    // Three different titles: the same post twice in a row looks like a glitch.
+    return { mins, win: mins.indexOf(Math.min(...mins)) as Btn, titles: shuffled(rng, TITLES).slice(0, 3) };
   });
   let idx = 0;
   let right = 0;
@@ -54,7 +54,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       p.title.textContent = r.titles[i];
     });
     pulse(row, 'pop-in');
-    note.textContent = `${right} fresh posts found`;
+    note.textContent = `${right} fresh post${right === 1 ? '' : 's'} found`;
   }
   show();
 
@@ -64,17 +64,22 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       const r = rounds[idx % rounds.length];
       if (b === r.win) {
         right++;
-        good(posts[b].post, 'NEWEST');
+        good(posts[b].post);
         fx.burst(posts[b].post, 'gold', 10);
+        // The praise floats from the counter: over the card it would hide the next age to read.
+        fx.pop(note, 'NEWEST', 'gold');
       } else {
         wrong++;
         lockedUntil = t + 450;
+        row.classList.add('locked');
         bad(posts[b].post, 'OLD NEWS');
       }
       idx++;
       show();
     },
-    tick() {},
+    tick(t) {
+      if (t >= lockedUntil) row.classList.remove('locked');
+    },
     score: () => clamp1000((1000 * (right - wrong)) / par),
     hint: (t) => (t >= lockedUntil ? rounds[idx % rounds.length].win : null),
   };

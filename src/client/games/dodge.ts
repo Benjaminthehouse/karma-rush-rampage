@@ -67,6 +67,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad }) =
             good(me, '+1');
           } else if (row.downs.includes(lane)) {
             hits++;
+            // A leftover .bump from an earlier catch outranks .shake and would mute it.
+            me.classList.remove('bump');
             pulse(me, 'shake');
             bad(me, 'OUCH');
           }
@@ -78,7 +80,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad }) =
         });
       }
     },
-    score: () => clamp1000((1000 * got) / rows.length - 150 * hits),
+    // A downvote cancels one upvote. (A flat -150 was worth two arrows at level 4, where every
+    // miss is also a hit, so catching 9 of 14 scored zero.)
+    score: () => clamp1000((1000 * (got - hits)) / rows.length),
     hint() {
       const next = rows.find((r) => !r.done);
       return next && next.up !== lane ? next.up : null;

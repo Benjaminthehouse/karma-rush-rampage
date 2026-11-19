@@ -15,21 +15,14 @@ const NEWS = [
   'due diligence: 3 rockets',
 ];
 const HYPE = ['STONKS!', 'HODL!', 'TENDIES!', 'BULLISH!', 'PUMP IT!', 'APE IN!', 'GAINS!', 'YOLO!'];
-const BAGS = ['BAG HOLDER', 'GUH!', 'REKT', 'NOT STONKS', 'SELL LOW!', 'OOF', 'DIP DIPPED', 'PANIC!'];
-const RANKS = [
-  { at: 0, name: 'PAPER HANDS' },
-  { at: 300, name: 'STONKS' },
-  { at: 650, name: 'DIAMOND HANDS' },
-  { at: 1000, name: 'TO THE MOON' },
-];
-/** What a ticker says under its arrow, by state and whether its button is held. */
-const TAGS: Record<string, string> = {
-  up: 'HOLD ME!',
-  'up held': 'STONKS',
-  top: 'TOPPED',
-  'top held': 'LET GO!',
-  down: 'DUMPING',
-  'down held': 'BAG HOLDER',
+const BAGS = ['GUH!', 'REKT', 'OOF', 'PANIC!', 'SELL LOW', 'BAGGED!', 'DIPPED!', 'BIG OOF'];
+const RANKS = ['PAPER HANDS', 'STONKS', 'DIAMOND HANDS', 'TO THE MOON'];
+const RANK_AT = [0, 300, 650, 1000]; // the score that earns each rank
+/** What a ticker says under its arrow: [button up, button held, held through a dump]. */
+const TAGS = {
+  up: ['HOLD ME!', 'STONKS', 'LET GO!'],
+  top: ['TOPPED', 'LET GO!', 'LET GO!'],
+  down: ['DUMPING', 'DUMPING', 'BAG HOLDER'],
 };
 const BTNS: Btn[] = [0, 1, 2];
 const STEP = 25; // ms between portfolio updates
@@ -37,7 +30,7 @@ const BEAT = 5; // steps between candles, sparks and sounds
 const CANDLES = 6;
 
 export const create: GameFactory = ({ root, rng, level, duration, down, good, bad, fx }) => {
-  const wobble = 380 - level * 55; // ms a topped-out ticker hangs in the air before holding it costs money
+  const wobble = 380 - level * 40; // ms a topped-out ticker hangs in the air before holding it costs money
   const doubles = Math.max(0, level - 1) * 0.1; // later rounds sometimes pump two tickers at once
   const names = shuffled(rng, TICKERS).slice(0, 3);
   const noise = Array.from({ length: 16 }, () => 0.5 + rng());
@@ -51,7 +44,7 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
     const order = shuffled(rng, BTNS);
     const lead = order.filter((b) => !prev.includes(b))[0];
     const up = rng() < doubles ? [lead, order.filter((b) => b !== lead)[0]] : [lead];
-    const to = from + randInt(rng, 850, 1450) - level * 90;
+    const to = from + randInt(rng, 850, 1450) - level * 70;
     pumps.push({ from, to, up, news: pick(rng, NEWS), hype: pick(rng, HYPE), bag: pick(rng, BAGS) });
     best += (Math.max(0, Math.min(to, duration) - from) / STEP) * up.length;
     prev = up;
@@ -64,13 +57,15 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
   let money = 0;
   let swing = 0; // net change since the last beat
   let hot: Btn = 1; // last held ticker that paid
+  let riding = 0; // the pump it paid in
   let cold: Btn = 1; // last held ticker that cost
+  const bagged = [false, false, false]; // held through a dump: pays nothing more until let go
   let losing = 0; // beats in a row spent losing money
   let cheered = -1; // last pump the player was cheered for catching
   let shown = -1;
   let rank = 0;
 
-  const wrap = h('div', 'g-stonks');
+  const wrap = h('div', 'g-stonks pix');
   const board = h('div', 'board');
   const label = h('span', 'rank');
   const cash = h('b', 'cash');
@@ -133,22 +128,21 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
       draw(c);
     });
     if (swing > 0) {
-      const i = pumpIndex(t);
-      good(cols[hot].el, i === cheered ? undefined : pumps[i].hype);
-      cheered = i;
+      good(cols[hot].el, riding === cheered ? undefined : pumps[riding].hype);
+      cheered = riding;
       losing = 0;
     } else if (swing < 0) {
       if (losing++ % 3 === 0) bad(cols[cold].el, pumps[pumpIndex(t)].bag);
     } else losing = 0;
-    board.classList.toggle('loss', swing < 0);
-    swing = 0;
 
-    const now = RANKS.filter((r) => score() >= r.at).length - 1;
-    label.textContent = RANKS[now].name;
+    const now = RANK_AT.filter((at) => score() >= at).length - 1;
+    label.textContent = swing < 0 ? 'NOT STONKS' : RANKS[now];
+    board.classList.toggle('loss', swing < 0);
     board.classList.toggle('landed', now === 3);
+    swing = 0;
     if (now <= rank) return;
     rank = now;
-    fx.pop(board, `${RANKS[now].name}!`, 'gold');
+    fx.pop(board, `${RANKS[now]}!`, 'gold');
     fx.burst(board, 'gold', 12 + now * 6);
     fx.sound(now === 3 ? 'power' : 'coin');
     if (now === 3) fx.flash('gold');
@@ -160,12 +154,14 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
     for (const b of BTNS) {
       if (!down[b]) continue;
       const s = stateOf(b, t);
-      if (s === 'up') {
-        delta++;
-        hot = b;
-      } else if (s === 'down') {
+      if (s === 'down') {
         delta--;
         cold = b;
+        bagged[b] = true;
+      } else if (s === 'up' && !bagged[b]) {
+        delta++;
+        hot = b;
+        riding = pumpIndex(t);
       }
     }
     money = Math.max(0, money + delta);
@@ -182,22 +178,27 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
       note.textContent = p.up.length > 1 ? `DOUBLE PUMP! ${p.up.map((b) => names[b]).join(' + ')}` : `${names[p.up[0]]}: ${p.news}`;
     }
     cols.forEach((c, b) => {
-      const key = `${stateOf(b as Btn, t)}${down[b] ? ' held' : ''}`;
+      const s = stateOf(b as Btn, t);
+      const grip = bagged[b] ? 2 : down[b] ? 1 : 0;
+      const key = `${s} ${['', 'held', 'bag'][grip]}`;
       if (key === c.key) return;
       c.key = key;
       c.el.className = `col c-${COLOR[b]} ${key}`;
-      c.tag.textContent = TAGS[key];
+      c.tag.textContent = TAGS[s][grip];
     });
     cash.textContent = `$${(money * 40).toLocaleString('en-US')}`;
     fill.style.width = `${score() / 10}%`;
   }
-  label.textContent = RANKS[0].name;
+  label.textContent = RANKS[0];
   cols.forEach(draw);
   render(0);
 
   return {
     press(b, t) {
       fx.sound(stateOf(b, t) === 'up' ? 'power' : 'thud');
+    },
+    release(b) {
+      bagged[b] = false;
     },
     tick(t) {
       while (clock + STEP <= Math.min(t, duration)) {

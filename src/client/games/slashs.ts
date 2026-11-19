@@ -32,6 +32,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let nextAt = -1; // when the answered card makes way for the next; -1 while a card is live
 
   const wrap = h('div', 'g-slashs');
+  const rule = h('div', 'rule');
+  rule.innerHTML = '<em>/s</em> = any <b>OTHER</b> colour';
   const card = h('div', 'card');
   const who = h('div', 'who');
   const face = h('i', 'face');
@@ -45,16 +47,16 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const votes = h('span', 'votes', '0');
   foot.append(up, votes, h('span', 'act', 'Reply'), h('span', 'act', 'Share'));
   // The joke going over your head: only shown when a /s is taken literally.
-  const whoosh = h('div', 'whoosh');
+  const over = h('div', 'over');
   const plane = h('i', 'plane');
   plane.innerHTML = PLANE;
-  whoosh.append(plane, h('i', 'face'), h('b', '', 'WHOOSH'));
-  card.append(who, say, foot, whoosh);
+  over.append(plane, h('i', 'face'), h('b', '', 'WHOOSH'));
+  card.append(who, say, foot, over);
   const shelf = h('div', 'shelf');
   const slots = Array.from({ length: 5 }, () => h('i', 'slot'));
   shelf.append(...slots);
   const note = h('div', 'g-note', '3 in a row pins an award');
-  wrap.append(card, shelf, note);
+  wrap.append(rule, card, shelf, note);
   root.append(wrap);
 
   const now = () => cards[idx % cards.length];
@@ -82,6 +84,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       sync(t);
       if (nextAt >= 0) return;
       const c = now();
+      // Wrong is obeying a /s, or disobeying a sincere order.
       if ((b === c.btn) === c.sarcasm) {
         wrong++;
         streak = 0;
@@ -101,12 +104,13 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         nextAt = t + GAP;
         card.classList.add('ok');
         pulse(up, 'bump');
-        good(up, c.sarcasm ? 'GOT THE JOKE' : undefined);
+        good(up);
+        if (c.sarcasm) fx.pop(card, 'GOT THE JOKE', 'gold');
         if (streak % 3 === 0) {
           const slot = slots[Math.min(pinned, slots.length - 1)];
           slot.className = `slot on a-${pinned % slots.length}`;
           pulse(slot, 'pop-in');
-          fx.pop(slot, awards[pinned % awards.length], 'gold');
+          fx.pop(shelf, awards[pinned % awards.length], 'gold');
           fx.burst(slot, 'gold', 14);
           fx.sound('coin');
           pinned++;

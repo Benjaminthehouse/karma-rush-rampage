@@ -1,5 +1,6 @@
 .g-banevasion .wanted { display: flex; align-items: center; gap: 0.6em; font-weight: 900; letter-spacing: 0.08em; color: var(--red); background: var(--bg); border: 0.14em solid var(--red); border-radius: 0.8em; padding: 0.3em 0.8em; }
-.g-banevasion .wanted .head { width: 2.6em; height: 2.6em; }
+/* Shrunk by font-size so the poster face is an exact copy of the heads below (the eyes are spaced in em). */
+.g-banevasion .wanted .head { font-size: 0.62em; }
 .g-banevasion .row { display: flex; gap: 0.5em; width: 100%; }
 .g-banevasion .hole { flex: 1; min-width: 0; height: 9em; border-radius: 0.8em; background: var(--bg); border: 0.14em solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 0.3em; padding-bottom: 0.5em; overflow: hidden; }
 .g-banevasion .hole .head, .g-banevasion .hole .tag { transform: translateY(1.5em) scale(0.3); opacity: 0; transition: transform 0.09s ease-out, opacity 0.05s; }

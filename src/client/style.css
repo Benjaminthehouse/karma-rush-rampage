@@ -1,3 +1,4 @@
+@import './kit/kit.css';
 @property --spin { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
 :root {
   --bg: #0b1020;
@@ -291,3 +292,33 @@ body.fx-low #arena.playing { animation: none; }
 #arcade-back { position: absolute; top: 0.5rem; left: 0.6rem; background: #0b1020aa; border: 1px solid var(--line); border-radius: 0.4rem; color: var(--ink); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; padding: 0.3rem 0.6rem; }
 #arcade .shout span { opacity: 1; }
 #arcade .shout { font-size: 2.3rem; }
+
+/* ---------- pixel look for the shell (menus, HUD, cards, pads, pop-ups) ---------- */
+.ui, #play > .hud, #pads, #settings, #toast, .fx-layer { font-family: 'Pixelify Sans', 'Trebuchet MS', system-ui, sans-serif; }
+.ui .logo span { font-style: normal; letter-spacing: 0.02em; -webkit-text-stroke: 0.16em var(--bg); text-shadow: 0.09em 0.11em 0 #000; }
+.ui .shout, .ui .count, .ui .round-score, .ui .rating, .ui .verdict, .ui h2, .ui .total b, .ui .choice b, .ui .play-btn { font-style: normal; }
+.ui .shout span { -webkit-text-stroke: 0.14em var(--bg); text-shadow: 0.07em 0.09em 0 #000; }
+.ui .chip { border-radius: 0; border: 0; box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line); margin: 2px; }
+.ui .standings li { border-radius: 0; border: 0; box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line); margin: 0 2px; }
+.ui .standings li.you { box-shadow: 0 -2px 0 0 var(--gold), 0 2px 0 0 var(--gold), -2px 0 0 0 var(--gold), 2px 0 0 0 var(--gold); }
+.ui .choice { border-radius: 0; border-width: 0 0 0 0.7rem; box-shadow: 0 -3px 0 0 var(--c), 0 3px 0 0 var(--c), 3px 0 0 0 var(--c), 0.3rem 0.5rem 0 0 #0006; }
+.ui .legend span { border-radius: 0; }
+.ui .play-btn { border-radius: 0; box-shadow: 0 -4px 0 0 #0b1020, 0 4px 0 0 #0b1020, -4px 0 0 0 #0b1020, 4px 0 0 0 #0b1020, 0 0.6rem 0 0 var(--green-d), 0 0 1.6rem #2fd66f88; }
+#play #hud-title { font-style: normal; }
+#play #combo { font-style: normal; }
+#timebar { border-radius: 0; box-shadow: 0 -2px 0 0 #0b1020, 0 2px 0 0 #0b1020, -2px 0 0 0 #0b1020, 2px 0 0 0 #0b1020; }
+#pips i { border-radius: 0 !important; }
+/* Pads: chunky arcade blocks with stepped corners. */
+#pads .pad { border-radius: 0; font-size: 1.15rem; letter-spacing: 0.04em;
+  background: linear-gradient(color-mix(in srgb, var(--c) 62%, #fff) 0 12%, var(--c) 12% 78%, var(--cd) 78%);
+  box-shadow: 0 -4px 0 0 #0b1020, 0 4px 0 0 #0b1020, -4px 0 0 0 #0b1020, 4px 0 0 0 #0b1020, 0 0.7rem 0 0 var(--cd), 0 calc(0.7rem + 4px) 0 0 #0b1020, 0 0 1.4rem color-mix(in srgb, var(--c) 45%, transparent); }
+#pads .pad.down { transform: translateY(0.5rem); filter: brightness(1.3);
+  box-shadow: 0 -4px 0 0 #0b1020, 0 4px 0 0 #0b1020, -4px 0 0 0 #0b1020, 4px 0 0 0 #0b1020, 0 0.2rem 0 0 var(--cd), 0 calc(0.2rem + 4px) 0 0 #0b1020, 0 0 2.6rem var(--c); }
+#pads .pad.idle { box-shadow: 0 -4px 0 0 #0b1020, 0 4px 0 0 #0b1020, -4px 0 0 0 #0b1020, 4px 0 0 0 #0b1020, 0 0.7rem 0 0 var(--cd), 0 calc(0.7rem + 4px) 0 0 #0b1020; }
+#pads .pad::after { border-radius: 0; }
+#pads .pad kbd { border-radius: 0; font-family: inherit; }
+#pads { gap: 0.9rem; padding-bottom: calc(1.3rem + env(safe-area-inset-bottom)); }
+.fx-layer > .pop-text { font-style: normal; -webkit-text-stroke: 0.16em var(--bg); letter-spacing: 0.02em; }
+.fx-layer > .spark { border-radius: 0; box-shadow: 0 0 0 1.5px #0b1020; }
+#arena { border-radius: 0.4rem; }
+#stage, #card, #fx { border-radius: 0.2rem; }

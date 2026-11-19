@@ -12,18 +12,18 @@
 .g-slashs .purple { --tint: var(--purple); }
 .g-slashs .say { display: flex; align-items: center; min-height: 2.4em; font-size: 1.8em; font-weight: 900; line-height: 1.2; }
 .g-slashs .say b { text-decoration: underline; text-underline-offset: 0.14em; }
-.g-slashs .say em { background: var(--gold); color: #071022; border-radius: 0.25em; padding: 0 0.3em; white-space: nowrap; }
+.g-slashs .say em, .g-slashs .rule em { background: var(--gold); color: #071022; border-radius: 0.25em; padding: 0 0.3em; white-space: nowrap; }
 .g-slashs .foot { display: flex; align-items: center; gap: 0.5em; font-weight: 900; }
 .g-slashs .foot .arrow { width: 1.8em; height: 1.8em; color: var(--gold); }
 .g-slashs .votes { flex: 1; font-size: 1.4em; color: var(--gold); font-variant-numeric: tabular-nums; }
 .g-slashs .act { font-size: 0.75em; font-weight: 800; color: var(--dim); }
-.g-slashs .whoosh { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15em; background: var(--panel-2); visibility: hidden; }
-.g-slashs .card.whoosh .whoosh { visibility: visible; }
+.g-slashs .over { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15em; background: var(--panel-2); visibility: hidden; }
+.g-slashs .card.whoosh .over { visibility: visible; }
 .g-slashs .plane { width: 2.8em; height: 2.8em; }
 .g-slashs .plane svg { display: block; width: 100%; height: 100%; }
 .g-slashs .card.whoosh .plane { animation: g-slashs-fly 0.38s ease-out both; }
 @keyframes g-slashs-fly { from { transform: translate(-8em, 0.8em) rotate(10deg); } to { transform: translate(5.5em, -0.3em) rotate(10deg); } }
-.g-slashs .whoosh b { font-size: 2.4em; font-style: italic; font-weight: 900; line-height: 1; letter-spacing: 0.04em; color: var(--gold); }
+.g-slashs .over b { font-size: 2.4em; font-style: italic; font-weight: 900; line-height: 1; letter-spacing: 0.04em; color: var(--gold); }
 .g-slashs .shelf { display: flex; gap: 0.6em; }
 .g-slashs .slot { width: 2.2em; height: 2.2em; border-radius: 50%; border: 0.14em dashed var(--line); }
 .g-slashs .slot.on { border: 0; border-radius: 0; background: var(--gold); }
@@ -32,3 +32,10 @@
 .g-slashs .slot.a-2 { background: var(--purple); clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%); }
 .g-slashs .slot.a-3 { border-radius: 50%; background: radial-gradient(circle, var(--ink) 0 24%, #ff7ac8 26% 100%); }
 .g-slashs .slot.a-4 { background: var(--ink); clip-path: polygon(0 22%, 26% 52%, 50% 8%, 74% 52%, 100% 22%, 88% 92%, 12% 92%); }
+/* A tall phone stage has room to spare: let the comment breathe. */
+@container (max-aspect-ratio: 2/3) {
+  .g-slashs { gap: 1.2em; }
+  .g-slashs .card { padding: 1.1em 1em; gap: 0.8em; }
+  .g-slashs .say { font-size: 2em; min-height: 3.6em; }
+  .g-slashs .slot { width: 2.7em; height: 2.7em; }
+}

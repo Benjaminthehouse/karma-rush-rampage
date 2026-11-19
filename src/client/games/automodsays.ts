@@ -17,6 +17,9 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let shownAt = 0;
   let obeyed = 0;
   let wrong = 0;
+  // An impostor that has just left still counts for a moment: nobody reads a new order
+  // that fast, so a wrong press in this window was aimed at the impostor.
+  let armedUntil = 0;
 
   const wrap = h('div', 'g-automodsays');
   const bubble = h('div', 'bubble');
@@ -25,7 +28,9 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const name = h('span', 'name');
   who.append(shield, name);
   const order = h('div', 'order');
-  bubble.append(who, order);
+  // Verdicts float up from just above the bubble, so they never cover the next name and shield.
+  const stamp = h('i', 'stamp');
+  bubble.append(who, order, stamp);
   const note = h('div', 'g-note');
   wrap.append(bubble, note);
   root.append(wrap);
@@ -44,23 +49,35 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   return {
     press(b, t) {
       const p = prompts[idx % prompts.length];
+      const late = t < armedUntil;
+      if (late) armedUntil = 0;
+      if (late && b !== p.btn) {
+        // Fell for the impostor a beat too late: say so, and keep the real order on screen.
+        wrong++;
+        bad(stamp, 'IMPOSTOR!');
+        return;
+      }
       if (p.fake) {
         wrong++;
-        bad(bubble, 'IMPOSTOR!');
+        bad(stamp, 'IMPOSTOR!');
       } else if (b === p.btn) {
         obeyed++;
-        good(bubble);
+        good(stamp);
       } else {
         wrong++;
-        bad(bubble, 'WRONG COLOUR');
+        bad(stamp, 'WRONG COLOUR');
       }
       idx++;
       show(t);
     },
     tick(t) {
+      if (armedUntil && t >= armedUntil) {
+        armedUntil = 0;
+        fx.pop(stamp, 'IGNORED', 'green');
+      }
       if (prompts[idx % prompts.length].fake && t - shownAt >= ignoreMs) {
-        fx.pop(bubble, 'IGNORED', 'green');
         fx.sound('whoosh');
+        armedUntil = t + 200;
         idx++;
         show(t);
       }

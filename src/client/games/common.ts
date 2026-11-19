@@ -42,6 +42,8 @@ export type GameCtx = {
     burst(at: Element | null, color?: FxColor, count?: number): void;
     /** Floating text that rises from `at` and fades, e.g. "+1" or "BANNED". */
     pop(at: Element | null, text: string, color?: FxColor): void;
+    /** A puff of pixel smoke under anything that jumps, lands, pops or vanishes. */
+    poof(at: Element | null): void;
     /** Brief coloured wash over the whole arena. Use for big moments only. */
     flash(color?: FxColor): void;
     shake(): void;
@@ -72,6 +74,11 @@ export type GameInst = {
 
 export type GameFactory = (ctx: GameCtx) => GameInst;
 
+// The pixel-art kit: sprites, characters and forum furniture. See GAME_GUIDE.md.
+export { TONES, defineSprite, hasSprite, setSprite, sprite, type Layer, type SpriteOpts, type Tone } from '../kit/px';
+export { person, type Mood, type Person, type PersonOpts } from '../kit/people';
+export { comment, postCard, type PostCard } from '../kit/ui';
+
 export function h<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   cls = '',
@@ -96,11 +103,44 @@ export function shuffled<T>(rng: () => number, arr: readonly T[]): T[] {
   return a;
 }
 
-/** Restarts a CSS animation class on an element (`pop-in`, `shake`, `bump` are global). */
+const PULSES = ['pop-in', 'shake', 'bump'];
+
+/**
+ * Plays a one-shot animation class on an element (`pop-in`, `shake`, `bump` are
+ * global). Any earlier one-shot is cleared first, so the new one always plays.
+ */
 export function pulse(el: HTMLElement, cls: string) {
-  el.classList.remove(cls);
+  el.classList.remove(cls, ...PULSES);
   void el.offsetWidth;
   el.classList.add(cls);
+}
+
+/**
+ * Deals items in shuffled order and reshuffles when the pile runs out, so
+ * nothing comes up twice in a row. Use it for titles, names and prompts.
+ */
+export function dealer<T>(rng: () => number, items: readonly T[]): () => T {
+  let pile: T[] = [];
+  let last: T | undefined;
+  return () => {
+    if (!pile.length) {
+      pile = shuffled(rng, items);
+      if (pile.length > 1 && pile[pile.length - 1] === last) pile.unshift(pile.pop()!);
+    }
+    last = pile.pop()!;
+    return last;
+  };
+}
+
+/**
+ * Three small squares with one lit: which pad (left, middle, right) a colour
+ * means. Put it beside any cue where colour alone tells the player what to
+ * press, so the game also works for players who cannot tell red from green.
+ */
+export function padDots(b: Btn): HTMLElement {
+  const el = h('span', 'pad-dots');
+  for (let i = 0; i < 3; i++) el.append(h('i', i === b ? `on c-${COLOR[b]}` : ''));
+  return el;
 }
 
 /** Vote arrow. Colour comes from CSS `color`; size from `font-size` (2.4em square by default). */

@@ -25,6 +25,10 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let lockedUntil = 0;
 
   const wrap = h('div', 'g-sixfingers');
+  // The one rule, kept on screen: colour, tilt and finger length are all decoys.
+  // It sits under the hands because pop text rises from the top edge of a slot.
+  const rule = h('div', 'rule');
+  rule.innerHTML = 'Real hands have <b>5</b> fingers';
   const row = h('div', 'row');
   const slots = [0, 1, 2].map(() => {
     const slot = h('div', 'slot');
@@ -32,7 +36,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     return slot;
   });
   const note = h('div', 'g-note');
-  wrap.append(row, note);
+  wrap.append(row, rule, note);
   root.append(wrap);
 
   function show() {

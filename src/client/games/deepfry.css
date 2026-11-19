@@ -36,7 +36,7 @@
 
 /* A finished meme goes nuclear, takes its stamp and fades off the fresh one underneath. */
 .g-deepfry .ghost { z-index: 4; filter: saturate(6) hue-rotate(-24deg) contrast(2.2) brightness(1.25); animation: g-deepfry-crisp 0.55s ease-in forwards; }
-@keyframes g-deepfry-crisp { 0%, 70% { opacity: 1; transform: none; } 100% { opacity: 0; transform: scale(1.14) rotate(4deg); visibility: hidden; } }
+@keyframes g-deepfry-crisp { 0%, 70% { opacity: 1; transform: none; } 100% { opacity: 0; transform: scale(1.07) rotate(3deg); visibility: hidden; } }
 .g-deepfry .stamp { position: absolute; left: 0; right: 0; top: 50%; z-index: 5; margin-top: -0.6em; text-align: center; font-size: 2.1em; line-height: 1.2; font-weight: 900; font-style: italic; color: #fff; -webkit-text-stroke: 0.16em #000; paint-order: stroke fill; transform: rotate(-9deg); animation: g-deepfry-slam 0.2s cubic-bezier(0.2, 1.6, 0.4, 1); }
 @keyframes g-deepfry-slam { from { transform: rotate(-9deg) scale(3); opacity: 0; } }
 

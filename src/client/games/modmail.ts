@@ -45,6 +45,7 @@ const AFTER = ['ok you can stop', 'we get it', 'go touch grass', 'this is not a 
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const want = 8 + Math.round(level * 0.6); // letters per appeal: 8 at first, 10 by the last round
+  // A dozen appeals is more than anyone can send in one round.
   const lines = shuffled(rng, APPEALS.filter((a) => Math.abs(a.length - want) <= 1)).slice(0, 12);
   const replies = REPLIES.map((r) => pick(rng, r));
   // Par is the five appeals that lift the ban; every letter and every send is one press.
@@ -95,7 +96,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       pulse(mail, 'pop-in');
     }
     [...line.children].forEach((c, i) => (c.className = i < typed ? 'on' : i === typed ? `next c-${COLOR[nextKey()]}` : ''));
-    line.classList.toggle('done', done);
+    mail.classList.toggle('ready', done);
     // The lit key is the pad to press; a typing key shows the letter it will type.
     keys.forEach((k, i) => k.classList.toggle('lit', i === (done ? 1 : nextKey())));
     keys[nextKey()].textContent = cap(typed);
@@ -123,7 +124,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         pulse(term, 'bump');
         pips.forEach((p, i) => p.classList.toggle('on', i < idx));
         said.textContent = replies[idx - 1] ?? AFTER[(idx - replies.length - 1) % AFTER.length];
-        pulse(reply, 'pop-in');
+        pulse(said, 'new');
         if (idx === replies.length) {
           ban.classList.add('free');
           fx.flash('gold');
@@ -138,7 +139,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         pulse(mail, 'shake');
         bad(mail, 'NOT FINISHED!');
       } else if (done) {
-        pulse(keys[1], 'bump');
+        // Typing past the end costs nothing but time.
         fx.sound('tick');
         if (nag(t)) fx.pop(keys[1], 'SEND IT!', 'green');
       } else if (b === last) {
@@ -150,7 +151,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         last = b;
         typed++;
         good(line.children[typed - 1]);
-        if (typed === text().length) fx.sound('ding');
+        fx.sound(typed === text().length ? 'ding' : 'tick');
       }
       show();
     },

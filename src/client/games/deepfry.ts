@@ -28,11 +28,15 @@ export const create: GameFactory = ({ root, rng, level, duration, good, fx }) =>
   // Mashing all three lands about two useful notches a slap, so the par is counted in slaps.
   const par = Math.round((duration / 1000) * 2 * (6.5 + level * 0.5));
   let hungry = randBtn(rng);
-  const memes = shuffled(rng, CAPTIONS).map(([top, bottom], i) => {
+  let hue = randInt(rng, 0, 3);
+  const memes = shuffled(rng, CAPTIONS).map(([top, bottom]) => {
+    // Never the same hungry dial or the same colours twice running.
     hungry = ((hungry + randInt(rng, 1, 2)) % 3) as Btn;
+    hue = (hue + randInt(rng, 1, 3)) % 4;
     const small = randInt(rng, 2, big - 2);
-    const rest = [small, big - small];
-    return { top, bottom, face: pick(rng, FACES), hue: i % 4, need: BTNS.map((b) => (b === hungry ? big : rest.pop()!)) };
+    const need = [small, big - small];
+    need.splice(hungry, 0, big);
+    return { top, bottom, need, hue, face: pick(rng, FACES) };
   });
   let idx = 0;
   let fill = [0, 0, 0];
@@ -88,7 +92,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, fx }) =>
 
   // The fried meme lingers as a stamped ghost while the next one is already on the plate.
   function crisp() {
-    banked += now().need.reduce((a, n) => a + n, 0);
+    banked += 2 * big;
     ghost?.remove();
     ghost = meme.cloneNode(true) as HTMLElement;
     ghost.classList.add('ghost');
@@ -117,7 +121,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, fx }) =>
       paint();
       pulse(knob, 'crank');
       // Three fingers land together, so the combo counts slaps rather than notches.
-      if (t - lastGood >= 100) {
+      if (t - lastGood >= 120) {
         lastGood = t;
         good(knob);
       }

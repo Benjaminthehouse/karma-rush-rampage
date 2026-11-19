@@ -9,5 +9,5 @@ export default defineGame({
   labels: ['FIRST!', 'FIRST!', 'FIRST!'],
   duration: 8000,
   kind: 'react',
-  think: 280,
+  think: 400,
 });

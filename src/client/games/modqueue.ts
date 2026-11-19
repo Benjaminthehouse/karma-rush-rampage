@@ -1,5 +1,5 @@
 import './modqueue.css';
-import { COLOR, h, pick, pulse, randBtn, clamp1000, type GameFactory } from './common';
+import { COLOR, h, pulse, randBtn, shuffled, clamp1000, type GameFactory } from './common';
 
 // 0 = spam (remove), 1 = wholesome (approve), 2 = flame war (lock)
 const ITEMS: string[][] = [
@@ -34,9 +34,13 @@ const DONE = ['REMOVED', 'APPROVED', 'LOCKED'];
 export const create: GameFactory = ({ root, rng, level, good, bad }) => {
   const par = 15 + level;
   const n = 34;
+  // Each kind is dealt from its own shuffled pile, so the same report never
+  // comes up twice running (that reads as "my press did nothing").
+  const piles = ITEMS.map((list) => shuffled(rng, list));
+  const dealt = [0, 0, 0];
   const queue = Array.from({ length: n }, () => {
     const type = randBtn(rng);
-    return { type, text: pick(rng, ITEMS[type]) };
+    return { type, text: piles[type][dealt[type]++ % piles[type].length] };
   });
   let idx = 0;
   let right = 0;
@@ -46,7 +50,9 @@ export const create: GameFactory = ({ root, rng, level, good, bad }) => {
   const card = h('div', 'report');
   const tag = h('span', 'tag');
   const text = h('div', 'text');
-  card.append(tag, text);
+  // Verdicts float up from just above the card, so the last one never covers the next report.
+  const stamp = h('i', 'stamp');
+  card.append(tag, text, stamp);
   const left = h('div', 'g-note');
   wrap.append(card, left);
   root.append(wrap);
@@ -74,10 +80,10 @@ export const create: GameFactory = ({ root, rng, level, good, bad }) => {
       if (!q) return;
       if (b === q.type) {
         right++;
-        good(card, DONE[b]);
+        good(stamp, DONE[b]);
       } else {
         wrong++;
-        bad(card, 'WRONG CALL');
+        bad(stamp, 'WRONG CALL');
       }
       idx++;
       show();

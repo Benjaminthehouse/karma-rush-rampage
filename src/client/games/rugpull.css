@@ -7,7 +7,7 @@
 .g-rugpull .col.shaky { border-color: var(--gold); animation: g-rugpull-shake 0.09s linear infinite; }
 .g-rugpull .col.shaky .chart i { background: var(--gold); }
 .g-rugpull .col.sold { border-color: var(--green); opacity: 0.75; }
-.g-rugpull .col.rugged { border-color: var(--red); opacity: 0.6; }
+.g-rugpull .col.rugged, .g-rugpull .col.paper { border-color: var(--red); opacity: 0.6; }
 .g-rugpull .col.rugged .chart i { background: var(--red); }
 .g-rugpull .g-note { flex-basis: 100%; }
 @keyframes g-rugpull-shake { 25% { transform: translateX(-0.12em) rotate(-1deg); } 75% { transform: translateX(0.12em) rotate(1deg); } }

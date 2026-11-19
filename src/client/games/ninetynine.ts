@@ -3,11 +3,13 @@ import { COLOR, clamp1000, h, pick, shuffled, type Btn, type GameFactory } from 
 
 const STEPS = ['Installing', 'Building', 'Deploying'];
 const THINGS = ['left-pad', 'node_modules', 'the vibes', 'prod', 'a fix', 'v2-final', 'dark mode', 'the hotfix', 'everything'];
-const OVER = 1.05; // a bar this far past 100 crashes on its own
+const OVER = 1.05; // a bar this far past 100 crashes on its own; any stop before that still counts
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const par = 10 + Math.floor(level * 0.75);
-  const near = 0.93 + level * 0.005; // stop at or above this for full marks
+  // The gold zone drawn on every track (7% wide in the CSS): stop inside it, or on 100, for full marks.
+  // It stays the same size at every level so the picture never lies; faster bars make later rounds harder.
+  const near = 0.93;
   const sets = Array.from({ length: 14 }, () => {
     // Finish times are spread out so two bars never need stopping in the same instant.
     const gap = () => 330 - level * 18 + rng() * 240;
@@ -44,7 +46,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     stopped[i] = v;
     const b = bars[i];
     b.rowEl.classList.add('stopped');
-    if (v > 1.005) {
+    b.fill.style.width = `${Math.min(100, v * 100)}%`; // freeze the bar exactly where it was stopped
+    if (v >= OVER) {
       fails++;
       b.rowEl.classList.add('crashed');
       b.pct.textContent = 'CRASH';
@@ -52,7 +55,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     } else if (v >= near) {
       points++;
       b.pct.textContent = `${Math.min(100, Math.round(v * 100))}%`;
-      good(b.rowEl, v >= 0.985 ? 'EXACTLY 100' : 'SHIPPED');
+      good(b.rowEl, v >= 0.995 ? 'EXACTLY 100' : 'SHIPPED');
     } else {
       fails += 0.5;
       b.pct.textContent = `${Math.round(v * 100)}%`;
@@ -63,7 +66,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let resting = false;
   function finishSet(t: number) {
     if (stopped.includes(null)) return;
-    if (stopped.every((v) => v !== null && v >= near && v <= 1.005)) {
+    if (stopped.every((v) => v !== null && v >= near && v < OVER)) {
       points++;
       fx.pop(null, 'CLEAN RELEASE!', 'gold');
       fx.burst(null, 'gold', 20);
@@ -81,6 +84,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       finishSet(t);
     },
     tick(t) {
+      note.textContent = `${Math.floor(points)} shipped`;
       if (resting) {
         if (t < startAt) return;
         // The next set starts: wipe the board.
@@ -96,7 +100,6 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         b.pct.textContent = `${Math.min(99, Math.floor(v * 100))}%`;
       });
       finishSet(t);
-      note.textContent = `${Math.floor(points)} shipped`;
     },
     score: () => clamp1000((1000 * (points - fails)) / par),
     hint(t) {

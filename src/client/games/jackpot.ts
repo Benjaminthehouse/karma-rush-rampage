@@ -1,5 +1,5 @@
 import './jackpot.css';
-import { COLOR, clamp1000, h, type Btn, type GameFactory } from './common';
+import { COLOR, clamp1000, h, pulse, type Btn, type GameFactory } from './common';
 
 // 0 is the gold award; the rest are duds.
 const SYMBOLS = ['gold', 'silver', 'down', 'spam'];
@@ -49,6 +49,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       if (stopped[i] === null) {
         r.now.className = `sym now ${SYMBOLS[symAt(i, t)]}`;
         r.next.className = `sym next ${SYMBOLS[strips[i][(spins * 17 + pos(i, t) + 1) % strips[i].length]]}`;
+        // The symbol visibly drops from the preview slot, so the small one reads as "coming next".
+        pulse(r.now, 'drop');
       }
     });
     note.textContent = `${points} gold`;

@@ -1,6 +1,8 @@
 // Visual juice: sparks, floating text, flashes, shakes. Everything is CSS-animated
 // DOM in a layer above the stage, so games never have to clean up.
 import type { FxColor } from './games/common';
+import './kit/sprites';
+import { sprite } from './kit/px';
 import { settings } from './settings';
 
 const HEX: Record<FxColor, string> = {
@@ -11,6 +13,16 @@ const HEX: Record<FxColor, string> = {
   white: '#f4f6ff',
   purple: '#b14bff',
 };
+
+let strip = '';
+/** The three poof frames side by side, for a stepped CSS animation. */
+function poofStrip() {
+  if (!strip) {
+    const el = sprite([{ name: 'poof1', x: 0 }, { name: 'poof2', x: 12 }, { name: 'poof3', x: 24 }]);
+    strip = el.style.backgroundImage.slice(4, -1).replace(/^"|"$/g, '');
+  }
+  return strip;
+}
 
 export type FxLayer = ReturnType<typeof createFx>;
 
@@ -51,10 +63,20 @@ export function createFx(arena: HTMLElement, layer: HTMLElement) {
       }
     },
     pop(at: Element | null, text: string, color: FxColor = 'gold') {
-      const { x, y } = point(at);
-      const el = spawn('pop-text', x, y);
+      // Words rise from the top edge of their anchor, so they never sit on what the player must read.
+      const base = layer.getBoundingClientRect();
+      const r = (at ?? layer).getBoundingClientRect();
+      const x = r.left + r.width / 2 - base.left;
+      const y = Math.max(18, (at ? r.top : r.top + r.height * 0.4) - base.top);
+      const el = spawn('pop-text', Math.min(base.width - 30, Math.max(30, x)), y);
       el.textContent = text;
       el.style.color = HEX[color];
+    },
+    /** A puff of pixel smoke: the "poof" under anything that jumps, lands, pops or vanishes. */
+    poof(at: Element | null) {
+      const { x, y } = point(at);
+      const el = spawn('poof', x, y);
+      el.style.backgroundImage = `url(${poofStrip()})`;
     },
     /** Milestone text across the top of the arena, clear of the action. */
     banner(text: string, color: FxColor = 'gold') {

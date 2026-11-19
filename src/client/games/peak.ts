@@ -1,9 +1,10 @@
 import './peak.css';
 import { COLOR, COLOR_NAME, clamp1000, h, pulse, randBtn, shuffled, type Btn, type GameFactory } from './common';
 
-export const create: GameFactory = ({ root, rng, level, good, bad }) => {
+export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   const par = 6 + Math.floor(level / 2);
-  const n = 24;
+  // Every press locks input for 250 ms, so this is more targets than anyone can use up: the round never goes dead.
+  const n = Math.ceil(duration / 250) + 2;
   const sweep = 1150 - level * 90; // ms for the marker to cross once
   const targets = Array.from({ length: n }, () => {
     const order = shuffled(rng, [0, 1, 2] as Btn[]);
@@ -18,6 +19,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad }) => {
   let pausedUntil = 0;
 
   const wrap = h('div', 'g-peak');
+  // Words pop from above this line, never from the marker: there they drifted across the next colour to read.
   const ask = h('div', 'rule');
   const track = h('div', 'track');
   const zones = [h('i'), h('i'), h('i')];
@@ -59,11 +61,13 @@ export const create: GameFactory = ({ root, rng, level, good, bad }) => {
       if (!tg || t < pausedUntil) return;
       if (b === tg.want && zoneAt(pos) === tg.want) {
         hits++;
-        good(marker, 'POSTED');
+        good(marker);
+        fx.pop(ask, 'POSTED', 'gold');
       } else {
         misses++;
         pulse(track, 'shake');
-        bad(marker, b === tg.want ? 'BAD TIMING' : 'WRONG COLOUR');
+        bad(marker);
+        fx.pop(ask, b === tg.want ? 'BAD TIMING' : 'WRONG COLOUR', 'red');
       }
       idx++;
       pausedUntil = t + 250;

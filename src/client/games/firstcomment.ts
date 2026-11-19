@@ -26,6 +26,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let state: 'wait' | 'live' | 'done' = 'wait';
   let earned = 0;
   let firsts = 0;
+  // A stray tap at the bell, or a late answer to a post that just timed out, is not a false start.
+  let quiet = 250;
 
   const wrap = h('div', 'g-firstcomment');
   const post = h('div', 'post');
@@ -54,16 +56,18 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   return {
     press(b, t) {
       const d = drops[idx];
-      if (!d || state === 'done') return;
+      if (state === 'done') return;
       if (state === 'wait') {
+        if (t < quiet) return;
         // Jumping the gun forfeits the upcoming post.
         pulse(post, 'shake');
         bad(post, 'TOO SOON');
         close('Removed: commenting on nothing');
         return;
       }
+      if (!d) return;
       if (b !== d.btn) {
-        bad(post, 'WRONG POST');
+        bad(post, 'WRONG COLOUR');
         close('You commented on the wrong post');
         return;
       }
@@ -79,8 +83,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       const d = drops[idx];
       if (!d) return;
       if (state === 'done' && t >= d.at + LIVE) {
+        // After the last post the feed keeps "loading" until the bell, so the end is never a frozen card.
         idx++;
-        if (drops[idx]) waiting();
+        waiting();
         return;
       }
       if (state === 'wait' && t >= d.at) {
@@ -91,8 +96,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         fx.sound('ding');
       } else if (state === 'live' && t >= d.at + LIVE) {
         bad(post, 'SECOND.');
+        quiet = t + 250;
         idx++;
-        if (drops[idx]) waiting();
+        waiting();
       }
     },
     score: () => clamp1000((1000 * earned) / drops.length),

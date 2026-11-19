@@ -1,3 +1,4 @@
 .g-poll .ballot { position: relative; width: min(100%, 24em); flex: 1; max-height: 15em; background: var(--bg); border: 3px solid var(--line); border-radius: 1em; }
+.g-poll .stamp { position: absolute; left: 50%; top: 0; }
 .g-poll .dot { position: absolute; width: 1.5em; height: 1.5em; margin: -0.75em; border-radius: 50%; background: var(--c); border: 2px solid var(--bg); }
 .g-poll .closed { position: absolute; inset: 0; display: grid; place-items: center; color: var(--dim); font-weight: 800; font-size: 1.4em; }

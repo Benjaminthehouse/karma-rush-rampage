@@ -1,21 +1,21 @@
-.g-bananascale .meter { --c: var(--gold); flex: none; max-width: 26em; }
 .g-bananascale .title { flex: none; min-height: 2.4em; display: flex; align-items: center; text-align: center; font-size: 1.15em; font-weight: 800; line-height: 1.2; }
 .g-bananascale .title.count { min-height: 1.725em; font-size: 1.6em; font-weight: 900; font-style: italic; color: var(--gold); font-variant-numeric: tabular-nums; }
 
 /* The scene is a size container: the thing is --h tall and each banana is exactly --h / --k. */
-.g-bananascale .scene { flex: 1 1 0; min-height: 8em; max-height: 20em; width: min(100%, 26em); position: relative; container-type: size; border-bottom: 0.2em solid var(--ink); }
-.g-bananascale .pair { --h: min(92cqh, (100cqw - 1.5em) / (var(--ar) + 0.25)); position: absolute; left: 0; right: 0; bottom: 0; height: var(--h); display: flex; justify-content: center; align-items: flex-end; gap: 1em; border-top: 0.12em dashed #0000; }
+.g-bananascale .scene { flex: 1 1 0; min-height: 8em; max-height: 17em; width: min(100%, 26em); position: relative; container-type: size; }
+.g-bananascale .floor { --c: var(--gold); position: absolute; left: 0; bottom: 0; height: 0.4em; background: var(--dim); }
+.g-bananascale .pair { --h: min(92cqh - 0.4em, (100cqw - 1.5em) / (var(--ar) + 0.25)); position: absolute; left: 0; right: 0; bottom: 0.4em; height: var(--h); display: flex; justify-content: center; align-items: flex-end; gap: 1em; border-top: 0.12em dashed #0000; }
 .g-bananascale .pair.done { border-top-color: var(--gold); }
 .g-bananascale .stack { flex: none; display: flex; flex-direction: column-reverse; }
-.g-bananascale .thing { flex: none; }
+.g-bananascale .thing { flex: none; position: relative; }
 .g-bananascale .thing svg { display: block; height: var(--h); width: calc(var(--h) * var(--ar)); }
 .g-bananascale .nana { display: block; }
 .g-bananascale .stack .nana { height: calc(var(--h) / var(--k)); width: calc(var(--h) / var(--k) * 0.44); opacity: 0; }
 .g-bananascale .stack .nana:first-child { opacity: 1; }
 .g-bananascale .stack .nana.on { opacity: 1; animation: g-bananascale-drop 0.12s ease-out; }
-.g-bananascale .pair.spin .nana { animation: g-bananascale-spin 0.3s ease-out; }
+.g-bananascale .pair.spin .nana:last-child { animation: g-bananascale-spin 0.3s ease-out; }
 
-.g-bananascale .stamp { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%) rotate(-9deg); white-space: nowrap; font-size: 1.35em; font-weight: 900; letter-spacing: 0.04em; padding: 0.1em 0.45em; border: 0.14em solid; border-radius: 0.3em; background: #0b1020e6; color: var(--gold); opacity: 0; }
+.g-bananascale .stamp { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%) rotate(-9deg); white-space: pre; text-align: center; line-height: 1.05; font-size: 1.2em; font-weight: 900; letter-spacing: 0.04em; padding: 0.2em 0.45em; border: 0.14em solid; border-radius: 0.3em; background: #0b1020e6; color: var(--gold); opacity: 0; }
 .g-bananascale .stamp.on { opacity: 1; animation: g-bananascale-slam 0.16s ease-out; }
 .g-bananascale .stamp.no { color: var(--dim); }
 

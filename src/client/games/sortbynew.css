@@ -1,4 +1,6 @@
 .g-sortbynew .row { display: flex; gap: 0.45em; width: 100%; }
+.g-sortbynew .row.locked { filter: saturate(0.3) brightness(0.6); }
 .g-sortbynew .post { flex: 1; min-width: 0; min-height: 8em; background: var(--panel-2); border: 0.16em solid var(--line); border-radius: 0.8em; padding: 0.7em 0.3em; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5em; text-align: center; }
-.g-sortbynew .post b { font-size: 1.35em; font-weight: 900; color: var(--gold); white-space: nowrap; }
+.g-sortbynew .post b { font-size: 1.8em; font-weight: 900; line-height: 1; color: var(--gold); white-space: nowrap; }
+.g-sortbynew .post b::after { content: 'ago'; display: block; margin-top: 0.3em; font-size: 0.42em; font-weight: 800; letter-spacing: 0.06em; }
 .g-sortbynew .post span { font-size: 0.72em; font-weight: 700; color: var(--dim); line-height: 1.15; }

@@ -1,12 +1,14 @@
 import './commentchain.css';
-import { COLOR, clamp1000, h, randBtn, type Btn, type GameFactory } from './common';
+import { COLOR, clamp1000, h, pulse, randBtn, type Btn, type GameFactory } from './common';
 
 const REPLIES = ['this', '^ this', 'came here to say this', 'underrated comment', 'take my upvote', 'username checks out', 'and my axe', 'same', 'source?', 'r/angryupvote'];
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const stepMs = 400 - level * 35; // how long each reply lights up while you watch
   const firstLen = 3 + Math.floor(level / 2);
-  const par = 8 + level * 2; // replies played back correctly
+  // Replies played back correctly. Capped: late chains are long, so most of the round is spent
+  // watching and 12 is all a quick player with a perfect memory has time to enter.
+  const par = Math.min(12, 8 + level * 2);
   const chains = Array.from({ length: 12 }, (_, i) => {
     const len = Math.min(6, firstLen + Math.floor(i / 2));
     const seq: Btn[] = [];
@@ -52,7 +54,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       r.classList.toggle('hidden', input >= 0 && i >= input);
     });
     banner.innerHTML = input < 0 ? 'Watch…' : '<b>Your turn!</b>';
-    note.textContent = `${done} replies chained`;
+    note.textContent = `${done} ${done === 1 ? 'reply' : 'replies'} chained`;
   }
 
   function nextChain(t: number) {
@@ -65,8 +67,14 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
 
   return {
     press(b, t) {
-      if (input < 0) return;
       const seq = chains[chain % chains.length];
+      // Quick players start the moment the last reply lights up. A correct first press there
+      // counts, so being early never silently eats a press and breaks the chain.
+      if (input < 0 && t >= showFrom + (seq.length - 1) * stepMs && b === seq[0].b) input = 0;
+      if (input < 0) {
+        pulse(banner, 'bump'); // still watching: no penalty, but the press is acknowledged
+        return;
+      }
       if (b === seq[input].b) {
         done++;
         good(rows[input]);

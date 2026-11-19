@@ -17,9 +17,9 @@ Pick an id: lowercase letters only (`banhammer`). Everything is named after it.
 Do not edit any other file. The registries are generated from these
 (`npm run gen`), and the daily lineup picks from whatever is registered.
 
-Reference games to read first: `upvote` (mash against a par), `modqueue`
-(classify), `copypasta` (sequence), `dodge` (time-driven, uses `tick`), `peak`
-(timing window).
+Reference games to read first: `upvote` and `selfpromo` (the look to match, and
+scoring against a par), then for mechanics `banevasion` (time-driven pop-ups),
+`tothemoon` (hold and release), `crosspost` (two-button chords).
 
 ### Metadata
 
@@ -125,25 +125,89 @@ These are what make a game feel good. The checker warns on some; a reviewer chec
 - **Colour means button.** Red is left, green is middle, blue is right. If the game
   uses colour to mean something else (say, red for "remove"), the label must say so.
 - **Big, few, bold.** Two to four elements on screen, large type, high contrast.
-  Flat shapes built from CSS and inline SVG. No images.
+  See "Make it a scene" below for how it should look.
 - **Keep the joke specific.** Reddit regulars should smirk. Keep it PG. No real
   people, brands, copyrighted characters, logos, lyrics or titles.
 
+## Make it a scene
+
+A mini-game is a little cartoon of the internet, not a control panel. The player
+should see a place, someone in it, and a thing happening to them. Read
+`upvote` (a post climbs the sky to a FRONT PAGE banner) and `selfpromo` (a mod bear
+dozes at the mod desk while your spam piles up) before you draw anything.
+
+- **Put it somewhere.** Give the wrapper a scene class for a bright backdrop:
+  `scene-sky` `scene-dusk` `scene-night` `scene-feed` `scene-grid` `scene-office`
+  `scene-danger` `scene-grass` `scene-mint` `scene-sun`. They also switch the text
+  to the pixel font. Swap the scene class mid-round for drama (alarm goes red).
+- **Cast someone.** `person({ tone, kind, hat, mood, px })` is a face with nine
+  moods: idle, happy, shock, angry, sleep, sad, cool, wink, dead. Kinds: plain, cat,
+  bear, bot. Hats: mod (green cap), horns (a troll), crown. Change `.mood()` when
+  things happen: happy on a hit, shock on a miss. A reacting face is half the fun.
+- **Show the thing itself changing.** The post rises, the pile grows, the balloon
+  swells, the troll gets squashed. A meter alone is not feedback. On every press
+  something in the world moves, and `fx.poof(at)` puffs smoke where it jumped,
+  landed, appeared or vanished.
+- **Use forum furniture for forum things.** `postCard({ sub, user, title, votes,
+  tone, avatar, big })` is a post with a vote rail; `comment({ user, text, depth,
+  avatar, op, mod })` is a reply. Votes are the `up` sprite (flip it for down), mods
+  wear the shield, awards are stars and coins. Affectionate and generic: no logos,
+  no mascots, no brand assets.
+- **Go big and bright.** The star of the scene is at least a third of the stage
+  wide on a phone. Two to four big things, thick dark outlines (`#0b1020`), hard
+  offset shadows, square corners, saturated colour. No blur, no soft gradients, no
+  thin grey lines on navy.
+- **Colour still means button.** Red left, green middle, blue right. Where colour
+  alone tells the player what to press, put `padDots(b)` beside it so it also reads
+  as left / middle / right.
+
+### Sprites
+
+`sprite(name, { tone, flip, flipY, px })` draws pixel art from the shared sheet in
+`src/client/kit/sprites.ts`: up, heart, star, coin, comment, shield, hammer, lock,
+trash, check, cross, envelope, crown, flame1, flame2, poof1-3, spark, zed, bang,
+quest, rocket, cloud, banana, cake, bell, trophy, bug, phone, laptop, server,
+cookie, megaphone, skull, bomb, gift, thumb, moon, eye, window. `px` is the size of
+one pixel in em (default 0.25, so a 12-pixel sprite is 3em). `tone` recolours the
+`A` `a` `L` pixels: red green blue gold orange purple pink teal grey ink brown night.
+`setSprite(el, name, opts)` swaps the picture: the next frame, another colour.
+
+Draw what the sheet lacks in your own game file. One character is one pixel:
+
+```ts
+defineSprite('banhammer-mole', `
+..kkkkkk..
+.kAAAAAAk.
+kAwkAAwkAk
+kAAAAAAAAk
+kAAkkkkAAk
+.kaaaaaak.
+..kkkkkk..`);
+```
+
+`.` empty, `k` outline, `w W` white, `d D x` greys, `y Y` gold, `o O` orange,
+`r R` red, `g G` green, `b B` blue, `p P` purple, `n N` brown, `c` cyan, `m` pink,
+`s` skin, `t` teal, and `A a L` for the tone (main, shade, light). Keep sprites
+10-16 pixels across, outline them in `k`, light them from the top left, and name
+them `<id>-something`. Every row must be the same length.
+
 ## Layout
 
-The stage is about 330x440 on a small phone and 700x450 on desktop. Your wrapper is
-a centred flex column filling it; its font size scales with the stage, so size
-everything in `em`. Shared helpers you may use: `.g-note` (dim caption), `.rule`
-(instruction line, `<b>` underlines), `.meter` / `.meter.big` with an inner `<i>`
-(set its width), `arrow('up' | 'down')`, colour classes `c-red` `c-green` `c-blue`
-(set `--c` and `--cd`), text colours `t-red` `t-green` `t-blue`, and the animation
-classes `pop-in`, `shake`, `bump` via `pulse(el, cls)`. Theme colours are CSS
-variables: `--bg --panel --panel-2 --line --ink --dim --red --green --blue --gold --purple`.
+The stage is about 330x440 on a small phone and 700x450 on desktop. Your wrapper
+fills it as a centred flex column; its font size scales with the stage, so size
+everything in `em`. Fill the stage: anchor things to the top and bottom rather
+than floating one card in the middle. Helpers from `./common`: `h` (make an
+element), `pulse(el, cls)` with `pop-in`, `shake` or `bump`, `dealer(rng, items)`
+(deals without repeats; use it for every list of titles or names), `pick`,
+`shuffled`, `randBtn`, `randInt`, `ratio`, `clamp1000`. Colour classes `c-red`
+`c-green` `c-blue` set `--c` and `--cd`. Theme colours are CSS variables:
+`--bg --red --green --blue --gold --purple --ink --dim`. Text on a bright scene
+should be dark (`#0b1020`); text on a dark panel should be `--ink`.
 
 ## Check it
 
 ```bash
-node tools/game-check.mjs banhammer
+node tools/game-check.mjs --art banhammer
 ```
 
 It lints the files, type-checks them alone, then plays the game: a perfect player,
@@ -151,7 +215,9 @@ a fast player, a casual player (built from `think`), an idle player, a random
 masher, a one-button spammer and a chaos monkey, across levels and seeds. Then it
 plays three real-time rounds at phone, small-phone and desktop sizes, checks the
 layout and saves screenshots to `dist/check/<id>/`. Look at all three screenshots.
-`FAIL` lines must be fixed; `WARN` lines need a reason to ignore.
+`FAIL` lines must be fixed; `WARN` lines need a reason to ignore. `--art` also
+fails a game that has no scene class, no sprites on stage, or sprite names
+without its id.
 
 Then play it for real: `npm run mock`, open
 `http://localhost:5199/game.html?u=you&games=banhammer`, choose PRACTICE.

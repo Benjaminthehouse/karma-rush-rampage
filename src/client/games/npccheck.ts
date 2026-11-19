@@ -1,5 +1,5 @@
 import './npccheck.css';
-import { COLOR, h, pick, pulse, randBtn, ratio, type GameFactory } from './common';
+import { COLOR, h, pick, pulse, ratio, shuffled, type Btn, type GameFactory } from './common';
 
 // What both NPCs say, in unison, every single time.
 const LINES = [
@@ -39,12 +39,14 @@ const FIGURE =
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const par = 11 + level * 0.75;
   const beat = 400 - level * 25; // ms an NPC holds each pose
-  const trios = Array.from({ length: 40 }, (_, i) => {
+  // Dealt in shuffled sixes, two per colour, so no single button is ever a lucky guess.
+  const order = Array.from({ length: 7 }, () => shuffled<Btn>(rng, [0, 0, 1, 1, 2, 2])).flat();
+  const trios = order.map((real, i) => {
     const roll = rng();
     // The first trio always has the loud tell; later levels lean on timing alone.
     const wild = i === 0 || roll >= 0.2 + level * 0.18;
     return {
-      real: randBtn(rng),
+      real,
       idle: pick(rng, IDLES),
       wild: wild ? pick(rng, WILDS) : '',
       // How many poses the player trails the NPCs by: a whole one, or (hardest) half of one.
@@ -140,6 +142,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         pods[b].pod.classList.add('npc');
         pods[b].say.textContent = `${trio.line}\n${trio.line}`;
         real.pod.classList.add('missed');
+        real.say.textContent = 'over here!';
         pulse(pods[b].pod, 'shake');
         bad(pods[b].fig, 'JUST AN NPC');
       }

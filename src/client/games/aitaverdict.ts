@@ -1,5 +1,5 @@
 import './aitaverdict.css';
-import { COLOR, h, pick, pulse, randBtn, ratio, type Btn, type GameFactory } from './common';
+import { COLOR, h, pick, pulse, ratio, shuffled, type Btn, type GameFactory } from './common';
 
 // Indexed by who has the horns, which is also the button: 0 OP, 1 both, 2 them.
 const VERDICT = ['YTA', 'ESH', 'NTA'];
@@ -35,8 +35,8 @@ const CASES = [
 
 // A bust with both a halo and horns; the .guilty class on its seat picks which one shows.
 const BUST =
-  '<svg viewBox="0 0 100 104" aria-hidden="true">' +
-  '<path class="torso" d="M10 104Q10 78 50 78Q90 78 90 104Z"/>' +
+  '<svg viewBox="8 0 84 136" preserveAspectRatio="xMidYMax meet" aria-hidden="true">' +
+  '<path class="torso" d="M10 136V100Q10 78 50 78Q90 78 90 100V136Z"/>' +
   '<g class="horns"><path d="M31 38Q13 24 21 3Q29 20 45 27Z"/><path d="M69 38Q87 24 79 3Q71 20 55 27Z"/></g>' +
   '<ellipse class="halo" cx="50" cy="12" rx="25" ry="7"/>' +
   '<circle class="head" cx="50" cy="52" r="27"/>' +
@@ -46,15 +46,12 @@ const BUST =
   '</svg>';
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
-  const par = 12 + level * 0.75;
-  let prev = -1;
-  const docket = Array.from({ length: 40 }, () => {
-    let verdict = randBtn(rng);
-    if (verdict === prev && rng() < 0.6) verdict = ((verdict + 1 + Math.floor(rng() * 2)) % 3) as Btn;
-    prev = verdict;
+  const par = 11 + level * 0.75;
+  // Dealt in shuffled sixes, two of each verdict, so no single button is ever a lucky guess.
+  const docket = Array.from({ length: 7 }, () => shuffled<Btn>(rng, [0, 0, 1, 1, 2, 2]))
+    .flat()
     // Later rounds seat OP on the right, so the colour counts and the side does not.
-    return { verdict, text: pick(rng, CASES[verdict]), swap: rng() < level * 0.12 };
-  });
+    .map((verdict) => ({ verdict, text: pick(rng, CASES[verdict]), swap: rng() < level * 0.12 }));
   let idx = 0;
   let right = 0;
   let wrong = 0;
@@ -64,6 +61,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const wrap = h('div', 'g-aitaverdict');
   const card = h('div', 'case');
   const title = h('div', 'title');
+  const ask = h('span');
+  title.append(ask);
   const dock = h('div', 'dock');
   const seats = (['OP', 'THEM'] as const).map((name, i) => {
     const seat = h('div', `seat c-${i ? 'blue' : 'red'}`);
@@ -89,7 +88,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     dock.classList.toggle('swap', c.swap);
     seats[0].classList.toggle('guilty', c.verdict <= 1);
     seats[1].classList.toggle('guilty', c.verdict >= 1);
-    title.replaceChildren(h('b', '', 'AITA'), ` ${c.text}`);
+    ask.replaceChildren(h('b', '', 'AITA'), ` ${c.text}`);
     stamp.textContent = '';
     pulse(card, 'pop-in');
   }
@@ -117,7 +116,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       stamp.className = `stamp c-${COLOR[c.verdict]}`;
       if (b === c.verdict) {
         right++;
-        nextAt = t + 240;
+        nextAt = t + 260;
         card.classList.add('ruled');
         good(stamp);
         fx.burst(stamp, COLOR[b], 10);
@@ -129,7 +128,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       } else {
         wrong++;
         nextAt = t + 450;
-        card.classList.add('ruled', 'overruled');
+        card.classList.add('overruled');
         pulse(card, 'shake');
         bad(title, 'OVERRULED!');
       }

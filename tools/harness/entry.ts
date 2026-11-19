@@ -36,7 +36,7 @@ pads.forEach((p, i) => (p.querySelector('span')!.textContent = meta.labels[i]));
 $('hud-title').textContent = meta.title;
 document.body.classList.add('fx-low'); // steady frame for screenshots
 const fx = createFx($('arena'), $('fx'));
-const noFx = { burst() {}, pop() {}, flash() {}, shake() {}, sound() {} };
+const noFx = { burst() {}, pop() {}, poof() {}, flash() {}, shake() {}, sound() {} };
 
 function validScore(v: unknown) {
   return typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 1000;
@@ -66,7 +66,7 @@ function driver(level: number, seed: number, bot: Bot, real: boolean) {
       stats.bads++;
       if (real && text) fx.pop(at ?? null, text, 'red');
     },
-    fx: real ? { burst: fx.burst, pop: fx.pop, flash: fx.flash, shake: fx.shake, sound() {} } : noFx,
+    fx: real ? { burst: fx.burst, pop: fx.pop, poof: fx.poof, flash: fx.flash, shake: fx.shake, sound() {} } : noFx,
   });
   const startHtml = stage.innerHTML;
   const botRng = mulberry32(('seed' in bot ? bot.seed : 1) * 7919 + 13);
@@ -166,6 +166,7 @@ function driver(level: number, seed: number, bot: Bot, real: boolean) {
   return { step, finish, stats, score: () => inst.score() };
 }
 
+const art = new URLSearchParams(location.search).has('art');
 const live = { running: false, t: 0, error: '' };
 
 (window as any).__h = {
@@ -224,6 +225,10 @@ const live = { running: false, t: 0, error: '' };
       seen.add(el);
       const cs = getComputedStyle(el);
       if (cs.visibility === 'hidden' || cs.display === 'none' || Number(cs.opacity) < 0.05) continue;
+      // An ellipsis is a deliberate cut (a long username on a meta line), not a layout bug.
+      let cut: Element | null = el;
+      while (cut && cut !== stage && getComputedStyle(cut).textOverflow !== 'ellipsis') cut = cut.parentElement;
+      if (cut && cut !== stage) continue;
       const range = document.createRange();
       range.selectNodeContents(node);
       const r = range.getBoundingClientRect();
@@ -244,11 +249,20 @@ const live = { running: false, t: 0, error: '' };
         const cs = getComputedStyle(el);
         if (cs.display === 'none' || cs.visibility === 'hidden' || cs.position === 'absolute' || Number(cs.opacity) < 0.05) continue;
         if (el.closest('[style*="position: absolute"]') || (el.offsetParent && el.offsetParent !== wrap && getComputedStyle(el.offsetParent).position === 'absolute')) continue;
+        // Anything inside a box that clips its own overflow is that box's business, not the stage's.
+        let box2: Element | null = el.parentElement;
+        while (box2 && box2 !== wrap && getComputedStyle(box2).overflow === 'visible') box2 = box2.parentElement;
+        if (box2 && box2 !== wrap) continue;
         const r = el.getBoundingClientRect();
         if (!r.width || !r.height) continue;
         const out = Math.max(box.left - r.left, r.right - box.right, box.top - r.top, r.bottom - box.bottom);
         if (out > 3) issues.push(`element .${String(el.className).split(' ')[0] || el.tagName.toLowerCase()} sticks ${Math.round(out)}px outside the stage and is cut off`);
       }
+    }
+    // Art direction (checked only with --art): a scene, drawn with sprites.
+    if (art && wrap) {
+      if (!/(^|\s)(scene-[a-z]+|pix)(\s|$)/.test(wrap.className)) issues.push('art: the wrapper needs a scene class (scene-sky, scene-office, ...) so the game has a place and the pixel font');
+      if (!stage.querySelector('.px')) issues.push('art: no pixel sprites on stage; draw the scene with sprite(), person(), postCard() or your own defineSprite()');
     }
     const warn: string[] = [];
     if (wrap && (wrap.scrollWidth > wrap.clientWidth + 3 || wrap.scrollHeight > wrap.clientHeight + 3))

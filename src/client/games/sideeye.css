@@ -1,0 +1,56 @@
+.g-sideeye { gap: 0.5em !important; }
+
+/* The boss peeks over the desk. */
+.g-sideeye .boss { flex: none; width: 100%; display: flex; flex-direction: column; align-items: center; }
+.g-sideeye .face { display: flex; gap: 0.8em; padding: 1.7em 1.3em 0.5em; background: var(--gold); border: 0.2em solid var(--bg); border-bottom: 0; border-radius: 6em 6em 0 0 / 4.2em 4.2em 0 0; transform-origin: 50% 100%; transition: transform 0.12s; }
+.g-sideeye.caught .face { transform: scale(1.08); }
+.g-sideeye .desk { width: 100%; height: 0.75em; border-radius: 0.3em; background: #b9793a; border: 0.16em solid var(--bg); box-shadow: inset 0 -0.2em 0 #8a5527; }
+.g-sideeye .socket { position: relative; }
+.g-sideeye .brow { position: absolute; left: 6%; right: 6%; top: -0.95em; height: 0.5em; border-radius: 1em; background: var(--bg); transition: transform 0.12s; }
+.g-sideeye .socket:first-child .brow { transform: rotate(-6deg) translateY(calc(var(--sus, 0) * -0.4em)); }
+.g-sideeye .socket:last-child .brow { transform: rotate(8deg) translateY(calc(var(--sus, 0) * 0.3em)); }
+.g-sideeye.caught .socket:first-child .brow { transform: rotate(16deg) translateY(0.3em); }
+.g-sideeye.caught .socket:last-child .brow { transform: rotate(-16deg) translateY(0.3em); }
+.g-sideeye .eye { position: relative; width: 5.2em; height: 3.9em; border-radius: 50%; background: var(--ink); border: 0.2em solid var(--bg); overflow: hidden; }
+.g-sideeye .pupil { position: absolute; left: 50%; top: 50%; width: 2.2em; height: 2.2em; margin: -1.1em 0 0 -1.1em; border-radius: 50%; background: var(--bg); transition: transform 0.1s ease-out; }
+.g-sideeye .pupil::after { content: ''; position: absolute; left: 16%; top: 12%; width: 32%; height: 32%; border-radius: 50%; background: var(--ink); }
+.g-sideeye .look-0 .pupil { transform: translate(-1.3em, 0.65em); }
+.g-sideeye .look-1 .pupil { transform: translate(0, 0.8em); }
+.g-sideeye .look-2 .pupil { transform: translate(1.3em, 0.65em); }
+.g-sideeye .lid { position: absolute; left: 0; right: 0; top: 0; height: calc(8% + var(--sus, 0) * 30%); background: #e2a51c; border-bottom: 0.2em solid var(--bg); transition: height 0.07s; }
+/* Shut: the lid comes all the way down, with a lash line across it. */
+.g-sideeye .blink .lid { height: 100%; background: linear-gradient(#e2a51c 50%, var(--bg) 50% 62%, #e2a51c 62%); }
+.g-sideeye.caught .lid { height: 0; border-bottom-width: 0; }
+.g-sideeye.caught .pupil { scale: 0.6; }
+.g-sideeye.caught .phones { filter: grayscale(0.9) brightness(0.55); }
+
+/* Three phones under the desk. */
+.g-sideeye .phones { flex: 1; min-height: 0; width: 100%; display: flex; justify-content: space-around; }
+.g-sideeye .phone { width: 30%; max-width: 7.5em; display: flex; flex-direction: column; padding: 0.3em; overflow: hidden; border: 0.22em solid var(--c); border-radius: 1em; background: var(--bg); box-shadow: 0 0 0.9em color-mix(in srgb, var(--c) 45%, transparent); }
+.g-sideeye .feed { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.3em; }
+.g-sideeye .feed.scroll { animation: g-sideeye-scroll 0.09s ease-out; }
+@keyframes g-sideeye-scroll { from { transform: translateY(1.8em); } }
+/* A meme: a picture with a caption bar top and bottom. */
+.g-sideeye .meme { flex: 1; min-height: 0; position: relative; border-radius: 0.45em; }
+.g-sideeye .meme::before, .g-sideeye .meme::after { content: ''; position: absolute; left: 18%; right: 18%; height: 0.34em; border-radius: 1em; background: var(--ink); border: 0.08em solid var(--bg); }
+.g-sideeye .meme::before { top: 9%; }
+.g-sideeye .meme::after { bottom: 9%; }
+.g-sideeye .m0 { background: radial-gradient(circle, var(--gold) 0 24%, #0000 26%), #6a3df0; }
+.g-sideeye .m1 { background: linear-gradient(135deg, #ff7ac8 50%, #ffb347 50%); }
+.g-sideeye .m2 { background: radial-gradient(circle at 32% 50%, #fff 0 13%, #0000 15%), radial-gradient(circle at 68% 50%, #fff 0 13%, #0000 15%), #1fb8a8; }
+.g-sideeye .m3 { background: repeating-linear-gradient(90deg, var(--gold) 0 20%, #ff9a3d 20% 40%); }
+.g-sideeye .m4 { background: radial-gradient(ellipse at 50% 110%, #7a4bff 0 58%, #0000 60%), #7ee7ff; }
+.g-sideeye .m5 { background: conic-gradient(#ff7ac8 25%, #fff 0 50%, #ff7ac8 0 75%, #fff 0); }
+
+.g-sideeye .doc { display: none; flex: 1; min-height: 0; flex-direction: column; align-items: center; justify-content: center; gap: 0.4em; border-radius: 0.45em; background: repeating-linear-gradient(#0000 0 0.9em, #b9c1e0 0.9em 1em), repeating-linear-gradient(90deg, #0000 0 1.5em, #b9c1e0 1.5em 1.6em), var(--ink); }
+.g-sideeye .doc span { font-size: 0.72em; font-weight: 900; line-height: 1.1; text-align: center; color: var(--bg); background: var(--ink); padding: 0.1em 0.25em; border-radius: 0.3em; }
+.g-sideeye .peek { position: relative; width: 2.6em; height: 1.6em; border-radius: 50%; background: var(--ink); border: 0.2em solid var(--bg); }
+.g-sideeye .peek::after { content: ''; position: absolute; left: 50%; top: 50%; width: 0.9em; height: 0.9em; margin: -0.45em; border-radius: 50%; background: var(--bg); }
+.g-sideeye .watched { border-color: var(--ink); box-shadow: 0 0 1.4em #f4f6ffcc; }
+.g-sideeye .watched .feed { display: none; }
+.g-sideeye .watched .doc { display: flex; }
+.g-sideeye .next { animation: g-sideeye-next 0.12s steps(2) infinite; }
+@keyframes g-sideeye-next { 50% { border-color: var(--ink); filter: brightness(1.6); } }
+
+.g-sideeye .tally { font-weight: 800; font-size: 0.85em; letter-spacing: 0.08em; color: var(--dim); line-height: 1; }
+.g-sideeye .tally b { font-size: 1.7em; font-weight: 900; font-style: italic; color: var(--gold); font-variant-numeric: tabular-nums; letter-spacing: 0; }

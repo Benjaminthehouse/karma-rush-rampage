@@ -1,7 +1,7 @@
 import './worksonmine.css';
 import { COLOR, clamp1000, h, pick, pulse, shuffled, type Btn, type GameFactory } from './common';
 
-const ERRORS = ['segfault', 'npm ERR!', 'NaN', 'undefined', 'exit 1', 'it’s DNS', 'timeout', '404', 'bad merge', 'missing ;'];
+const ERRORS = ['segfault', 'off by one', 'NaN', 'undefined', 'exit 1', 'it’s DNS', 'timeout', '404', 'bad merge', 'missing ;'];
 const EXCUSES = [
   'Then we ship your machine.',
   'Cannot reproduce. Closing.',
@@ -20,13 +20,14 @@ const PAIRS: Btn[][] = [
 ];
 const TICK = '<svg class="tick" viewBox="0 0 24 24"><path d="M4 13l5.5 5.5L20 6"/></svg>';
 const CROSS = '<svg class="cross" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg>';
-const SHOW_MS = 500; // the working laptop shows its tick
-const OK_MS = 400; // celebration before the next shuffle
+const SWAP_MS = [290, 265, 218, 200, 174]; // per level: later rounds add swaps and speed them up
+const SHOW_MS = 450; // the working laptop shows its tick
+const OK_MS = 350; // celebration before the next laptop lights up
 const OOPS_MS = 700; // a wrong pick also costs time
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const swaps = 3 + Math.floor(level / 2);
-  const swapMs = 290 - 30 * level;
+  const swapMs = SWAP_MS[level];
   const par = 3.5 + level / 8; // correct picks that earn 1000
   // More bouts than fit in a round. The answer visits every slot before it repeats, so no button is a safe bet.
   const ends: Btn[] = [];
@@ -36,20 +37,26 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     ends.push(...block);
   }
   const excuses = shuffled(rng, EXCUSES);
+  // The same laptop works all round: each bout starts where the last one ended.
+  let from = ends[2];
   const bouts = ends.map((end) => {
-    const moves: Btn[][] = [];
-    while (moves.length < swaps) {
-      const pair = pick(rng, PAIRS);
-      if (pair !== moves[moves.length - 1]) moves.push(pair);
-    }
-    // Run the shuffle backwards to find where the working laptop has to start.
-    const start = moves.reduceRight((s, [a, b]) => (s === a ? b : s === b ? a : s), end);
+    const start = from;
+    from = end;
+    let moves: Btn[][];
+    // Deal shuffles until one carries the working laptop to this bout's answer.
+    do {
+      moves = [];
+      while (moves.length < swaps) {
+        const pair = pick(rng, PAIRS);
+        if (pair !== moves[moves.length - 1]) moves.push(pair);
+      }
+    } while (moves.reduce((s, [a, b]) => (s === a ? b : s === b ? a : s), start) !== end);
     return { start, end, moves, errors: [pick(rng, ERRORS), pick(rng, ERRORS)] };
   });
 
   let n = 0; // bouts finished
   let phase: 'show' | 'shuffle' | 'ask' | 'after' = 'show';
-  let t0 = 0; // when the current bout began
+  let shuffleAt = 0;
   let askAt = 0;
   let nextAt = 0;
   let step = 0; // swaps already started in this bout
@@ -59,7 +66,10 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
 
   const wrap = h('div', 'g-worksonmine');
   wrap.style.setProperty('--ms', `${Math.round(swapMs * 0.88)}ms`);
+  const say = h('div', 'say');
   const banner = h('div', 'rule');
+  banner.innerHTML = 'Watch the <b>green tick</b>!';
+  say.append(banner);
   const desk = h('div', 'desk');
   const pads = [0, 1, 2].map((i) => {
     const pad = h('div', `pad c-${COLOR[i]}`);
@@ -85,13 +95,13 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     builds.append(pip);
     return pip;
   });
-  const note = h('div', 'g-note');
-  wrap.append(banner, desk, builds, note);
+  const note = h('div', 'g-note', '0 shipped');
+  wrap.append(say, desk, builds, note);
   root.append(wrap);
 
   const bout = () => bouts[n % bouts.length];
   const rigAt = (slot: Btn) => rigs.find((r) => r.slot === slot)!;
-  const place = (r: Rig) => (r.el.style.left = `${r.slot * 6}em`);
+  const place = (r: Rig) => (r.el.style.left = `${r.slot * 35}%`);
   const face = (r: Rig, state: string, text = '') => {
     r.el.className = `rig ${state}`;
     r.laptop.className = 'laptop';
@@ -99,14 +109,12 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   };
 
   function begin(t: number) {
-    t0 = t;
-    askAt = t + SHOW_MS + swaps * swapMs;
+    shuffleAt = t + SHOW_MS;
+    askAt = shuffleAt + swaps * swapMs;
     step = 0;
     phase = 'show';
     let e = 0;
     rigs.forEach((r) => (r.slot === bout().start ? face(r, 'ok', 'WORKS') : face(r, 'err', bout().errors[e++])));
-    banner.innerHTML = 'Watch the <b>green tick</b>!';
-    note.textContent = `${right} shipped`;
   }
 
   // The laptop heading right arcs over the top, the one heading left ducks under.
@@ -115,11 +123,10 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     const under = rigAt(b);
     over.slot = b;
     under.slot = a;
-    [over, under].forEach((r, i) => {
-      place(r);
-      r.laptop.className = 'laptop';
-      pulse(r.laptop, i ? 'under' : 'over');
-    });
+    rigs.forEach((r) => (r.laptop.className = 'laptop'));
+    [over, under].forEach(place);
+    pulse(over.laptop, 'over');
+    pulse(under.laptop, 'under');
     fx.sound('whoosh');
   }
 
@@ -134,9 +141,9 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       // Full marks for a pick within 250 ms of the question mark, three quarters for a slow one.
       earned += 0.75 + 0.25 * Math.max(0, Math.min(1, 1 - (t - askAt - 250) / 650));
       right++;
-      face(mine, 'win', 'WORKS');
       const clean = right === 3 && !wrong;
-      banner.innerHTML = `<span class="stamp${clean ? ' gold' : ''}">${clean ? 'CERTIFIED: WORKS EVERYWHERE' : 'WORKS ON MY MACHINE!'}</span>`;
+      face(mine, 'win', 'WORKS');
+      banner.innerHTML = clean ? '<span class="stamp gold">CERTIFIED: WORKS EVERYWHERE</span>' : '<span class="stamp">WORKS ON MY MACHINE!</span>';
       good(mine.el, CHEERS[right % CHEERS.length]);
       fx.burst(mine.el, 'green', 18);
       fx.sound('coin');
@@ -165,7 +172,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   }
 
   rigs.forEach(place);
-  begin(0);
+  begin(250); // the very first tick stays up a little longer
 
   return {
     press(b, t) {
@@ -174,13 +181,13 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     },
     tick(t) {
       if (phase === 'after' && t >= nextAt) begin(nextAt);
-      if (phase === 'show' && t >= t0 + SHOW_MS) {
+      if (phase === 'show' && t >= shuffleAt) {
         phase = 'shuffle';
         rigs.forEach((r) => face(r, 'off'));
         banner.textContent = 'Don’t lose it…';
       }
       if (phase !== 'shuffle') return;
-      while (step < swaps && t >= t0 + SHOW_MS + step * swapMs) swap(bout().moves[step++]);
+      while (step < swaps && t >= shuffleAt + step * swapMs) swap(bout().moves[step++]);
       if (t >= askAt) {
         phase = 'ask';
         desk.className = 'desk ask';
@@ -189,7 +196,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         fx.sound('ding');
       }
     },
-    score: () => clamp1000((1000 * (earned - 0.4 * wrong)) / par),
+    score: () => clamp1000((1000 * (earned - 0.3 * wrong)) / par),
     hint: () => (phase === 'ask' ? bout().end : null),
   };
 };
