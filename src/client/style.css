@@ -390,3 +390,12 @@ body { background: var(--bg); }
 #hud, #race, #timebar { contain: layout style; }
 #pads .pad { contain: layout style; }
 .fx-layer > .spark { animation: none; }
+
+/* Result card: the community row. Quiet buttons, one line, so the score stays the headline. */
+.ui .social { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem; margin: 0.1rem 0 0.3rem; }
+.ui .social[hidden] { display: none; }
+.ui .social button { font: inherit; font-size: 0.85rem; letter-spacing: 0.04em; color: #0b1020; background: var(--gold); border: 0; padding: 0.4rem 0.7rem; box-shadow: 0 -2px 0 0 #0b1020, 0 2px 0 0 #0b1020, -2px 0 0 0 #0b1020, 2px 0 0 0 #0b1020, 0 0.3rem 0 0 #0b1020; cursor: pointer; touch-action: manipulation; }
+.ui .social button:disabled { background: var(--panel-2); color: var(--dim); box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line); cursor: default; }
+/* The start screen: today's run is the one obvious thing to press. */
+.ui .choice.primary { transform: scale(1.04); }
+.ui .pitch { margin: 0; font-size: 0.95rem; color: var(--ink); text-align: center; }

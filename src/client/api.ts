@@ -3,6 +3,7 @@ import type {
   PartyBeat,
   PartyScore,
   PartyState,
+  SocialResponse,
   SubmitRequest,
   SubmitResponse,
 } from '../shared/api';
@@ -23,6 +24,9 @@ export const api = {
   partyBeat: (b: PartyBeat) => call<PartyState>('/api/party/beat', b),
   partyStart: (b: PartyBeat) => call<PartyState>('/api/party/start', b),
   partyScore: (b: PartyScore) => call<PartyState>('/api/party/score', b),
+  share: () => call<SocialResponse>('/api/share', {}),
+  join: () => call<SocialResponse>('/api/join', {}),
+  flair: () => call<SocialResponse>('/api/flair', {}),
 };
 
 export const fmt = (n: number) => n.toLocaleString('en-US');

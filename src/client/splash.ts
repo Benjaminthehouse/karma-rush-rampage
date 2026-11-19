@@ -33,7 +33,7 @@ function render(init: InitResponse) {
   if (init.myRun) bits.push(`You scored ${fmt(init.myRun.total)}${init.rank ? ` · #${init.rank}` : ''}`);
   if (init.streak > 0) bits.push(`${init.streak}-day streak`);
   $('s-me').textContent = bits.join(' · ');
-  $('s-play').textContent = init.myRun ? 'PLAY PARTY / PRACTICE' : 'PLAY TODAY’S RUN';
+  $('s-play').textContent = init.myRun ? 'MY RESULT · PLAY MORE' : 'PLAY TODAY’S RUN';
 }
 
 async function load() {

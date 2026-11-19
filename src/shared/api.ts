@@ -22,7 +22,14 @@ export type InitResponse = {
   players: number;
   rivals: Rival[];
   now: number;
+  /** The community this post lives in, without the r/ prefix. Absent in the demo. */
+  subreddit?: string;
+  /** True once the player has posted this day's score as a comment. */
+  shared?: boolean;
 };
+
+/** Result of one of the result card's community actions. */
+export type SocialResponse = { ok: boolean; message: string };
 
 export type SubmitRequest = { rounds: number[] };
 export type SubmitResponse = {

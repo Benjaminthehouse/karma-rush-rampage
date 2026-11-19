@@ -119,6 +119,25 @@ export async function getInit(
   };
 }
 
+const sharedKey = (day: string) => `shared:${day}`;
+
+/** Whether the player already posted this day's score as a comment. */
+export const hasShared = async (store: Store, day: string, username: string) => !!(await store.hGet(sharedKey(day), username));
+export const markShared = (store: Store, day: string, username: string) => store.hSet(sharedKey(day), { [username]: '1' });
+
+/** The comment a player posts under the day's post: their total, rank, streak and round scores. */
+export function shareText(init: InitResponse, titles: (id: string) => string): string | null {
+  if (!init.myRun) return null;
+  const head = [`**${init.myRun.total.toLocaleString('en-US')}** points`];
+  if (init.rank) head.push(`#${init.rank} of ${init.players.toLocaleString('en-US')}`);
+  if (init.streak > 1) head.push(`${init.streak}-day streak`);
+  const rounds = init.lineup.map((id, i) => `${titles(id)} ${init.myRun!.rounds[i] ?? 0}`).join(' · ');
+  return `${head.join(' · ')}\n\n${rounds}\n\nBeat that.`;
+}
+
+/** The flair a player can choose to wear for their streak. Commas are not allowed in flair text. */
+export const streakFlair = (streak: number) => (streak >= 2 ? `${streak}-day streak` : 'Played today');
+
 /** Records the player's run for the day. Only the first run of a day counts. */
 export async function submitRun(
   store: Store,

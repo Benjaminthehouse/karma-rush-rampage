@@ -72,7 +72,7 @@ function setPads(labels: [string, string, string], actions?: ((() => void) | nul
 
 const held = [false, false, false];
 /** Shown on the menu so a tester can tell which build they are looking at. */
-const BUILD = 13;
+const BUILD = 14;
 let dayLine = '';
 /** The menu's status line, with the audio state so "no sound" can be told apart by cause. */
 function paintStatus() {
@@ -287,6 +287,7 @@ function menu() {
     ['LIVE PARTY', 'Race everyone on this post, in sync'],
   ]);
   setPads(['PRACTICE', played ? 'RESULT' : 'DAILY RUN', 'PARTY'], [practiceMenu, daily, lobby]);
+  document.querySelector('.choice[data-pad="1"]')?.classList.toggle('primary', !played);
 }
 
 /** The three menu cards mirror the pads: index 0 red, 1 green, 2 blue. */
@@ -307,6 +308,7 @@ function practiceMenu() {
     ['ARCADE', `Pick any of the ${GAME_IDS.length} games and practise it`],
   ]);
   setPads(['BACK', 'RANDOM 5', 'ARCADE'], [menu, practice, arcade]);
+  document.querySelector('.choice[data-pad="1"]')?.classList.remove('primary');
   $('menu-count').textContent = 'Practice never touches the leaderboard';
 }
 
@@ -424,7 +426,7 @@ async function solo(kind: 'daily' | 'practice', lineup: Round[], rivals: Rival[]
     console.error(err);
     toast('Could not save your score. Check your connection.');
   }
-  final({ kind: `DAILY RUN · ${prettyDay(init?.day ?? '')}`, lineup, rounds, total, badges, boardTitle: 'Leaderboard', board: leaderboard(board) });
+  final({ kind: `DAILY RUN · ${prettyDay(init?.day ?? '')}`, lineup, rounds, total, badges, boardTitle: 'Leaderboard', board: leaderboard(board), social: !!init?.myRun });
 }
 
 const dailyLineup = (): Round[] => (init ? roundsFromIds(init.day, init.lineup) : []);
@@ -445,6 +447,7 @@ function daily() {
       boardTitle: offline ? 'You vs the house bots' : 'Leaderboard',
       board: offline ? standings(myName(), init.myRun.rounds, init.rivals, 5) : leaderboard(init.leaderboard),
       announce: false,
+      social: true,
     });
     return;
   }
@@ -495,8 +498,11 @@ function final(o: {
   again?: () => void;
   /** False when re-opening an old result: no need to shout it again. */
   announce?: boolean;
+  /** True for a saved daily run on Reddit: offer to comment the score, wear flair, join. */
+  social?: boolean;
 }) {
   show('final');
+  paintSocial(!!o.social);
   $('final-kind').textContent = o.kind;
   countUp($('final-total'), o.total);
   sfx.fanfare();
@@ -523,6 +529,49 @@ function final(o: {
   o.board.id = 'final-board';
   old.replaceWith(o.board);
   setPads(['MENU', o.again ? 'REMATCH' : 'PRACTICE', 'PARTY'], [menu, o.again ?? practice, lobby]);
+}
+
+// The result card's next steps: say it in the comments, wear the streak, join the community.
+const socialDone = { share: false, flair: false, join: false };
+try {
+  socialDone.join = localStorage.getItem('km_joined') === '1';
+} catch {
+  /* ask again */
+}
+function paintSocial(on: boolean) {
+  const row = $('final-social');
+  row.hidden = !on || offline || !init?.username;
+  if (row.hidden) return;
+  const share = $<HTMLButtonElement>('social-share');
+  share.textContent = init?.shared || socialDone.share ? 'SCORE POSTED' : 'POST MY SCORE';
+  share.disabled = !!init?.shared || socialDone.share;
+  const flair = $<HTMLButtonElement>('social-flair');
+  flair.textContent = socialDone.flair ? 'FLAIR ON' : (init?.streak ?? 0) >= 2 ? `WEAR ${init!.streak}-DAY FLAIR` : 'WEAR FLAIR';
+  flair.disabled = socialDone.flair;
+  const join = $<HTMLButtonElement>('social-join');
+  join.textContent = socialDone.join ? 'JOINED' : `JOIN r/${init?.subreddit ?? 'this community'}`;
+  join.disabled = socialDone.join;
+}
+for (const key of ['share', 'flair', 'join'] as const) {
+  $(`social-${key}`).addEventListener('click', async () => {
+    if (socialDone[key]) return;
+    socialDone[key] = true; // no double posts while the request is out
+    paintSocial(true);
+    try {
+      const res = await api[key]();
+      socialDone[key] = res.ok;
+      toast(res.message);
+      if (res.ok) {
+        sfx.named('coin');
+        if (key === 'join') localStorage.setItem('km_joined', '1');
+      }
+    } catch (err) {
+      console.error(err);
+      socialDone[key] = false;
+      toast('That did not go through. Try again.');
+    }
+    paintSocial(true);
+  });
 }
 
 let countRaf = 0;
@@ -678,7 +727,10 @@ api.init().then(
   (res) => {
     init = res;
     skew = res.now - Date.now();
-    if (screen === 'menu') menu();
+    if (screen !== 'menu') return;
+    // Already played today: open on the result card, with its next steps, not the menu.
+    if (res.myRun && !params.has('menu')) daily();
+    else menu();
   },
   (err) => {
     // No server behind this build: run as a self-contained demo.

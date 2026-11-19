@@ -4,8 +4,8 @@
 import express from 'express';
 import path from 'node:path';
 import { feedChannel, partyChannel } from '../src/shared/api';
-import { dayKey } from '../src/shared/daily';
-import { cleanRounds, getInit, guestName, partyBeat, partyScore, partyStart, submitRun, type Store } from '../src/server/core';
+import { GAME_META, dayKey } from '../src/shared/daily';
+import { cleanRounds, getInit, guestName, hasShared, markShared, shareText, streakFlair, partyBeat, partyScore, partyStart, submitRun, type Store } from '../src/server/core';
 
 const hashes = new Map<string, Map<string, string>>();
 const zsets = new Map<string, Map<string, number>>();
@@ -57,7 +57,28 @@ app.get('/mock/realtime', (req, res) => {
 });
 
 app.get('/api/init', async (req, res) => {
-  res.json(await getInit(store, { username: user(req), day: dayKey(), today: dayKey(), now: Date.now() }));
+  const name = user(req);
+  const init = await getInit(store, { username: name, day: dayKey(), today: dayKey(), now: Date.now() });
+  res.json({ ...init, subreddit: 'mocksub', shared: name ? await hasShared(store, dayKey(), name) : false });
+});
+/** Comments "posted" in this session, so a test can read them back. */
+const comments: string[] = [];
+app.get('/mock/comments', (_req, res) => void res.json(comments));
+app.post('/api/share', async (req, res) => {
+  const name = user(req);
+  if (!name) return void res.json({ ok: false, message: 'Log in to do that' });
+  const init = await getInit(store, { username: name, day: dayKey(), today: dayKey(), now: Date.now() });
+  const text = shareText(init, (id) => GAME_META[id]?.title ?? id);
+  if (!text) return void res.json({ ok: false, message: 'Play today’s run first' });
+  if (await hasShared(store, dayKey(), name)) return void res.json({ ok: true, message: 'Already posted' });
+  comments.push(`${name}: ${text}`);
+  await markShared(store, dayKey(), name);
+  res.json({ ok: true, message: 'Posted to the comments' });
+});
+app.post('/api/join', (_req, res) => void res.json({ ok: true, message: 'Joined r/mocksub' }));
+app.post('/api/flair', async (req, res) => {
+  const init = await getInit(store, { username: user(req), day: dayKey(), today: dayKey(), now: Date.now() });
+  res.json({ ok: true, message: `Flair set: ${streakFlair(init.streak)}` });
 });
 app.post('/api/submit', async (req, res) => {
   const rounds = cleanRounds(req.body?.rounds);

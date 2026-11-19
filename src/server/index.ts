@@ -7,6 +7,7 @@ import {
   type PartyBeat,
   type PartyMessage,
   type PartyScore,
+  type SocialResponse,
   type SubmitRequest,
 } from '../shared/api';
 import { GAME_META, dayKey, prettyDay } from '../shared/daily';
@@ -14,9 +15,13 @@ import {
   cleanRounds,
   getInit,
   guestName,
+  hasShared,
+  markShared,
   partyBeat,
   partyScore,
   partyStart,
+  shareText,
+  streakFlair,
   submitRun,
   type Store,
 } from './core';
@@ -58,9 +63,10 @@ const route =
 router.get(
   '/api/init',
   route(async (_req, res) => {
-    res.json(
-      await getInit(store, { username: await username(), day: postDay(), today: dayKey(), now: Date.now() })
-    );
+    const name = await username();
+    const day = postDay();
+    const init = await getInit(store, { username: name, day, today: dayKey(), now: Date.now() });
+    res.json({ ...init, subreddit: context.subredditName, shared: name ? await hasShared(store, day, name) : false });
   })
 );
 
@@ -77,6 +83,58 @@ router.post(
     const out = await submitRun(store, { username: name, day, today: dayKey(), rounds });
     if (out.saved && name) await push<FeedMessage>(feedChannel(day), { t: 'score', name, total: out.total });
     res.json(out);
+  })
+);
+
+// ------------------------------------------------- result card: community
+
+const social = (fn: (name: string) => Promise<SocialResponse>) =>
+  route(async (_req, res) => {
+    const name = await username();
+    if (!name) {
+      res.json({ ok: false, message: 'Log in to do that' } satisfies SocialResponse);
+      return;
+    }
+    res.json(await fn(name));
+  });
+
+/** Posts the player's score under the day's post: as them where Reddit allows it, else from the app. */
+router.post(
+  '/api/share',
+  social(async (name) => {
+    const day = postDay();
+    const post = context.postId;
+    const init = await getInit(store, { username: name, day, today: dayKey(), now: Date.now() });
+    const text = shareText(init, (id) => GAME_META[id]?.title ?? id);
+    if (!post || !text) return { ok: false, message: 'Play today’s run first' };
+    if (await hasShared(store, day, name)) return { ok: true, message: 'Already posted' };
+    try {
+      await reddit.submitComment({ id: post, text, runAs: 'USER' });
+    } catch (err) {
+      console.error('comment as user failed, posting from the app', err);
+      await reddit.submitComment({ id: post, text: `u/${name} scored ${text}` });
+    }
+    await markShared(store, day, name);
+    return { ok: true, message: 'Posted to the comments' };
+  })
+);
+
+router.post(
+  '/api/join',
+  social(async () => {
+    await reddit.subscribeToCurrentSubreddit();
+    return { ok: true, message: `Joined r/${context.subredditName}` };
+  })
+);
+
+/** Opt-in: the player asks to wear their streak as flair in this community. */
+router.post(
+  '/api/flair',
+  social(async (name) => {
+    const init = await getInit(store, { username: name, day: postDay(), today: dayKey(), now: Date.now() });
+    const text = streakFlair(init.streak);
+    await reddit.setUserFlair({ subredditName: context.subredditName, username: name, text });
+    return { ok: true, message: `Flair set: ${text}` };
   })
 );
 

@@ -15,7 +15,7 @@
   "permissions": {
     "redis": true,
     "realtime": true,
-    "reddit": { "enable": true, "scope": "user" }
+    "reddit": { "enable": true, "scope": "user", "asUser": ["SUBMIT_COMMENT", "SUBSCRIBE_TO_SUBREDDIT"] }
   },
   "menu": {
     "items": [

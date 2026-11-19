@@ -42,11 +42,16 @@ or `engine.ts`, so the look can change without touching the rules.
 | Round intro | Round number, the shout dictated word by word, how-to, button legend |
 | Round | HUD (round pips, title, combo, live score), timer, race track, the stage, three pads |
 | Round result | Score counting up, verdict, standings |
-| Final | Total, verdict, per-round breakdown, leaderboard or party standings |
+| Final | Total, verdict, per-round breakdown, leaderboard or party standings. After a saved daily run: post the score as a comment, wear streak flair (opt-in), join the community |
 
 The race track under the timer shows every player's score in the current round,
 live: recorded runs and bots replay as a curve to their final score, and party
 players report theirs about once a second.
+
+Someone who has already played today opens straight onto their result card.
+The comment, flair and join actions run from the player's own account
+(`permissions.reddit.asUser` in `devvit.json`); if Reddit refuses a comment as the
+user, the app posts it on their behalf.
 
 ## The mini-games
 
