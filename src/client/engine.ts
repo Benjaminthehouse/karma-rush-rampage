@@ -51,7 +51,7 @@ export function standings(me: string, mine: number[], rivals: Rival[], through: 
     li.style.setProperty('--i', String(i));
     const bar = h('i');
     bar.style.width = `${Math.max(2, (r.total / max) * 100)}%`;
-    const name = h('span', 'who', r.you ? `${r.name} (you)` : r.name);
+    const name = h('span', 'who', r.you && r.name !== 'you' ? `${r.name} (you)` : r.name);
     if (r.bot) name.append(h('em', '', 'bot'));
     li.append(bar, name, h('span', 'pts', r.pending ? `${fmt(r.total)}…` : fmt(r.total)));
     list.append(li);
