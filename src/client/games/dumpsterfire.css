@@ -8,18 +8,24 @@
 @keyframes g-dumpsterfire-flip { from { transform: scaleY(0.2); } }
 
 /* Three threads, one above each button. */
-.g-dumpsterfire .lanes { flex: 1; min-height: 0; align-self: center; width: 100%; max-width: 25em; display: flex; gap: 0.4em; }
+.g-dumpsterfire .sky { flex: 1 1 0; min-height: 0; overflow: hidden; container-type: size; display: flex; align-items: center; justify-content: flex-end; padding-right: 1.6em; }
+@container (max-height: 4.4em) { .g-dumpsterfire .sky .px { display: none; } }
+.g-dumpsterfire .lanes { flex: 0 1 auto; min-height: 0; align-self: center; width: 100%; max-width: 25em; display: flex; }
 .g-dumpsterfire .lane { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
 /* The mod stands over whichever thread was hosed last. */
-.g-dumpsterfire .perch { flex: none; height: 3em; display: flex; align-items: flex-end; justify-content: center; }
-.g-dumpsterfire .pit { --size: 0; --base: 2.7em; flex: 1; min-height: 0; align-self: stretch; position: relative; }
+.g-dumpsterfire .perch { flex: none; align-self: stretch; height: 3em; display: flex; align-items: flex-end; justify-content: center; border-bottom: 0.45em solid #a8b1d6; box-shadow: 0 0.2em 0 0 #646e9c, 0 0.4em 0 0 #0b1020; }
+.g-dumpsterfire .pit { --size: 0; --base: 2.7em; flex: 0 1 12.5em; min-height: 0; align-self: stretch; position: relative; }
 .g-dumpsterfire .bin { position: absolute; left: 50%; bottom: 0; margin-left: -2.1em; z-index: 1; }
 .g-dumpsterfire .lane.over .bin { animation: g-dumpsterfire-rattle 0.1s steps(2) infinite; }
 @keyframes g-dumpsterfire-rattle { 50% { transform: translateX(0.1em); } }
 /* The flame stands in the dumpster and is as tall as the thread is hot. */
-.g-dumpsterfire .flame { position: absolute; left: 50%; bottom: calc(var(--base) - 0.6em); height: calc((100% - var(--base)) * var(--size) + 0.6em); aspect-ratio: 13 / 16; max-width: 100%; translate: -50% 0; visibility: hidden; transition: height 0.08s steps(2); }
+.g-dumpsterfire .flame { position: absolute; left: 50%; bottom: calc(var(--base) - 0.6em); height: calc((100% - var(--base)) * var(--size) + 0.6em); aspect-ratio: 13 / 16; max-width: 100%; translate: -50% 0; transform-origin: 50% 100%; visibility: hidden; }
 .g-dumpsterfire .lane.over .flame { visibility: visible; }
 .g-dumpsterfire .flame .px { display: block; width: 100% !important; height: 100% !important; }
+.g-dumpsterfire .flame.leap { animation: g-dumpsterfire-leap 0.14s steps(3); }
+.g-dumpsterfire .flame.hit { animation: g-dumpsterfire-hit 0.1s steps(2); }
+@keyframes g-dumpsterfire-leap { from { transform: scaleY(0.25); } }
+@keyframes g-dumpsterfire-hit { from { transform: scale(1.18, 0.8); } }
 .g-dumpsterfire .tip { position: absolute; left: 50%; top: 0.6em; width: 0; height: 0; }
 /* Water comes straight down from the mod onto the flame. */
 .g-dumpsterfire .jet { position: absolute; left: 50%; top: -0.2em; bottom: calc(var(--base) + (100% - var(--base)) * var(--size) - 0.5em); width: 0.8em; margin-left: -0.4em; z-index: 2; opacity: 0; background: repeating-linear-gradient(#7ee7ff 0 0.3em, #f4f6ff 0.3em 0.6em); box-shadow: -0.16em 0 0 0 #0b1020, 0.16em 0 0 0 #0b1020; }
@@ -27,7 +33,7 @@
 @keyframes g-dumpsterfire-jet { 0% { opacity: 1; } 50% { opacity: 1; background-position: 0 0.3em; } 100% { opacity: 0; } }
 
 /* The comment that started it. */
-.g-dumpsterfire .take { flex: none; align-self: stretch; height: 2.1em; margin: 0.5em 0.2em 0.2em; padding: 0 0.15em; display: flex; align-items: center; justify-content: center; text-align: center; background: #fff; color: #8a93bd; box-shadow: 0 -0.2em 0 0 #0b1020, 0 0.2em 0 0 #0b1020, -0.2em 0 0 0 #0b1020, 0.2em 0 0 0 #0b1020, 0 -0.5em 0 0 var(--c), -0.2em -0.5em 0 0 #0b1020, 0.2em -0.5em 0 0 #0b1020, 0 -0.7em 0 0 #0b1020; }
+.g-dumpsterfire .take { flex: none; align-self: stretch; height: 2.1em; margin: 0.5em 0.4em 0.2em; padding: 0 0.15em; display: flex; align-items: center; justify-content: center; text-align: center; background: #fff; color: #8a93bd; box-shadow: 0 -0.2em 0 0 #0b1020, 0 0.2em 0 0 #0b1020, -0.2em 0 0 0 #0b1020, 0.2em 0 0 0 #0b1020, 0 -0.5em 0 0 var(--c), -0.2em -0.5em 0 0 #0b1020, 0.2em -0.5em 0 0 #0b1020, 0 -0.7em 0 0 #0b1020; }
 .g-dumpsterfire .take span { font-size: 0.72em; line-height: 1; }
 .g-dumpsterfire .lane.over .take { color: #0b1020; background: #fff0a8; }
 

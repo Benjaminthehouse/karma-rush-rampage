@@ -80,7 +80,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, fx }) =>
   root.append(wrap);
 
   const now = () => memes[idx % memes.length];
-  let blob = person({ px: FACE });
+  const cast = () => person({ tone: BLOBS[now().hue], kind: now().kind, mood: now().mood, px: FACE });
+  let blob = cast();
 
   function paint() {
     const p = BTNS.map((b) => fill[b] / now().need[b]);
@@ -101,7 +102,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, fx }) =>
   function serve() {
     const m = now();
     meme.className = `meme h${m.hue}`;
-    blob = person({ tone: BLOBS[m.hue], kind: m.kind, mood: m.mood, px: FACE });
+    blob = cast();
     // A lens flare waits on each eye for the GLOW dial.
     face.replaceChildren(blob.el, h('i', 'flare l'), h('i', 'flare r'));
     top.textContent = m.top;

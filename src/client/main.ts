@@ -488,7 +488,7 @@ let partyLive = false;
 const seen = new Set<string>();
 
 const partyRivals = (): Rival[] =>
-  (party?.players ?? []).filter((p) => p.inMatch && p.name !== party?.you).map((p) => ({ name: p.name, rounds: p.rounds }));
+  (party?.players ?? []).filter((p) => p.inMatch && p.name !== party?.you).map((p) => ({ name: p.name, rounds: p.rounds, live: p.live }));
 
 function takeParty(state: PartyState) {
   skew = state.now - Date.now();
@@ -589,6 +589,10 @@ async function joinParty(state: PartyState) {
     held: () => held,
     onRound: (rounds) => {
       api.partyScore({ guest, matchId: id, rounds }).then(takeParty, console.error);
+    },
+    // About once a second, tell the others how this round is going (and hear how theirs is).
+    onLive: (rounds, live) => {
+      api.partyScore({ guest, matchId: id, rounds, live }).then(takeParty, console.error);
     },
   });
   const mine = match;

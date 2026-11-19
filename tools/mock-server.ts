@@ -75,8 +75,8 @@ app.post('/api/party/start', async (req, res) => {
   send(partyChannel(POST), { t: 'sync' });
 });
 app.post('/api/party/score', async (req, res) => {
-  res.json(await partyScore(store, POST, who(req), Date.now(), String(req.body?.matchId ?? ''), req.body?.rounds));
-  send(partyChannel(POST), { t: 'sync' });
+  res.json(await partyScore(store, POST, who(req), Date.now(), String(req.body?.matchId ?? ''), req.body?.rounds, req.body?.live));
+  if (!(Number(req.body?.live) > 0)) send(partyChannel(POST), { t: 'sync' });
 });
 
 app.use(express.static(path.resolve(process.cwd(), 'dist/mock-client')));

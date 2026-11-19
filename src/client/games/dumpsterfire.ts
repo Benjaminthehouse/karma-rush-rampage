@@ -54,11 +54,11 @@ const LINE = 50; // a thread at or over this is on fire
 const KNOCK = 12; // what one spray takes off
 const FLARE = 78; // a hot take lights a calm thread this high: three sprays
 const GROW = 4; // a fire nobody hoses keeps growing, % per second: a fourth spray after two seconds
-const GRACE = 450; // ms after a fire goes out in which more sprays are only steam
+const GRACE = 600; // ms after a fire goes out in which more sprays are only steam
 const ABUSE = 300; // ms of civil time a spray on a calm thread costs
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
-  const par = duration * (0.64 - level * 0.03); // ms of all-three-calm that earn 1000
+  const par = duration * (0.6 - level * 0.0125); // ms of all-three-calm that earn 1000
   const take = dealer(rng, TAKES);
   // The round opens with all three smouldering: one spray each.
   const heat = [0, 1, 2].map(() => 51 + rng() * 4);
@@ -80,6 +80,10 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   const signL = sprite('flame1', { px: 0.13 });
   const signR = sprite('flame2', { px: 0.13 });
   sign.append(signL, signText, signR);
+  // Spare height on a tall phone is sky: the moon over a flame war, a cloud once it is civil.
+  const sky = h('div', 'sky');
+  const orb = sprite('moon', { px: 0.3 });
+  sky.append(orb);
   const row = h('div', 'lanes');
   const mod = person({ tone: 'gold', hat: 'mod', mood: 'shock', px: 0.17 });
   const lanes = ([0, 1, 2] as Btn[]).map((i) => {
@@ -98,7 +102,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     note.append(text);
     el.append(perch, pit, note);
     row.append(el);
-    return { el, perch, pit, fire, tip, jet, bin, note, text, outAt: -9999, ablaze: false };
+    return { el, perch, pit, flame, fire, tip, jet, bin, note, text, outAt: -9999, ablaze: false };
   });
   lanes[1].perch.append(mod.el);
   const hud = h('div', 'hud');
@@ -109,7 +113,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   const secs = h('b');
   clock.append(secs);
   hud.append(bar, clock);
-  wrap.append(sign, row, hud);
+  wrap.append(sign, sky, row, hud);
   root.append(wrap);
 
   let next = 0;
@@ -144,6 +148,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       if (over(b)) {
         heat[b] -= KNOCK;
         fx.poof(l.tip);
+        pulse(l.flame, 'hit');
         if (over(b)) good(l.tip);
         else {
           heat[b] = 0;
@@ -175,6 +180,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         heat[f.lane] = over(f.lane) ? Math.min(100, heat[f.lane] + KNOCK * 2) : FLARE;
         l.text.textContent = f.take;
         pulse(l.note, 'pop-in');
+        pulse(l.flame, 'leap');
         fx.pop(l.pit, 'HOT TAKE!', COLOR[f.lane]);
         fx.sound('zap');
         fx.shake();
@@ -193,6 +199,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         signText.textContent = calm ? 'ALL CIVIL :)' : 'DUMPSTER FIRE!';
         setSprite(signL, calm ? 'check' : 'flame1', { px: 0.13 });
         setSprite(signR, calm ? 'check' : 'flame2', { px: 0.13 });
+        setSprite(orb, calm ? 'cloud' : 'moon', { px: 0.3 });
         wrap.classList.toggle('calm', calm);
         wrap.classList.toggle('scene-sky', calm);
         wrap.classList.toggle('scene-night', !calm);

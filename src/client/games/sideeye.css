@@ -1,58 +1,62 @@
-.g-sideeye { gap: 0.5em !important; }
+.g-sideeye { justify-content: flex-start !important; align-items: stretch !important; gap: 0 !important; padding: 0 !important; color: #0b1020; }
 
 /* The boss peeks over the desk. */
-.g-sideeye .boss { flex: none; width: 100%; display: flex; flex-direction: column; align-items: center; }
-.g-sideeye .face { display: flex; gap: 0.8em; padding: 1.7em 1.3em 0.5em; background: var(--gold); border: 0.2em solid var(--bg); border-bottom: 0; border-radius: 6em 6em 0 0 / 4.2em 4.2em 0 0; transform-origin: 50% 100%; transition: transform 0.12s; }
-.g-sideeye.caught .face { transform: scale(1.08); }
-.g-sideeye .desk { width: 100%; height: 0.75em; border-radius: 0.3em; background: #b9793a; border: 0.16em solid var(--bg); box-shadow: inset 0 -0.2em 0 #8a5527; }
+.g-sideeye .boss { flex: none; display: flex; flex-direction: column; align-items: center; padding-top: 0.9em; }
+.g-sideeye .head { position: relative; display: flex; gap: 0.7em; padding: 2.1em 1em 0.5em; background: var(--gold); box-shadow: 0 -0.25em 0 0 #0b1020, -0.25em 0 0 0 #0b1020, 0.25em 0 0 0 #0b1020, inset -0.5em 0 0 0 #c98a10; transform-origin: 50% 100%; }
+.g-sideeye.caught .head { transform: scale(1.1); }
+.g-sideeye .hair { position: absolute; left: 0; right: 0; top: 0; height: 0.8em; background: #6e3f1c; box-shadow: 0 0.25em 0 0 #0b1020, inset 0 0.25em 0 0 #b0703c; }
 .g-sideeye .socket { position: relative; }
-.g-sideeye .brow { position: absolute; left: 6%; right: 6%; top: -0.95em; height: 0.5em; border-radius: 1em; background: var(--bg); transition: transform 0.12s; }
-.g-sideeye .socket:first-child .brow { transform: rotate(-6deg) translateY(calc(var(--sus, 0) * -0.4em)); }
-.g-sideeye .socket:last-child .brow { transform: rotate(8deg) translateY(calc(var(--sus, 0) * 0.3em)); }
-.g-sideeye.caught .socket:first-child .brow { transform: rotate(16deg) translateY(0.3em); }
-.g-sideeye.caught .socket:last-child .brow { transform: rotate(-16deg) translateY(0.3em); }
-.g-sideeye .eye { position: relative; width: 5.2em; height: 3.9em; border-radius: 50%; background: var(--ink); border: 0.2em solid var(--bg); overflow: hidden; }
-.g-sideeye .pupil { position: absolute; left: 50%; top: 50%; width: 2.2em; height: 2.2em; margin: -1.1em 0 0 -1.1em; border-radius: 50%; background: var(--bg); transition: transform 0.1s ease-out; }
-.g-sideeye .pupil::after { content: ''; position: absolute; left: 16%; top: 12%; width: 32%; height: 32%; border-radius: 50%; background: var(--ink); }
-.g-sideeye .look-0 .pupil { transform: translate(-1.3em, 0.65em); }
+.g-sideeye .brow { position: absolute; left: 0; right: 0; top: -0.85em; height: 0.5em; background: #0b1020; transform: translateY(calc(var(--sus, 0) * 0.3em)); }
+.g-sideeye .socket:first-of-type .brow { transform: translateY(calc(var(--sus, 0) * -0.3em)); }
+.g-sideeye.caught .brow { transform: translateY(0.35em) rotate(-12deg); }
+.g-sideeye.caught .socket:first-of-type .brow { transform: translateY(0.35em) rotate(12deg); }
+.g-sideeye .eye { position: relative; width: 5em; height: 3.6em; background: #f4f6ff; box-shadow: 0 0 0 0.25em #0b1020; overflow: hidden; }
+.g-sideeye .pupil { position: absolute; left: 50%; top: 50%; width: 2em; height: 2em; margin: -1em 0 0 -1em; background: #0b1020; transition: transform 0.08s steps(2); }
+.g-sideeye .pupil::after { content: ''; position: absolute; left: 0.3em; top: 0.3em; width: 0.6em; height: 0.6em; background: #f4f6ff; }
+.g-sideeye .look-0 .pupil { transform: translate(-1.4em, 0.7em); }
 .g-sideeye .look-1 .pupil { transform: translate(0, 0.8em); }
-.g-sideeye .look-2 .pupil { transform: translate(1.3em, 0.65em); }
-.g-sideeye .lid { position: absolute; left: 0; right: 0; top: 0; height: calc(8% + var(--sus, 0) * 30%); background: #e2a51c; border-bottom: 0.2em solid var(--bg); transition: height 0.07s; }
+.g-sideeye .look-2 .pupil { transform: translate(1.4em, 0.7em); }
+.g-sideeye .lid { position: absolute; left: 0; right: 0; top: 0; height: calc(6% + var(--sus, 0) * 30%); background: #c98a10; box-shadow: 0 0.25em 0 0 #0b1020; }
 /* Shut: the lid comes all the way down, with a lash line across it. */
-.g-sideeye .blink .lid { height: 100%; background: linear-gradient(#e2a51c 50%, var(--bg) 50% 62%, #e2a51c 62%); }
-.g-sideeye.caught .lid { height: 0; border-bottom-width: 0; }
+.g-sideeye .blink .lid { height: 100%; background: linear-gradient(#c98a10 0 54%, #0b1020 54% 66%, #c98a10 66%); }
+.g-sideeye.caught .lid { height: 0; box-shadow: none; }
 .g-sideeye.caught .pupil { scale: 0.6; }
-.g-sideeye.caught .phones { filter: grayscale(0.9) brightness(0.55); }
+.g-sideeye .desk { position: relative; z-index: 1; align-self: stretch; height: 1.5em; display: flex; align-items: center; justify-content: center; background: #b0703c; box-shadow: 0 -0.25em 0 0 #0b1020, 0 0.25em 0 0 #0b1020, inset 0 0.3em 0 0 #dba678, inset 0 -0.3em 0 0 #6e3f1c; }
+.g-sideeye .plate { background: #0b1020; color: var(--gold); font-size: 0.68em; letter-spacing: 0.14em; line-height: 1; padding: 0.2em 0.7em; }
 
-/* Three phones under the desk. */
+/* Under the desk it is dark, and the phones glow. */
+.g-sideeye .under { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 0.5em; padding: 0.9em 0.6em 0.5em; background: #151c33; }
 .g-sideeye .phones { flex: 1; min-height: 0; width: 100%; display: flex; justify-content: space-around; }
-.g-sideeye .phone { position: relative; width: 30%; max-width: 9em; display: flex; flex-direction: column; padding: 0.3em; overflow: hidden; border: 0.22em solid var(--c); border-radius: 1em; background: var(--bg); box-shadow: 0 0 0.9em color-mix(in srgb, var(--c) 45%, transparent); }
-.g-sideeye .feed { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.3em; }
-.g-sideeye .feed.scroll { animation: g-sideeye-scroll 0.09s ease-out; }
-@keyframes g-sideeye-scroll { from { transform: translateY(1.8em); } }
-/* A meme: a picture with a caption bar top and bottom. */
-.g-sideeye .meme { flex: 1; min-height: 0; position: relative; border-radius: 0.45em; }
-.g-sideeye .meme::before, .g-sideeye .meme::after { content: ''; position: absolute; left: 18%; right: 18%; height: 0.34em; border-radius: 1em; background: var(--ink); border: 0.08em solid var(--bg); }
-.g-sideeye .meme::before { top: 9%; }
-.g-sideeye .meme::after { bottom: 9%; }
-.g-sideeye .m0 { background: radial-gradient(circle, var(--gold) 0 24%, #0000 26%), #6a3df0; }
-.g-sideeye .m1 { background: linear-gradient(135deg, #ff7ac8 50%, #ffb347 50%); }
-.g-sideeye .m2 { background: radial-gradient(circle at 32% 50%, #fff 0 13%, #0000 15%), radial-gradient(circle at 68% 50%, #fff 0 13%, #0000 15%), #1fb8a8; }
-.g-sideeye .m3 { background: repeating-linear-gradient(90deg, var(--gold) 0 20%, #ff9a3d 20% 40%); }
-.g-sideeye .m4 { background: radial-gradient(ellipse at 50% 110%, #7a4bff 0 58%, #0000 60%), #7ee7ff; }
-.g-sideeye .m5 { background: conic-gradient(#ff7ac8 25%, #fff 0 50%, #ff7ac8 0 75%, #fff 0); }
+.g-sideeye .phone { position: relative; width: 29%; max-width: 8.5em; max-height: 17em; display: flex; flex-direction: column; padding: 0.7em 0.3em 0.9em; background: var(--c); box-shadow: 0 -0.22em 0 0 #0b1020, 0 0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, 0 0.6em 0 0 var(--cd), -0.22em 0.6em 0 0 #0b1020, 0.22em 0.6em 0 0 #0b1020, 0 0.82em 0 0 #0b1020; }
+.g-sideeye .phone::before { content: ''; position: absolute; left: 38%; right: 38%; top: 0.25em; height: 0.2em; background: #0b1020; }
+.g-sideeye .feed, .g-sideeye .doc { flex: 1; min-height: 0; box-shadow: 0 0 0 0.16em #0b1020; overflow: hidden; }
+.g-sideeye .feed { display: flex; flex-direction: column; background: #0b1020; gap: 0.16em; }
+.g-sideeye .feed.scroll .meme { animation: g-sideeye-scroll 0.09s steps(3); }
+@keyframes g-sideeye-scroll { from { transform: translateY(1.6em); } }
+/* A meme: a picture on a loud background under a caption bar. */
+.g-sideeye .meme { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.g-sideeye .meme::before { content: ''; position: absolute; left: 14%; right: 14%; top: 0.22em; height: 0.24em; background: #f4f6ff; box-shadow: 0 0 0 0.1em #0b1020; }
+.g-sideeye .meme .px { margin-top: 0.4em; }
+.g-sideeye .m0 { background: #b14bff; }
+.g-sideeye .m1 { background: #ff7ac8; }
+.g-sideeye .m2 { background: #2fd6c4; }
+.g-sideeye .m3 { background: #ff8a3d; }
+.g-sideeye .m4 { background: #7ee7ff; }
 
-.g-sideeye .doc { display: none; flex: 1; min-height: 0; flex-direction: column; align-items: center; justify-content: center; gap: 0.4em; border-radius: 0.45em; background: repeating-linear-gradient(#0000 0 0.9em, #b9c1e0 0.9em 1em), repeating-linear-gradient(90deg, #0000 0 1.5em, #b9c1e0 1.5em 1.6em), var(--ink); }
-.g-sideeye .doc span { font-size: 0.72em; font-weight: 900; line-height: 1.1; text-align: center; color: var(--bg); background: var(--ink); padding: 0.1em 0.25em; border-radius: 0.3em; }
-.g-sideeye .peek { position: relative; width: 2.6em; height: 1.6em; border-radius: 50%; background: var(--ink); border: 0.2em solid var(--bg); }
-.g-sideeye .peek::after { content: ''; position: absolute; left: 50%; top: 50%; width: 0.9em; height: 0.9em; margin: -0.45em; border-radius: 50%; background: var(--bg); }
-.g-sideeye .watched { border-color: var(--ink); box-shadow: 0 0 1.4em #f4f6ffcc; }
+/* Watched: suddenly it is a spreadsheet. */
+.g-sideeye .doc { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 0.4em; background: linear-gradient(#17b85a 0 0.7em, #0000 0.7em), repeating-linear-gradient(#0000 0 0.9em, #c4cbe4 0.9em 1em), repeating-linear-gradient(90deg, #0000 0 1.4em, #c4cbe4 1.4em 1.5em), #fff; }
+.g-sideeye .doc span { font-size: 0.68em; line-height: 1.05; text-align: center; background: #fff; padding: 0.1em 0.2em; }
+.g-sideeye .watched { background: #f4f6ff; }
 .g-sideeye .watched .feed { display: none; }
 .g-sideeye .watched .doc { display: flex; }
 /* Eyes shut and swinging this way: still safe, not for long. */
-.g-sideeye .next { animation: g-sideeye-next 0.12s steps(2) infinite; }
-.g-sideeye .next::after { content: '!'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 4.5em; font-weight: 900; font-style: italic; color: var(--ink); background: #0b1020aa; }
-@keyframes g-sideeye-next { 50% { border-color: var(--ink); filter: brightness(1.5); } }
+.g-sideeye .warn { position: absolute; inset: 0; z-index: 1; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 0.4em; background: #0b1020cc; }
+.g-sideeye .next { animation: g-sideeye-next 0.16s steps(1) infinite; }
+.g-sideeye .next .warn { display: flex; }
+@keyframes g-sideeye-next { 50% { background: #f4f6ff; } }
+.g-sideeye.caught .phones { filter: grayscale(1) brightness(0.6); }
 
-.g-sideeye .tally { font-weight: 800; font-size: 0.85em; letter-spacing: 0.08em; color: var(--dim); line-height: 1; }
-.g-sideeye .tally b { font-size: 1.7em; font-weight: 900; font-style: italic; color: var(--gold); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.g-sideeye .bar { flex: none; width: calc(100% - 0.4em); max-width: 22em; height: 0.9em; background: #0b1020; box-shadow: 0 0 0 0.2em #0b1020, 0 0 0 0.36em #2c3763; }
+.g-sideeye .bar i { display: block; height: 100%; width: 0; background: var(--green); box-shadow: inset 0 0.25em 0 0 #9df5bd; }
+.g-sideeye .tally { flex: none; color: #f4f6ff; font-size: 0.8em; letter-spacing: 0.06em; line-height: 1; white-space: nowrap; }
+.g-sideeye .tally b { font-size: 1.5em; color: var(--gold); font-variant-numeric: tabular-nums; }

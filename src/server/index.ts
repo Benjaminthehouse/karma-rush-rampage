@@ -86,7 +86,7 @@ async function partyWho(body: PartyBeat): Promise<string | null> {
 
 function partyRoute(
   fn: (post: string, who: string, body: PartyBeat & Partial<PartyScore>) => ReturnType<typeof partyBeat>,
-  notify: boolean
+  notify: boolean | 'onRoundEnd'
 ) {
   return route(async (req, res) => {
     const post = context.postId;
@@ -96,7 +96,9 @@ function partyRoute(
       return;
     }
     const state = await fn(post, who, req.body ?? {});
-    if (notify) await push<PartyMessage>(partyChannel(post), { t: 'sync' });
+    // A finished round is news for everyone; a mid-round progress ping is not worth a broadcast.
+    const midRound = notify === 'onRoundEnd' && Number((req.body as PartyScore)?.live) > 0;
+    if (notify && !midRound) await push<PartyMessage>(partyChannel(post), { t: 'sync' });
     res.json(state);
   });
 }
@@ -105,7 +107,7 @@ router.post('/api/party/beat', partyRoute((post, who, b) => partyBeat(store, pos
 router.post('/api/party/start', partyRoute((post, who) => partyStart(store, post, who, Date.now()), true));
 router.post(
   '/api/party/score',
-  partyRoute((post, who, b) => partyScore(store, post, who, Date.now(), String(b.matchId ?? ''), b.rounds), true)
+  partyRoute((post, who, b) => partyScore(store, post, who, Date.now(), String(b.matchId ?? ''), b.rounds, b.live), 'onRoundEnd')
 );
 
 // ------------------------------------------------------------- daily posts

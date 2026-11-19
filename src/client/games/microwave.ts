@@ -54,14 +54,15 @@ const GAP = 380; // ms an opened microwave shows off before the next one arrives
 const BEEPING = 800; // ms the house suffers after a countdown reaches zero
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
-  const beat = 320 - level * 20; // ms per number
+  const beat = 320 - level * 15; // ms per number, and so the length of the 0:01 window
   const snack = dealer(rng, SNACKS);
   let lastBtn = -1;
-  const queue = Array.from({ length: 24 }, () => {
+  const queue = Array.from({ length: 24 }, (_, i) => {
     let btn = randBtn(rng);
     while (btn === lastBtn) btn = randBtn(rng);
     lastBtn = btn;
-    const from = randInt(rng, 3, 5);
+    // Short counts keep the snacks coming. The first one always starts at 0:04: time to find its colour.
+    const from = i ? randInt(rng, 3, 4) : 4;
     // From level 2 the clock sometimes hangs on a number, to trip anyone pressing by rhythm alone.
     const hang = level >= 2 && rng() < 0.1 + level * 0.1 ? randInt(rng, 2, from) : 0;
     const [art, name] = snack();
@@ -129,7 +130,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   door.append(h('i', 'handle'), which);
   bay.append(cavity, door);
   const tally = h('div', 'tally');
-  const stars = [0, 1, 2, 3, 4, 5].map(() => tally.appendChild(sprite('star', { px: 0.13 })));
+  // One empty star per microwave in a clean run, so a full panel is a perfect night.
+  const stars = Array.from({ length: Math.min(par, 8) }, () => tally.appendChild(sprite('star', { px: 0.13 })));
   const body = h('div', 'body');
   body.append(bay, tally);
   oven.append(display, body);

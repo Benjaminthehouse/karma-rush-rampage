@@ -161,7 +161,7 @@ export async function submitRun(
 // One lobby per post. `meta` holds the current match; every player owns exactly
 // one field of the players hash, so concurrent writes never clobber each other.
 
-type Seat = { hb: number; m: string; r: number[] };
+type Seat = { hb: number; m: string; r: number[]; p: number };
 
 const LOBBY_TTL = 12_000;
 const SEAT_TTL = 5 * 60_000;
@@ -174,12 +174,12 @@ function parseSeat(raw: string | undefined | null): Seat {
   try {
     const s = raw ? JSON.parse(raw) : null;
     if (s && typeof s === 'object') {
-      return { hb: Number(s.hb) || 0, m: String(s.m ?? ''), r: Array.isArray(s.r) ? s.r.map(clampScore) : [] };
+      return { hb: Number(s.hb) || 0, m: String(s.m ?? ''), r: Array.isArray(s.r) ? s.r.map(clampScore) : [], p: clampScore(s.p) };
     }
   } catch {
     /* fall through to an empty seat */
   }
-  return { hb: 0, m: '', r: [] };
+  return { hb: 0, m: '', r: [], p: 0 };
 }
 
 async function readMeta(store: Store, post: string, now: number) {
@@ -201,7 +201,7 @@ async function partyState(store: Store, post: string, who: string, now: number):
     const age = now - seat.hb;
     if (age > SEAT_TTL && !(inMatch && meta.running)) dead.push(name);
     else if (age < LOBBY_TTL || inMatch) {
-      players.push({ name, inMatch, rounds: inMatch ? seat.r : [] });
+      players.push({ name, inMatch, rounds: inMatch ? seat.r : [], live: inMatch ? seat.p : 0 });
     }
   }
   if (dead.length) await store.hDel(seatsKey(post), dead);
@@ -217,6 +217,7 @@ export async function partyBeat(store: Store, post: string, who: string, now: nu
   if (matchId && matchId === meta.id && meta.running && seat.m !== matchId) {
     seat.m = matchId;
     seat.r = [];
+    seat.p = 0;
   }
   await store.hSet(seatsKey(post), { [who]: JSON.stringify(seat) });
   return partyState(store, post, who, now);
@@ -227,7 +228,7 @@ export async function partyStart(store: Store, post: string, who: string, now: n
   if (!meta.running) {
     const id = `${post}-${now.toString(36)}`;
     await store.hSet(metaKey(post), { id, startAt: String(now + PARTY_COUNTDOWN) });
-    await store.hSet(seatsKey(post), { [who]: JSON.stringify({ hb: now, m: id, r: [] } satisfies Seat) });
+    await store.hSet(seatsKey(post), { [who]: JSON.stringify({ hb: now, m: id, r: [], p: 0 } satisfies Seat) });
   }
   return partyState(store, post, who, now);
 }
@@ -238,12 +239,15 @@ export async function partyScore(
   who: string,
   now: number,
   matchId: string,
-  rounds: unknown
+  rounds: unknown,
+  live?: unknown
 ) {
   const seat = parseSeat(await store.hGet(seatsKey(post), who));
   if (seat.m === matchId && Array.isArray(rounds) && rounds.length <= ROUNDS) {
     seat.hb = now;
     seat.r = rounds.map(clampScore);
+    // Score so far in the round being played, for everyone else's race track.
+    seat.p = clampScore(live);
     await store.hSet(seatsKey(post), { [who]: JSON.stringify(seat) });
   }
   return partyState(store, post, who, now);

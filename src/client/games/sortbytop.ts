@@ -16,9 +16,10 @@ const POSTS = [
   ['r/ItGotWorse', 'Update: it got worse'],
   ['r/BeanReview', 'Is this a good bean?'],
 ];
-const FACES: Tone[] = ['gold', 'orange', 'pink', 'teal', 'brown', 'ink'];
+/** Author colours: none that could pass for a red, green or blue button. */
+const FACES: Tone[] = ['gold', 'brown', 'ink', 'grey', 'pink', 'purple'];
 const KINDS = ['cat', 'plain', 'bear'] as const;
-const ASKS = ['TAP THE HIGHEST', 'NOW THE NEXT HIGHEST', 'THEN THE LAST ONE'];
+const ASKS = ['TAP THE HIGHEST', 'NOW THE NEXT HIGHEST', 'THEN THE LAST ONE', 'SORTED!'];
 /** How an author takes coming first, second and last. */
 const PLACED: Mood[] = ['cool', 'happy', 'sad'];
 const BTNS: Btn[] = [0, 1, 2];
@@ -63,8 +64,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let dealAt = 0; // when the next set arrives; 0 while a set is in play
 
   // The scene: a feed of three posts under a banner that says which one to tap next.
-  // Each ranked post jumps to its place in the list, its author reacts, and every
-  // sorted feed puts a trophy on the shelf.
+  // Each post's vote rail is painted in its button's colour. A ranked post is stamped
+  // and its author reacts; a finished feed snaps into order and puts a trophy on the shelf.
   const wrap = h('div', 'g-sortbytop scene-feed');
   const bar = h('div', 'bar');
   const ask = h('span');
@@ -87,11 +88,14 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
 
   const current = () => sets[idx % sets.length];
 
-  /** Ranked posts stack at the top in rank order; the rest keep their order underneath. */
+  /**
+   * Posts hold still while a set is in play, so top, middle and bottom always mean
+   * red, green and blue. Only a finished set jumps into rank order.
+   */
   function place() {
-    const list = [...picked, ...BTNS.filter((b) => !picked.includes(b))];
-    list.forEach((b, slot) => posts[b].card.el.style.setProperty('--shift', String(slot - b)));
-    ask.textContent = ASKS[picked.length % 3];
+    const sorted = picked.length === 3;
+    BTNS.forEach((b) => posts[b].card.el.style.setProperty('--shift', String(sorted ? picked.indexOf(b) - b : 0)));
+    ask.textContent = ASKS[picked.length];
     note.textContent = done ? `${done} sorted, ${flawless} perfect` : 'Front page needs sorting!';
   }
 
@@ -101,7 +105,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       p.card.el.classList.remove('ranked');
       p.card.set({ sub: s.posts[i][0], title: s.posts[i][1] });
       p.card.votes(label(s.vals[i]));
-      setSprite(p.card.arrow, 'up', s.vals[i] < 0 ? { tone: 'purple', flipY: true, px: ARROW } : { tone: COLOR[i], px: ARROW });
+      // White arrow up for upvoted, dark arrow down for downvoted: both read on any rail colour.
+      setSprite(p.card.arrow, 'up', s.vals[i] < 0 ? { tone: 'night', flipY: true, px: ARROW } : { tone: 'ink', px: ARROW });
       p.author.tone(s.faces[i]);
       p.author.mood('idle');
     });
@@ -115,7 +120,10 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       if (t < lockedUntil || dealAt) return;
       const s = current();
       const p = posts[b];
-      if (picked.includes(b)) return pulse(p.card.el, 'shake');
+      if (picked.includes(b)) {
+        fx.sound('tick');
+        return pulse(p.card.el, 'shake');
+      }
       const want = s.order[picked.length];
       if (b !== want) {
         points--;
@@ -131,14 +139,15 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       points++;
       p.badge.textContent = `#${picked.length}`;
       p.card.el.classList.add('ranked');
-      fx.poof(p.badge);
       good(p.card.arrow);
       if (picked.length === 3) {
         done++;
         dealAt = t + 250;
+        // Smoke where a post jumps from as the feed snaps into order.
+        BTNS.forEach((i) => picked[i] !== i && fx.poof(posts[i].card.el));
         fx.pop(feed, clean ? 'PERFECT SORT! +2' : 'SORTED', clean ? 'gold' : 'white');
         fx.sound(clean ? 'coin' : 'ding');
-        if (shelf.childElementCount < 12) shelf.append(sprite(clean ? 'trophy' : 'check', { px: 0.1 }));
+        if (shelf.childElementCount < 9) shelf.append(sprite(clean ? 'trophy' : 'check', { px: 0.14 }));
         if (clean) {
           points += 2;
           flawless++;

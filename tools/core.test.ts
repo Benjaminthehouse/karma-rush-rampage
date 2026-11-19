@@ -91,7 +91,12 @@ assert.equal((await partyStart(s, 't3_x', 'bob', now + 10)).id, id, 'a second ST
 p = await partyBeat(s, 't3_x', 'bob', now + 100, id);
 assert.deepEqual(p.players.map((x) => [x.name, x.inMatch]), [['ann', true], ['bob', true]]);
 p = await partyScore(s, 't3_x', 'bob', now + 9000, id, [800]);
-assert.deepEqual(p.players[0], { name: 'bob', inMatch: true, rounds: [800] });
+assert.deepEqual(p.players[0], { name: 'bob', inMatch: true, rounds: [800], live: 0 });
+// A mid-round progress ping shows up as `live` for the others' race track.
+p = await partyScore(s, 't3_x', 'bob', now + 9500, id, [800], 430);
+assert.equal(p.players.find((x) => x.name === 'bob')!.live, 430);
+p = await partyScore(s, 't3_x', 'bob', now + 9600, id, [800]);
+assert.equal(p.players.find((x) => x.name === 'bob')!.live, 0);
 p = await partyScore(s, 't3_x', 'cat', now + 9000, id, [999]);
 assert.ok(!p.players.some((x) => x.name === 'cat'), 'cannot score without a seat');
 now += 5000 + matchLength(lineupFor(id)) + 2000;

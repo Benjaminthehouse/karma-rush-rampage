@@ -29,7 +29,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const swaps = 3 + Math.floor(level / 2);
   const swapMs = SWAP_MS[level];
   const showMs = LEAD_MS - swaps * swapMs; // the tick stays up 450 ms at level 0, 370 at level 4
-  const par = 3.5 + level / 16; // correct picks that earn 1000
+  const par = 3.25 + level / 16; // correct picks that earn 1000: three prompt ones come close, a fourth makes sure
   const excuses = shuffled(rng, EXCUSES);
   // More bouts than fit in a round. The same laptop works all round: each bout starts where the last one
   // ended, and it never ends a shuffle where it began, so no answer repeats and no button is a safe bet.

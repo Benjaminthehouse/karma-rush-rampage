@@ -1,7 +1,7 @@
 import './stonks.css';
 import { COLOR, dealer, h, person, randInt, ratio, setSprite, shuffled, sprite, type Btn, type GameFactory, type Mood } from './common';
 
-const TICKERS = ['$CATS', '$SOUP', '$MEME', '$YOLO', '$NAPS', '$BEANS', '$HYPE', '$COPE', '$APES', '$VIBE', '$TACO', '$OOPS'];
+const TICKERS = ['$CATS', '$SOUP', '$MEME', '$YOLO', '$NAPS', '$BEANS', '$NOPE', '$COPE', '$APES', '$VIBE', '$SOCKS', '$OOPS'];
 const NEWS = [
   'CEO posted a rocket',
   'up on pure vibes',
@@ -28,9 +28,10 @@ const BTNS: Btn[] = [0, 1, 2];
 const STEP = 25; // ms between portfolio updates
 const BEAT = 5; // steps between candles, sparks and sounds
 const CANDLES = 6;
+const CATCH = 230; // ms a sharp player needs to jump on a new pump; the par does not charge for it
 
 export const create: GameFactory = ({ root, rng, level, duration, down, good, bad, fx }) => {
-  const wobble = 380 - level * 40; // ms a topped-out ticker hangs in the air before holding it costs money
+  const wobble = 520 - level * 35; // ms a topped-out ticker hangs in the air before holding it costs money
   const doubles = Math.max(0, level - 1) * 0.1; // later rounds sometimes pump two tickers at once
   const names = shuffled(rng, TICKERS).slice(0, 3);
   const noise = Array.from({ length: 16 }, () => 0.5 + rng());
@@ -47,13 +48,15 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
     const order = shuffled(rng, BTNS);
     const lead = order.filter((b) => !prev.includes(b))[0];
     const up = rng() < doubles ? [lead, order.filter((b) => b !== lead)[0]] : [lead];
-    const to = from + randInt(rng, 850, 1450) - level * 70;
+    // The opening pump is a long one: a newcomer is still finding the buttons.
+    const to = from + (from ? randInt(rng, 900, 1500) - level * 65 : 1500);
     pumps.push({ from, to, up, news: news(), hype: hype(), bag: bag() });
-    best += (Math.max(0, Math.min(to, duration) - from) / STEP) * up.length;
+    // The par forgives the catch, twice over on the opener; a ticker that just keeps climbing needs none.
+    for (const b of up) best += Math.max(0, Math.min(to, duration) - from - (prev.includes(b) ? 0 : from ? CATCH : CATCH * 2)) / STEP;
     prev = up;
     from = to;
   }
-  const par = Math.round(best * 0.88);
+  const par = Math.round(best);
 
   let clock = 0; // the portfolio is settled up to this time
   let steps = 0;
@@ -94,7 +97,7 @@ export const create: GameFactory = ({ root, rng, level, duration, down, good, ba
       chart.append(candle);
       return candle;
     });
-    const sign = sprite('up', { px: 0.28 });
+    const sign = sprite('up', { px: 0.28 }, 'sign');
     const slot = h('div', 'slot');
     slot.append(sign);
     const tag = h('span', 'tag');

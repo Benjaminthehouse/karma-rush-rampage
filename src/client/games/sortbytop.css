@@ -5,8 +5,11 @@
 .g-sortbytop .feed { --gap: 1.15em; flex: 1; min-height: 0; max-height: 24em; align-self: center; width: min(100%, 30em); display: flex; flex-direction: column; gap: var(--gap); padding: 0.6em 1.2em 0.7em 0.9em; }
 .g-sortbytop .feed.locked { opacity: 0.6; }
 .g-sortbytop .rx-post { flex: 1; min-height: 0; width: auto; position: relative; translate: 0 calc(var(--shift, 0) * (100% + var(--gap))); transition: translate 0.12s; box-shadow: 0 -0.22em 0 0 #0b1020, 0 0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, 0 0 0 0.45em var(--c), 0.55em 0.8em 0 0 #0b102044; }
-.g-sortbytop .rx-rail { min-width: 5.4em; gap: 0.15em; }
+.g-sortbytop .rx-rail { min-width: 5.4em; gap: 0.15em; background: var(--c); }
 .g-sortbytop .rx-score { font-size: 1.7em; color: #0b1020; }
+.g-sortbytop .pad-dots { font-size: 1.3em; }
+.g-sortbytop .pad-dots i { background: #0b102055; }
+.g-sortbytop .pad-dots i.on { background: #fff; }
 .g-sortbytop .rx-down, .g-sortbytop .rx-bar { display: none; }
 .g-sortbytop .rx-title { font-size: 1.05em; }
 .g-sortbytop .badge { position: absolute; left: -0.4em; top: -0.6em; display: none; background: var(--gold); font-size: 1.1em; padding: 0 0.35em; box-shadow: 0 0 0 0.15em #0b1020, 0.2em 0.25em 0 0 #0b102066; }
@@ -14,7 +17,7 @@
 .g-sortbytop .ranked .rx-rail { background: #c4cbe4; }
 .g-sortbytop .ranked .badge { display: block; animation: g-sortbytop-stamp 0.14s steps(2); }
 
-.g-sortbytop .shelf { flex: none; display: flex; justify-content: center; gap: 0.25em; min-height: 1.3em; }
+.g-sortbytop .shelf { flex: none; display: flex; justify-content: center; align-items: flex-end; gap: 0.25em; min-height: 1.7em; }
 .g-sortbytop .count { flex: none; text-align: center; font-size: 0.8em; }
 @keyframes g-sortbytop-stamp { from { transform: scale(1.6); } }
 

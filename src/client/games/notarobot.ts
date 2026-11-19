@@ -10,15 +10,15 @@ function draw(names: string[], art: string) {
 draw(['light', 'icecream', 'domino', 'menu'], `
 ..kkkkkkkk.. ....kkkk.... .kkkkkkkkkk. ............
 .kxxxxxxxxk. ...krrrrk... kwwwwwwwwwwk ....kkkk....
-.kxxrrrrxxk. ..krrWrrrk.. kwwwwwwwwwwk ...kDDDDk...
+.kxxrrrrxxk. ..krrrrrrk.. kwwwwwwwwwwk ...kDDDDk...
 .kxrrWrrrxk. ..krrrrrrk.. kwwwwkkwwwwk ...kDDDDk...
 .kxrrrrrrxk. ..kkrrrrkk.. kwwwwkkwwwwk ...kDDDDk...
 .kxxrrrrxxk. .kyyyyyyyyk. kwwwwwwwwwwk ....kkkk....
-.kxxxxxxxxk. .kyyyWyyyyk. kwwwwwwwwwdk ............
+.kxxxxxxxxk. .kyyyyyyyyk. kwwwwwwwwwdk ............
 .kxxyyyyxxk. .kyyyyyyyyk. kwwwwwwwwwdk ....kkkk....
 .kxyyWyyyxk. .kkyyyyyykk. kwwwwwwwwddk ...kDDDDk...
 .kxyyyyyyxk. .kggggggggk. kkkkkkkkkkkk ...kDDDDk...
-.kxxyyyyxxk. .kggggWgggk. kwwwwwwwwwwk ...kDDDDk...
+.kxxyyyyxxk. .kggggggggk. kwwwwwwwwwwk ...kDDDDk...
 .kxxxxxxxxk. .kggggggggk. kwwkkwwwwwwk ....kkkk....
 .kxxggggxxk. ..kggggggk.. kwwkkwwwwwwk ............
 .kxggWgggxk. ..kkkkkkkk.. kwwwwwwwwwwk ....kkkk....
@@ -39,7 +39,7 @@ draw(['hydrant', 'tree', 'cone', 'sign'], `
 .kRRRRRRRRk. kggggggGGGGk ...kwwwdk... .krrrrrrRRk.
 .kkkkkkkkkk. .kggggGGGGk. ..kwwwwwdk.. ..krrrrRRk..
 ..krrrrrrk.. .kkGGGGGGkk. ..kooooOOk.. ...kkkkkk...
-kkkrWWrrrkkk ...kkkkkk... ..kooooOOk.. ....kddk....
+kkkrWrrrrkkk ...kkkkkk... ..kooooOOk.. ....kddk....
 kRkrWrrrRkRk ....knNk.... .koooooOOOk. ....kdDk....
 kRkrWrrrRkRk ....knNk.... .kwwwwwwwdk. ....kdDk....
 kkkrrrrRRkkk ....knNk.... .kwwwwwwwdk. ....kdDk....
@@ -96,8 +96,9 @@ const GRACE = 120;
 const PX = 0.32; // one pixel of a tile picture, in em
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
-  // Rows to clear for full marks: one every 500 ms in round one, every 420 ms in round five.
-  const par = 16 + level * 0.75;
+  // Rows to clear for full marks: one every 500 ms in round one, every 445 ms in round five,
+  // where the look-alikes already slow everybody down.
+  const par = 16 + level * 0.5;
   // More rows than anyone can clear, never the same columns twice running.
   let lights = 0;
   const rows = Array.from({ length: 40 }, () => {
@@ -108,8 +109,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     // and the camera gets sloppier: pictures sit off-centre and float off the road.
     return BTNS.map((b) => ({
       kind: (lights >> b) & 1 ? 'light' : rng() < level * 0.14 ? pick(rng, FAKES) : decoys[b],
-      dx: (rng() - 0.5) * (0.3 + level * 0.14),
-      dy: rng() * (0.3 + level * 0.3),
+      dx: (rng() - 0.5) * (0.2 + level * 0.1),
+      dy: rng() * (0.2 + level * 0.25),
       flip: rng() < 0.5,
     }));
   });
@@ -185,7 +186,6 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     panel.style.setProperty('--grain', String(Math.min(0.34, 0.05 + level * 0.03 + failed * 0.05)));
     if (s < 1000 || proven) return;
     proven = true;
-    bubble.textContent = 'Welcome, fellow human.';
     fx.flash('gold');
     fx.burst(foot, 'gold', 30);
     fx.sound('power');
@@ -208,7 +208,6 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         bot.mood('angry');
         bubble.textContent = quips[failed % quips.length];
         pulse(panel, 'shake');
-        fx.poof(tile);
         bad(head, `THAT IS ${NAMES[kind]}`);
         gauge();
         return;
@@ -224,15 +223,17 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       verified++;
       tally++;
       idx++;
-      bot.mood(score() >= 1000 ? 'wink' : 'happy');
+      const human = score() >= 1000;
+      bot.mood(human ? 'wink' : 'happy');
       pulse(bot.el, 'bump');
       good(box);
       pulse(box, 'blip');
       // A cheer every third check, up by the robot where it hides nothing.
-      if (verified % 3 === 0 && score() < 1000) {
+      if (human) bubble.textContent = 'Welcome, fellow human.';
+      else if (verified % 3 === 0) {
         const cheer = CHEERS[(verified / 3 - 1) % CHEERS.length];
         bubble.textContent = cheer;
-        fx.pop(guard, cheer, 'gold');
+        fx.pop(bubble, cheer, 'gold');
       }
       gauge();
       deal(t);

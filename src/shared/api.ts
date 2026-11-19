@@ -1,7 +1,10 @@
 export type LbEntry = { name: string; score: number; rank: number };
 
-/** Someone you race: a recorded run from today, a house bot, or a live party player. */
-export type Rival = { name: string; bot?: boolean; rounds: number[] };
+/**
+ * Someone you race: a recorded run from today, a house bot, or a live party player.
+ * `live` is a party player's score so far in the round being played.
+ */
+export type Rival = { name: string; bot?: boolean; rounds: number[]; live?: number };
 
 export type InitResponse = {
   username: string | null;
@@ -32,7 +35,7 @@ export type SubmitResponse = {
   players: number;
 };
 
-export type PartyPlayer = { name: string; rounds: number[]; inMatch: boolean };
+export type PartyPlayer = { name: string; rounds: number[]; inMatch: boolean; live: number };
 export type PartyState = {
   /** Match id; also the seed of its lineup. Empty before the first match. */
   id: string;
@@ -43,7 +46,7 @@ export type PartyState = {
   players: PartyPlayer[];
 };
 export type PartyBeat = { guest?: string; matchId?: string };
-export type PartyScore = { guest?: string; matchId: string; rounds: number[] };
+export type PartyScore = { guest?: string; matchId: string; rounds: number[]; live?: number };
 
 export type FeedMessage = { t: 'score'; name: string; total: number };
 export type PartyMessage = { t: 'sync' };

@@ -8,5 +8,5 @@ export default defineGame({
   labels: ['HOLD', 'HOLD', 'HOLD'],
   duration: 8000,
   kind: 'react',
-  think: 300,
+  think: 400,
 });

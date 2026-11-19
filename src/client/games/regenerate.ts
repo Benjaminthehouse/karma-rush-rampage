@@ -68,7 +68,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     }
     return c;
   });
-  const mends = Array.from({ length: 60 }, () => draw()); // a broken pass takes at least two reprompts to mend
+  const mends = Array.from({ length: 60 }, () => 1 + draw()); // a broken pass takes at least two reprompts to mend
   const retry = [RETRY[0], ...shuffled(rng, RETRY.slice(1))]; // the classic always comes first
   const again = shuffled(rng, AGAIN);
   const broke = shuffled(rng, BROKE);

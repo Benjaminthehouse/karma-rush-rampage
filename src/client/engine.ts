@@ -4,7 +4,7 @@
 // timed inside a phase (announcer words, score count-up) is a cue checked against
 // that clock, never a timer, so nothing can fire after the phase is over.
 import type { Rival } from '../shared/api';
-import { GAME_META, MAX_ROUND_SCORE, TIMING, mulberry32, timeline, type Phase, type Round } from '../shared/daily';
+import { GAME_META, MAX_ROUND_SCORE, TIMING, hashStr, mulberry32, timeline, type Phase, type Round } from '../shared/daily';
 import { fmt } from './api';
 import { createBot } from './bot';
 import { createFx } from './fx';
@@ -67,6 +67,8 @@ export function runMatch(o: {
   setPads: (labels: [string, string, string]) => void;
   /** Light a pad for a beat (the announcer's words chase across the pads). */
   pulsePad?: (b: Btn) => void;
+  /** Called about once a second mid-round with the score so far (party players share it). */
+  onLive?: (rounds: number[], live: number) => void;
   /** Which pads are physically down right now, so a pad held through the intro still counts. */
   held?: () => readonly boolean[];
   /** Demo mode: a bot plays by following each game's hint(). Practice only. */
@@ -91,7 +93,38 @@ export function runMatch(o: {
   let stopped = false;
   let lastCount = 0;
   let rushing = false;
+  let lastPing = 0;
   let shownScore = -1;
+  const raceEl = $('race');
+  let racers: { name: string; you: boolean; el: HTMLElement; curve: number }[] = [];
+
+  /** The race track: one marker per player, sliding from START to 1,000 as the round goes. */
+  function lineUp() {
+    const names = [{ name: o.me, you: true }, ...o.rivals().slice(0, 4).map((r) => ({ name: r.name, you: false }))];
+    racers = names.map((n) => {
+      const el = h('i', n.you ? 'you' : '', n.you ? 'YOU' : n.name.replace(/^u\//, '').slice(0, 1).toUpperCase());
+      el.title = n.name;
+      // Ghost runs replay as a curve to their recorded score: some start fast, some finish strong.
+      return { ...n, el, curve: 0.75 + (hashStr(n.name) % 60) / 100 };
+    });
+    raceEl.replaceChildren(h('b', 'goal', 'GOAL'), ...racers.map((r) => r.el).reverse());
+    racers.forEach((r) => (r.el.style.left = '0%'));
+  }
+
+  function race(ph: Phase, local: number, mine: number) {
+    const frac = Math.max(0, Math.min(1, local / (ph.end - ph.start)));
+    const rivals = o.rivals();
+    for (const r of racers) {
+      let v = mine;
+      if (!r.you) {
+        const rv = rivals.find((x) => x.name === r.name);
+        const known = rv?.rounds[ph.round];
+        // A recorded run has this round's score already; a live player only has their latest ping.
+        v = known !== undefined ? known * frac ** r.curve : (rv?.live ?? 0);
+      }
+      r.el.style.left = `${Math.max(0, Math.min(100, v / 10))}%`;
+    }
+  }
   const scoreEl = $('hud-score');
   let bot: ReturnType<typeof createBot> | null = null;
   let finish!: (s: number[]) => void;
@@ -192,6 +225,8 @@ export function runMatch(o: {
     stage.className = '';
     down.fill(false);
     rushing = false;
+    lastPing = 0;
+    lineUp();
     sfx.go();
     fx.flash('white');
     music.start(round.seed, round.level);
@@ -360,7 +395,13 @@ export function runMatch(o: {
         if (inst && bot && o.autoplay) bot(inst, local, o.autoplay.press, o.autoplay.release);
         // The score in the corner climbs live, so the round total is never a surprise.
         if (inst) {
-          const live = total() + clamp1000(inst.score());
+          const mine = clamp1000(inst.score());
+          race(ph, local, mine);
+          if (o.onLive && local - lastPing >= 1000 && mine > 0) {
+            lastPing = local;
+            o.onLive([...scores], mine);
+          }
+          const live = total() + mine;
           if (live !== shownScore) {
             shownScore = live;
             scoreEl.textContent = fmt(live);

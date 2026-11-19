@@ -28,8 +28,11 @@
 .g-stonks .col.up .sign { animation: g-stonks-rise 0.4s steps(2) infinite; }
 .g-stonks .col.up .tag { background: var(--c); }
 .g-stonks .col.up.held .tag { background: var(--gold); }
-.g-stonks .col.top { background: #fff; color: #0b1020; box-shadow: 0 0 0 0.2em #0b1020, 0 0 0 0.45em var(--gold), 0.65em 0.8em 0 0 #0b1020; animation: g-stonks-wobble 0.12s steps(2) infinite; }
-.g-stonks .col.top .tag { background: var(--gold); }
+/* Topped out: the card goes dark at once, so the only bright cards are the ones to hold. Still holding it is an alarm. */
+.g-stonks .col.top { color: var(--gold); }
+.g-stonks .col.top .chart i { background: #7c86b0; }
+.g-stonks .col.top.held { box-shadow: 0 0 0 0.2em #0b1020, 0 0 0 0.45em var(--gold), 0.45em 0.6em 0 0 #0b1020; animation: g-stonks-wobble 0.12s steps(2) infinite; }
+.g-stonks .col.top.held .tag { background: var(--gold); color: #0b1020; }
 .g-stonks .col.down .chart i { background: #7c86b0; }
 .g-stonks .col.held, .g-stonks .col.bag { transform: translate(0.2em, 0.3em); }
 .g-stonks .col.bag { background: #2c3763; color: #dcabff; box-shadow: 0 0 0 0.2em #0b1020, 0 0 0 0.45em var(--purple), 0.45em 0.5em 0 0 #0b1020; }

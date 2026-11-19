@@ -1,64 +1,85 @@
 import './sideeye.css';
-import { COLOR, h, pick, pulse, randBtn, randInt, ratio, shuffled, type Btn, type GameFactory } from './common';
+import { COLOR, dealer, h, pulse, randBtn, randInt, ratio, setSprite, shuffled, sprite, type Btn, type GameFactory } from './common';
 
 // What a watched phone suddenly has on screen.
 const DOCS = ['Q3 REPORT', 'BUDGET v7', 'TIMESHEET', 'INBOX (0)', 'KPI DECK', 'SYNERGY', 'ROADMAP', 'FINAL_v2', 'AGENDA', 'ORG CHART'];
 const LOLS = ['LOL', 'SAME', 'MOOD', 'SO TRUE', 'SAVED', 'I’M DEAD', 'TOO REAL', 'NICE', 'OOF', 'HA'];
-const KINDS = 6; // meme tile designs in the css
+// What an unwatched one has: sheet sprites on loud backgrounds.
+const MEMES = ['banana', 'cake', 'rocket', 'trophy', 'cookie', 'bug', 'moon', 'gift', 'heart', 'star', 'crown', 'thumb'];
+const TINTS = 5; // tile colours in the css
+const FINE = 3; // memes lost when caught
+const LOCK = 500; // ms frozen when caught
+const EARLY = 350; // ms at the very start in which the first stare does not bite yet
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
-  const blink = 340 - level * 20; // eyes shut while they swing to the next phone: nothing is watched
-  const par = Math.round((duration / 1000) * (6.8 + level * 0.4));
-  // Two stares in three land where the scrolling was (`follow`); the third on one of the other phones.
+  const tell = 600 - level * 40; // eyes shut while they swing to the next phone, which flashes: nothing is watched
+  const par = Math.round((duration / 1000) * (6.3 + level * 0.3));
+  const doc = dealer(rng, DOCS);
+  // The round opens mid-stare. Two stares in three land where the scrolling was (`follow`); the third on one of the other phones.
   const stares: { shut: number; from: number; to: number; follow: boolean; alt: number; doc: string }[] = [];
   let bag: boolean[] = [];
   for (let at = 0; at < duration; ) {
     if (!bag.length) bag = shuffled(rng, [true, true, false]);
-    const from = at + (at ? blink : 500);
-    const to = from + randInt(rng, 600, 1050) - level * 50;
-    stares.push({ shut: at, from, to, follow: bag.pop()!, alt: randInt(rng, 0, 1), doc: pick(rng, DOCS) });
+    const from = at ? at + tell : 0;
+    const to = from + (at ? randInt(rng, 650, 1050) : 1350) - level * 50;
+    stares.push({ shut: at, from, to, follow: bag.pop()!, alt: randInt(rng, 0, 1), doc: doc() });
     at = to;
   }
 
-  const wrap = h('div', 'g-sideeye');
+  // The scene: the boss peeking over the desk up top, three phones in the dark under it.
+  const wrap = h('div', 'g-sideeye scene-office');
   const boss = h('div', 'boss');
-  const face = h('div', 'face');
+  const head = h('div', 'head');
+  head.append(h('i', 'hair'));
   for (let i = 0; i < 2; i++) {
     const socket = h('div', 'socket');
     const eye = h('div', 'eye');
     eye.append(h('i', 'pupil'), h('i', 'lid'));
     socket.append(h('i', 'brow'), eye);
-    face.append(socket);
+    head.append(socket);
   }
-  boss.append(face, h('div', 'desk'));
+  const desk = h('div', 'desk');
+  desk.append(h('span', 'plate', 'THE BOSS'));
+  boss.append(head, desk);
+  const under = h('div', 'under');
   const row = h('div', 'phones');
   const phones = [0, 1, 2].map((i) => {
     const el = h('div', `phone c-${COLOR[i]}`);
     const feed = h('div', 'feed');
-    const tiles = [0, 1, 2].map(() => h('i'));
-    feed.append(...tiles);
-    const doc = h('div', 'doc');
+    const tiles = [0, 1, 2].map(() => {
+      const tile = h('div', 'meme');
+      const pic = sprite(MEMES[0], { px: 0.17 });
+      tile.append(pic);
+      feed.append(tile);
+      return { tile, pic };
+    });
+    const sheet = h('div', 'doc');
     const title = h('span');
-    doc.append(h('i', 'peek'), title);
-    el.append(feed, doc);
+    sheet.append(sprite('eye', { px: 0.2 }), title);
+    const warn = h('div', 'warn');
+    warn.append(sprite('eye', { px: 0.2 }), sprite('bang', { px: 0.3 }));
+    el.append(feed, sheet, warn);
     row.append(el);
-    return { el, feed, tiles, title, skip: randInt(rng, 0, KINDS - 1), lastAt: -1000 };
+    return { el, feed, tiles, title, skip: randInt(rng, 0, MEMES.length - 1), lastAt: -1000 };
   });
-  const meter = h('div', 'meter big');
+  const bar = h('div', 'bar');
   const fill = h('i');
-  meter.append(fill);
+  bar.append(fill);
   const tally = h('div', 'tally');
   const count = h('b');
   tally.append(count, ' MEMES SCROLLED');
-  wrap.append(boss, row, meter, tally);
+  under.append(row, bar, tally);
+  wrap.append(boss, under);
   root.append(wrap);
 
   let memes = 0;
   let lockedUntil = 0;
+  let lastGood = -1000;
   let on = randBtn(rng); // the phone last scrolled
-  let cur = -1; // index of the stare (and the blink before it) in progress
+  let cur = -1; // index of the stare (and the eyes-shut spell before it) in progress
   let watched: Btn = on;
   let shown = '';
+  let caught = false;
 
   /** Moves on to the stare for time `t`; each one picks its phone the moment the eyes shut. */
   function sync(t: number) {
@@ -71,27 +92,36 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   sync(0);
 
   function paint(p: (typeof phones)[number]) {
-    p.tiles.forEach((tile, j) => (tile.className = `meme m${(p.skip + j) % KINDS}`));
+    p.tiles.forEach(({ tile, pic }, j) => {
+      const k = p.skip + j;
+      tile.className = `meme m${k % TINTS}`;
+      setSprite(pic, MEMES[k % MEMES.length], { px: 0.17 });
+    });
   }
 
   function show() {
     count.textContent = String(memes);
     fill.style.width = `${Math.min(100, (memes / par) * 100)}%`;
     // The more you get away with, the narrower the eyes.
-    face.style.setProperty('--sus', String(Math.min(1, memes / par)));
+    head.style.setProperty('--sus', String(Math.min(1, memes / par)));
   }
   phones.forEach(paint);
   show();
 
   return {
     press(b, t) {
-      if (t < lockedUntil) return;
-      const s = sync(t);
       const p = phones[b];
-      if (t >= s.from && b === watched) {
-        memes = Math.max(0, memes - 5);
-        lockedUntil = t + 600;
+      if (t < lockedUntil) {
         pulse(p.el, 'shake');
+        return;
+      }
+      const s = sync(t);
+      if (t >= s.from && b === watched) {
+        pulse(p.el, 'shake');
+        // Nobody is fined for mashing before they have had time to look.
+        if (!cur && t < EARLY) return;
+        memes = Math.max(0, memes - FINE);
+        lockedUntil = t + LOCK;
         bad(row, 'CAUGHT IN 4K');
         fx.flash('red');
         fx.sound('thud');
@@ -104,7 +134,11 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       p.skip++;
       paint(p);
       pulse(p.feed, 'scroll');
-      good(p.el, memes % 10 === 5 ? LOLS[Math.floor(memes / 10) % LOLS.length] : undefined);
+      // Two thumbs can scroll faster than the combo should climb.
+      if (t - lastGood >= 100) {
+        lastGood = t;
+        good(p.el, memes % 10 === 5 ? LOLS[Math.floor(memes / 10) % LOLS.length] : undefined);
+      } else fx.sound('pop');
       if (memes % 10 === 0) {
         fx.pop(count, `${memes} MEMES!`, 'gold');
         fx.burst(count, 'gold', 14);
@@ -118,20 +152,30 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       const key = `${cur}${open}`;
       if (key !== shown) {
         shown = key;
-        face.className = `face look-${watched} ${open ? 'watch' : 'blink'}`;
-        phones.forEach((p, i) => {
-          p.el.classList.toggle('next', i === watched && !open);
-          p.el.classList.toggle('watched', i === watched && open);
+        head.className = `head look-${watched} ${open ? 'watch' : 'blink'}`;
+        const p = phones[watched];
+        phones.forEach((q) => {
+          q.el.classList.toggle('next', q === p && !open);
+          q.el.classList.toggle('watched', q === p && open);
         });
         if (open) {
-          const p = phones[watched];
           p.title.textContent = s.doc;
           fx.sound('zap');
           // Scrolled it right up to the moment the eyes opened.
-          if (s.from - p.lastAt < 130) fx.pop(p.el, 'PHEW', 'white');
-        } else fx.sound('tick');
+          if (s.from - p.lastAt < 150) fx.pop(p.el, 'PHEW', 'white');
+        } else {
+          fx.sound('tick');
+          // The eyes are coming for the phone in your hand.
+          if (watched === on && t - p.lastAt < 600) fx.pop(p.el, 'MOVE!', 'red');
+        }
       }
-      wrap.classList.toggle('caught', t < lockedUntil);
+      const now = t < lockedUntil;
+      if (now !== caught) {
+        caught = now;
+        wrap.classList.toggle('caught', caught);
+        wrap.classList.toggle('scene-danger', caught);
+        wrap.classList.toggle('scene-office', !caught);
+      }
     },
     score: () => ratio(memes, par),
     hint(t) {
