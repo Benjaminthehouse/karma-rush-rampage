@@ -30,7 +30,7 @@
   background: linear-gradient(#0000 0 58%, #fff0a8 58% 66%, #0000 66%), #ff7ac8;
   box-shadow: 0 -0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, 0.45em 0.2em 0 0 #0b102088; }
 .g-cakeday .icing { position: absolute; left: 0; right: 0; top: 0; height: 1.5em;
-  background: radial-gradient(circle at 50% 100%, #fff 0 0.55em, #0000 0.58em) 0 0.2em / 1.6em 1.3em repeat-x, linear-gradient(#fff 0 0.75em, #0000 0.75em); }
+  background: linear-gradient(90deg, #fff 0 55%, #0000 55%) 0 0.75em / 1.6em 0.5em repeat-x, linear-gradient(#fff 0 0.75em, #0000 0.75em); }
 .g-cakeday .plate { position: absolute; left: -0.5em; right: -0.5em; bottom: -0.7em; height: 0.7em; background: #dde2f5; box-shadow: 0 0.18em 0 0 #0b1020, -0.18em 0 0 0 #0b1020, 0.18em 0 0 0 #0b1020, 0 -0.18em 0 0 #0b1020; }
 
 /* The party in front of the cake: OP Cat in a hat between two guests. */
