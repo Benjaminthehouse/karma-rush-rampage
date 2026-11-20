@@ -26,6 +26,8 @@ export type InitResponse = {
   subreddit?: string;
   /** True once the player has posted this day's score as a comment. */
   shared?: boolean;
+  /** True once the player chose to wear their streak as flair here. */
+  flair?: boolean;
 };
 
 /** Result of one of the result card's community actions. */

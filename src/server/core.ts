@@ -136,7 +136,15 @@ export function shareText(init: InitResponse, titles: (id: string) => string): s
 }
 
 /** The flair a player can choose to wear for their streak. Commas are not allowed in flair text. */
-export const streakFlair = (streak: number) => (streak >= 2 ? `${streak}-day streak` : 'Played today');
+/**
+ * The flair a player can choose to wear in this community. It stays until it is changed,
+ * so it reads as a record, not as news about today, and it is refreshed after every run.
+ * Commas are not allowed in flair text, so the best score has no thousands separator.
+ */
+export const streakFlair = (streak: number, best: number) => `Rush streak ${Math.max(1, streak)} · best ${best}`;
+/** Whether the player opted in to wearing the flair; once they have, every saved run refreshes it. */
+export const wantsFlair = async (store: Store, name: string) => (await store.hGet(userKey(name), 'flair')) === '1';
+export const markFlair = (store: Store, name: string) => store.hSet(userKey(name), { flair: '1' });
 
 /** Records the player's run for the day. Only the first run of a day counts. */
 export async function submitRun(

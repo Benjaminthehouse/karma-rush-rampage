@@ -553,8 +553,9 @@ function paintSocial(on: boolean) {
   share.textContent = init?.shared || socialDone.share ? 'SCORE POSTED' : 'POST MY SCORE';
   share.disabled = !!init?.shared || socialDone.share;
   const flair = $<HTMLButtonElement>('social-flair');
-  flair.textContent = socialDone.flair ? 'FLAIR ON' : (init?.streak ?? 0) >= 2 ? `WEAR ${init!.streak}-DAY FLAIR` : 'WEAR FLAIR';
-  flair.disabled = socialDone.flair;
+  const flairOn = socialDone.flair || !!init?.flair;
+  flair.textContent = flairOn ? 'FLAIR ON' : 'WEAR STREAK FLAIR';
+  flair.disabled = flairOn;
   const join = $<HTMLButtonElement>('social-join');
   join.textContent = socialDone.join ? 'JOINED' : `JOIN r/${init?.subreddit ?? 'this community'}`;
   join.disabled = socialDone.join;

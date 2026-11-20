@@ -17,6 +17,7 @@ import {
   getInit,
   guestName,
   hasShared,
+  markFlair,
   markShared,
   partyBeat,
   partyScore,
@@ -24,6 +25,7 @@ import {
   shareText,
   streakFlair,
   submitRun,
+  wantsFlair,
   type Store,
 } from './core';
 
@@ -67,7 +69,12 @@ router.get(
     const name = await username();
     const day = postDay();
     const init = await getInit(store, { username: name, day, today: dayKey(), now: Date.now() });
-    res.json({ ...init, subreddit: context.subredditName, shared: name ? await hasShared(store, day, name) : false });
+    res.json({
+      ...init,
+      subreddit: context.subredditName,
+      shared: name ? await hasShared(store, day, name) : false,
+      flair: name ? await wantsFlair(store, name) : false,
+    });
   })
 );
 
@@ -82,7 +89,17 @@ router.post(
     const name = await username();
     const day = postDay();
     const out = await submitRun(store, { username: name, day, today: dayKey(), rounds });
-    if (out.saved && name) await push<FeedMessage>(feedChannel(day), { t: 'score', name, total: out.total });
+    if (out.saved && name) {
+      await push<FeedMessage>(feedChannel(day), { t: 'score', name, total: out.total });
+      // A player who wears the flair gets it refreshed with their new streak and best.
+      if (await wantsFlair(store, name)) {
+        try {
+          await reddit.setUserFlair({ subredditName: context.subredditName, username: name, text: streakFlair(out.streak, out.best) });
+        } catch (err) {
+          console.error('flair refresh failed', err);
+        }
+      }
+    }
     res.json(out);
   })
 );
@@ -123,7 +140,13 @@ router.post(
 router.post(
   '/api/join',
   social(async () => {
-    await reddit.subscribeToCurrentSubreddit();
+    try {
+      await reddit.subscribeToCurrentSubreddit();
+    } catch (err) {
+      // Shown to the player for now, so a failed join can be diagnosed from a playtest.
+      console.error('subscribe failed', err);
+      return { ok: false, message: `Could not join: ${err instanceof Error ? err.message : String(err)}`.slice(0, 160) };
+    }
     return { ok: true, message: `Joined r/${context.subredditName}` };
   })
 );
@@ -133,8 +156,9 @@ router.post(
   '/api/flair',
   social(async (name) => {
     const init = await getInit(store, { username: name, day: postDay(), today: dayKey(), now: Date.now() });
-    const text = streakFlair(init.streak);
+    const text = streakFlair(init.streak, init.best);
     await reddit.setUserFlair({ subredditName: context.subredditName, username: name, text });
+    await markFlair(store, name);
     return { ok: true, message: `Flair set: ${text}` };
   })
 );

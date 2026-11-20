@@ -5,7 +5,7 @@ import express from 'express';
 import path from 'node:path';
 import { feedChannel, partyChannel } from '../src/shared/api';
 import { GAME_META, dayKey } from '../src/shared/daily';
-import { cleanRounds, getInit, guestName, hasShared, markShared, shareText, streakFlair, partyBeat, partyScore, partyStart, submitRun, type Store } from '../src/server/core';
+import { cleanRounds, getInit, guestName, hasShared, markFlair, markShared, shareText, streakFlair, wantsFlair, partyBeat, partyScore, partyStart, submitRun, type Store } from '../src/server/core';
 
 const hashes = new Map<string, Map<string, string>>();
 const zsets = new Map<string, Map<string, number>>();
@@ -66,7 +66,7 @@ app.post(/^\/api\/telemetry\/journey\/(.+)$/, (req, res) => {
 app.get('/api/init', async (req, res) => {
   const name = user(req);
   const init = await getInit(store, { username: name, day: dayKey(), today: dayKey(), now: Date.now() });
-  res.json({ ...init, subreddit: 'mocksub', shared: name ? await hasShared(store, dayKey(), name) : false });
+  res.json({ ...init, subreddit: 'mocksub', shared: name ? await hasShared(store, dayKey(), name) : false, flair: name ? await wantsFlair(store, name) : false });
 });
 /** Comments "posted" in this session, so a test can read them back. */
 const comments: string[] = [];
@@ -85,7 +85,9 @@ app.post('/api/share', async (req, res) => {
 app.post('/api/join', (_req, res) => void res.json({ ok: true, message: 'Joined r/mocksub' }));
 app.post('/api/flair', async (req, res) => {
   const init = await getInit(store, { username: user(req), day: dayKey(), today: dayKey(), now: Date.now() });
-  res.json({ ok: true, message: `Flair set: ${streakFlair(init.streak)}` });
+  const name = user(req);
+  if (name) await markFlair(store, name);
+  res.json({ ok: true, message: `Flair set: ${streakFlair(init.streak, init.best)}` });
 });
 app.post('/api/submit', async (req, res) => {
   const rounds = cleanRounds(req.body?.rounds);
