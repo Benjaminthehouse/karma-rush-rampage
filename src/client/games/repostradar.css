@@ -38,3 +38,9 @@
   .g-repostradar .photo { height: 4.6em; }
   .g-repostradar .wall { margin-bottom: 0.4em; }
 }
+/* Short stages (a small phone): tighter posts so the nine-post wall and the tally both fit. */
+@container (max-height: 470px) {
+  .g-repostradar .photo { height: 4.7em; }
+  .g-repostradar .wall { margin: 0.4em 0; }
+  .g-repostradar .wall.n9 .old { height: 2.5em; }
+}

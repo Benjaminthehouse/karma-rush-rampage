@@ -2,6 +2,7 @@ import { connectRealtime, requestExpandedMode } from '@devvit/web/client';
 import { feedChannel, type FeedMessage, type InitResponse } from '../shared/api';
 import { GAME_META, MAX_TOTAL, prettyDay, roundsFromIds } from '../shared/daily';
 import { api, fmt } from './api';
+import { avatar } from './avatar';
 import { h } from './games/common';
 import { track } from './track';
 
@@ -18,7 +19,9 @@ function board(init: InitResponse) {
     const li = h('li', e.name === init.username ? 'you' : '');
     const bar = h('i');
     bar.style.width = `${Math.max(2, (e.score / MAX_TOTAL) * 100)}%`;
-    li.append(bar, h('span', 'who', `${e.rank}. ${e.name}`), h('span', 'pts', fmt(e.score)));
+    const who = h('span', 'who', `${e.rank}. ${e.name}`);
+    who.prepend(avatar(e.name, { url: e.avatar }));
+    li.append(bar, who, h('span', 'pts', fmt(e.score)));
     list.append(li);
   });
 }

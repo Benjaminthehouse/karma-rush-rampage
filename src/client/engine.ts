@@ -6,6 +6,7 @@
 import type { Rival } from '../shared/api';
 import { GAME_META, MAX_ROUND_SCORE, TIMING, hashStr, mulberry32, timeline, type Phase, type Round } from '../shared/daily';
 import { fmt } from './api';
+import { avatar, shortName } from './avatar';
 import { createBot } from './bot';
 import { createFx } from './fx';
 import { COLOR, clamp1000, h, type Btn, type FxColor, type GameInst } from './games/common';
@@ -33,16 +34,17 @@ const tier = (score: number) => (score >= 950 ? 4 : score >= 700 ? 3 : score >= 
 export const rating = (score: number) => TIERS[tier(score)];
 
 /** Standings after `through` rounds; a rival with no score yet for a round shows as still playing. */
-export function standings(me: string, mine: number[], rivals: Rival[], through: number): HTMLElement {
+export function standings(me: string, mine: number[], rivals: Rival[], through: number, myAvatar?: string): HTMLElement {
   const sum = (a: number[]) => a.slice(0, through).reduce((x, y) => x + y, 0);
   const rows = [
-    { name: me, total: sum(mine), you: true, bot: false, pending: false },
+    { name: me, total: sum(mine), you: true, bot: false, pending: false, avatar: myAvatar },
     ...rivals.map((r) => ({
       name: r.name,
       total: sum(r.rounds),
       you: false,
       bot: !!r.bot,
       pending: r.rounds.length < through,
+      avatar: r.avatar,
     })),
   ].sort((a, b) => b.total - a.total);
   const list = h('ol', 'standings');
@@ -53,6 +55,7 @@ export function standings(me: string, mine: number[], rivals: Rival[], through: 
     const bar = h('i');
     bar.style.width = `${Math.max(2, (r.total / max) * 100)}%`;
     const name = h('span', 'who', r.you && r.name !== 'you' ? `${r.name} (you)` : r.name);
+    name.prepend(avatar(r.name, { url: r.avatar, bot: r.bot }));
     if (r.bot) name.append(h('em', '', 'bot'));
     li.append(bar, name, h('span', 'pts', r.pending ? `${fmt(r.total)}…` : fmt(r.total)));
     list.append(li);
@@ -67,6 +70,8 @@ export function runMatch(o: {
   /** ms since the match started; negative while counting down. */
   clock: () => number;
   me: string;
+  /** The player's own Reddit avatar image, if they have one. */
+  avatar?: string;
   rivals: () => Rival[];
   setPads: (labels: [string, string, string]) => void;
   /** Light a pad for a beat (the announcer's words chase across the pads). */
@@ -100,27 +105,69 @@ export function runMatch(o: {
   let lastPing = 0;
   let shownScore = -1;
   const raceEl = $('race');
-  let racers: { name: string; you: boolean; el: HTMLElement; curve: number; at: number }[] = [];
-  let raceWidth = 0;
+  let racers: { name: string; you: boolean; el: HTMLElement; bar: HTMLElement; curve: number; at: number }[] = [];
+  let raceShown = '';
+  let raceLead = -1;
 
-  /** The race track: one marker per player, sliding from START to 1,000 as the round goes. */
+  /**
+   * The race strip: one cell per player, side by side, so nobody ever covers anybody.
+   * Each cell is a face, a name and a bar that fills towards 1,000 as the round goes;
+   * whoever is ahead right now wears the crown. Recorded runs carry their place on the
+   * day's leaderboard, so it is plain who is being chased.
+   */
   function lineUp() {
-    const names = [{ name: o.me, you: true }, ...o.rivals().slice(0, 4).map((r) => ({ name: r.name, you: false }))];
-    racers = names.map((n) => {
-      const el = h('i', n.you ? 'you' : '', n.you ? 'YOU' : n.name.replace(/^u\//, '').slice(0, 1).toUpperCase());
-      el.title = n.name;
-      // Ghost runs replay as a curve to their recorded score: some start fast, some finish strong.
-      return { ...n, el, curve: 0.75 + (hashStr(n.name) % 60) / 100, at: 0 };
+    const them = o.rivals().slice(0, 4);
+    const who = [
+      { name: o.me, you: true, avatar: o.avatar, bot: false, rank: undefined as number | undefined },
+      ...them.map((r) => ({ name: r.name, you: false, avatar: r.avatar, bot: !!r.bot, rank: r.rank })),
+    ];
+    // Rebuilt only when the line-up changes (a party player joining), never every round.
+    const key = who.map((n) => n.name).join('|');
+    if (key !== raceShown) {
+      raceShown = key;
+      racers = who.map((n) => {
+        const el = h('div', `racer${n.you ? ' you' : ''}`);
+        const bar = h('i');
+        const track = h('span', 'bar');
+        track.append(bar);
+        const label = h('em', '', n.you ? 'YOU' : shortName(n.name, who.length > 4 ? 7 : 9));
+        const text = h('span', 'txt');
+        text.append(label, track);
+        el.append(avatar(n.name, { url: n.avatar, bot: n.bot }), text);
+        if (n.rank) el.append(h('b', 'rank', `#${n.rank}`));
+        // Ghost runs replay as a curve to their recorded score: some start fast, some finish strong.
+        return { name: n.name, you: n.you, el, bar, curve: 0.75 + (hashStr(n.name) % 60) / 100, at: -1 };
+      });
+      raceEl.replaceChildren(...racers.map((r) => r.el));
+      raceLead = -1;
+    }
+    racers.forEach((r) => {
+      r.at = -1;
+      r.bar.style.transform = 'scaleX(0)';
     });
-    raceEl.replaceChildren(h('b', 'goal', 'GOAL'), ...racers.map((r) => r.el).reverse());
-    racers.forEach((r) => (r.el.style.transform = ''));
-    // Markers slide with a transform, in whole pixels, so the track never needs laying out again.
-    raceWidth = raceEl.clientWidth;
+  }
+
+  /** "You are racing": the same faces, introduced by name before the first round. */
+  function versus(): HTMLElement {
+    const row = h('div', 'versus');
+    const them = o.rivals().slice(0, 3);
+    if (!them.length) return row;
+    row.append(h('span', 'vs-title', them.some((r) => !r.bot) ? 'RACING TODAY’S PLAYERS' : 'RACING THE HOUSE BOTS'));
+    const line = h('div', 'vs-line');
+    for (const r of them) {
+      const cell = h('div', 'vs-cell');
+      cell.append(avatar(r.name, { url: r.avatar, bot: r.bot }), h('b', '', shortName(r.name, 12)), h('small', '', r.rank ? (r.rank === 1 ? '#1 today' : `#${r.rank} today`) : r.bot ? 'bot' : 'live'));
+      line.append(cell);
+    }
+    row.append(line);
+    return row;
   }
 
   function race(ph: Phase, local: number, mine: number) {
     const frac = Math.max(0, Math.min(1, local / (ph.end - ph.start)));
     const rivals = o.rivals();
+    let best = 0;
+    let lead = -1;
     for (const r of racers) {
       let v = mine;
       if (!r.you) {
@@ -129,10 +176,21 @@ export function runMatch(o: {
         // A recorded run has this round's score already; a live player only has their latest ping.
         v = known !== undefined ? known * frac ** r.curve : (rv?.live ?? 0);
       }
-      const at = Math.round((Math.max(0, Math.min(1000, v)) / 1000) * raceWidth);
+      // Bars move in steps of half a percent, and only when they change.
+      const at = Math.round(Math.max(0, Math.min(1000, v)) / 5);
+      if (at > best) {
+        best = at;
+        lead = racers.indexOf(r);
+      }
       if (at === r.at) continue;
       r.at = at;
-      r.el.style.transform = `translateX(${at}px)`;
+      r.bar.style.transform = `scaleX(${at / 200})`;
+    }
+    if (best <= 0) lead = -1;
+    if (lead !== raceLead) {
+      racers[raceLead]?.el.classList.remove('first');
+      racers[lead]?.el.classList.add('first');
+      raceLead = lead;
     }
   }
   const scoreEl = $('hud-score');
@@ -361,7 +419,7 @@ export function runMatch(o: {
     cues.push({
       at: 100 + COUNT + 520,
       run: () => {
-        box.replaceChildren(standings(o.me, scores, o.rivals(), ph.round + 1));
+        box.replaceChildren(standings(o.me, scores, o.rivals(), ph.round + 1, o.avatar));
         box.classList.add('in');
       },
     });
@@ -384,7 +442,7 @@ export function runMatch(o: {
       if (n !== lastCount) {
         lastCount = n;
         sfx.count(n);
-        showCard('count', h('div', 'eyebrow', 'GET READY'), h('div', 'count', String(n)));
+        showCard('count', h('div', 'eyebrow', 'GET READY'), h('div', 'count', String(n)), versus());
         o.setPads(['', '', '']);
         hud();
       }
@@ -479,7 +537,7 @@ export function runMatch(o: {
     refresh() {
       const ph = phases[p];
       const box = card.querySelector('.standings-box.in');
-      if (ph?.type === 'result' && box) box.replaceChildren(standings(o.me, scores, o.rivals(), ph.round + 1));
+      if (ph?.type === 'result' && box) box.replaceChildren(standings(o.me, scores, o.rivals(), ph.round + 1, o.avatar));
     },
   };
 }

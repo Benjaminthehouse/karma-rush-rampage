@@ -1,13 +1,24 @@
-export type LbEntry = { name: string; score: number; rank: number };
+/** `avatar` is the player's Reddit avatar image, when they have one. */
+export type LbEntry = { name: string; score: number; rank: number; avatar?: string };
 
 /**
  * Someone you race: a recorded run from today, a house bot, or a live party player.
  * `live` is a party player's score so far in the round being played.
  */
-export type Rival = { name: string; bot?: boolean; rounds: number[]; live?: number };
+export type Rival = {
+  name: string;
+  bot?: boolean;
+  rounds: number[];
+  live?: number;
+  avatar?: string;
+  /** Where this player stands on the day's leaderboard, for a recorded run. */
+  rank?: number;
+};
 
 export type InitResponse = {
   username: string | null;
+  /** The player's own Reddit avatar image, when they have one. */
+  avatar?: string;
   /** The day this post belongs to (its lineup + leaderboard). */
   day: string;
   /** True when `day` is the current UTC day, i.e. the run counts for the streak. */
@@ -44,7 +55,7 @@ export type SubmitResponse = {
   players: number;
 };
 
-export type PartyPlayer = { name: string; rounds: number[]; inMatch: boolean; live: number };
+export type PartyPlayer = { name: string; rounds: number[]; inMatch: boolean; live: number; avatar?: string };
 export type PartyState = {
   /** Match id; also the seed of its lineup. Empty before the first match. */
   id: string;

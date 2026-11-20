@@ -61,9 +61,17 @@ or `engine.ts`, so the look can change without touching the rules.
 | Round result | Score counting up, verdict, standings |
 | Final | Total, verdict, per-round breakdown, leaderboard or party standings. After a saved daily run: post the score as a comment, wear streak flair (opt-in), join the community |
 
-The race track under the timer shows every player's score in the current round,
-live: recorded runs and bots replay as a curve to their final score, and party
-players report theirs about once a second.
+The race strip under the timer shows who you are racing in the current round: one
+cell per player with their Reddit avatar (a pixel face if they have none), their name
+and a bar that fills towards 1,000; whoever is ahead wears a 1ST tag.
+
+- **Today's Rush** races recorded runs from the same day: the day's leader, someone
+  from the top quarter and someone from the middle of the board (house bots fill in
+  while fewer than three others have played). So the race means what the leaderboard
+  means: beat all three and you top the day. The countdown names them, and the result
+  card shows who you beat.
+- **Live Party** shows the people in the lobby, updated about once a second.
+- **Practice** races the house bots.
 
 Someone who has already played today opens straight onto their result card.
 The comment, flair and join actions run from the player's own account

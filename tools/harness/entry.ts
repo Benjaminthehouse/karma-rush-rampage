@@ -21,6 +21,7 @@ document.body.innerHTML = `
     <header class="hud"><div id="pips"><i class="done"></i><i class="now"></i><i></i><i></i><i></i></div>
       <div id="hud-title"></div><div class="hud-right"><span id="combo"></span><span id="hud-score">1,000</span></div></header>
     <div id="timebar"><i></i></div>
+    <div id="race"><div class="racer you"><span class="av"></span><span class="txt"><em>YOU</em><span class="bar"><i></i></span></span></div><div class="racer"><span class="av"></span><span class="txt"><em>rival</em><span class="bar"><i></i></span></span></div></div>
     <div class="arena" id="arena"><div id="stage"></div><div id="card" class="ui" hidden></div><div id="fx" class="fx-layer"></div></div>
   </section></main>
   <footer id="pads">

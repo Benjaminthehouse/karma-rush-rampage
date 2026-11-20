@@ -341,11 +341,7 @@ body.fx-low #card.card-intro::before, body.fx-low #card.card-count::before { opa
 #hud-score.live { color: #fff; text-shadow: 0 0 0.6rem var(--gold); }
 
 /* ---------- race track: everyone's score in this round, live ---------- */
-#race { position: relative; height: 1.5rem; margin: 0 0.9rem 0 0.2rem; background: #0b1020; box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line); font-family: 'Jersey 25', 'Trebuchet MS', system-ui, sans-serif; }
 #race:empty { visibility: hidden; }
-#race i { position: absolute; top: 0.12rem; height: 1.26rem; min-width: 1.26rem; padding: 0 0.2rem; margin-left: -0.63rem; display: grid; place-items: center; font-style: normal; font-size: 0.72rem; font-weight: 700; line-height: 1; color: #0b1020; background: var(--dim); transition: left 0.12s linear; }
-#race i.you { background: var(--gold); z-index: 2; box-shadow: 0 0 0.6rem var(--gold); }
-#race .goal { position: absolute; right: -0.75rem; top: 0; bottom: 0; display: grid; place-items: center; padding: 0 0.25rem; font-size: 0.6rem; background: var(--green); color: #0b1020; }
 
 /* ---------- touch devices: nothing scrolls, zooms or selects while you mash ---------- */
 html, body { overscroll-behavior: none; -webkit-touch-callout: none; }
@@ -375,14 +371,11 @@ body.fx-low #stage *, body.fx-low #stage *::before, body.fx-low #stage *::after 
 .ui .logo, .ui .play-btn, .ui .rgb i { animation: none; }
 .fx-layer > .spark { box-shadow: none; will-change: transform, opacity; }
 .fx-layer > .pop-text { will-change: transform, opacity; }
-#race i { transition: none; }
 body { background: var(--bg); }
 
 /* Repaint as little as possible: no blurred glows that change every frame, markers that slide on the
    compositor, and each strip of the play screen boxed off so a change in one never repaints another. */
 #combo, #hud-score.live { text-shadow: none; }
-#race i { left: 0; will-change: transform; }
-#race i.you { box-shadow: none; }
 #stage { contain: layout paint style; }
 #hud, #race, #timebar { contain: layout style; }
 #pads .pad { contain: layout style; }
@@ -447,3 +440,51 @@ body { background: var(--bg); }
 #settings { flex-wrap: wrap; }
 #mute-hint { flex: 0 0 100%; margin: 0; text-align: center; font-size: 0.8rem; color: var(--dim); }
 body.ios #menu, body.ios #lobby, body.ios #final, body.ios #arcade { padding-bottom: 4.9rem; }
+
+/* ---------- players' faces ---------- */
+.av { position: relative; display: inline-block; width: 1em; height: 1em; flex: none; background: #1a2140; box-shadow: 0 0 0 0.07em #0b1020; overflow: hidden; vertical-align: middle; }
+.av > .px { position: absolute; left: 0; top: 0; }
+.av > img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: 50% 14%; background: #dfe4f5; }
+.ui .standings .who .av { font-size: 1.5em; margin: -0.2em 0.45em -0.15em -0.2em; }
+
+/* ---------- the race strip: a cell per player, face, name and a bar that fills ---------- */
+#race { position: relative; margin: 0.1rem 0 0; display: flex; font-family: 'Jersey 25', 'Trebuchet MS', system-ui, sans-serif; gap: 0.3rem; background: none; box-shadow: none; }
+#race:empty { display: none; }
+#race .racer { position: relative; flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 0.3rem; padding: 0.22rem 0.3rem 0.22rem 0.25rem; background: #0b1020; color: var(--dim); box-shadow: inset 0 0 0 2px var(--line); contain: layout style; }
+#race .racer .av { font-size: 1.55rem; }
+#race .racer .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.2rem; }
+#race .racer em { font-style: normal; font-size: 0.72rem; line-height: 1; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; }
+#race .racer .bar { display: block; height: 0.42rem; background: #2c3763; overflow: hidden; }
+#race .racer .bar i { display: block; width: 100%; height: 100%; background: var(--dim); transform: scaleX(0); transform-origin: left center; will-change: transform; }
+#race .racer.you { color: var(--gold); box-shadow: inset 0 0 0 2px var(--gold); }
+#race .racer.you .bar i { background: var(--gold); }
+#race .racer .rank { position: absolute; right: 0.18rem; top: 0.12rem; font-size: 0.62rem; line-height: 1; padding: 0.05rem 0.15rem; background: #2c3763; color: var(--ink); }
+/* Whoever is ahead this round. */
+#race .racer.first { background: #2a2408; }
+#race .racer.first::after { content: '1ST'; position: absolute; left: 0.15rem; top: -0.3rem; font-size: 0.6rem; line-height: 1; padding: 0.06rem 0.2rem; background: var(--gold); color: #0b1020; }
+
+/* ---------- who you are racing: on the countdown, and how it came out on the result card ---------- */
+.versus, .recap { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; width: 100%; }
+.vs-title { font-size: 0.95rem; letter-spacing: 0.06em; text-align: center; }
+.vs-line { display: flex; justify-content: center; gap: 0.5rem; width: 100%; }
+.vs-cell { flex: 1 1 0; min-width: 0; max-width: 8rem; display: flex; flex-direction: column; align-items: center; gap: 0.15rem; padding: 0.4rem 0.2rem 0.35rem; background: #0b1020cc; box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line); }
+.vs-cell .av { font-size: 2.4rem; }
+.vs-cell b { font-weight: 400; font-size: 0.9rem; line-height: 1.1; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+.vs-cell small { font-size: 0.75rem; line-height: 1; color: var(--dim); }
+.vs-cell.won { box-shadow: 0 -2px 0 0 var(--green), 0 2px 0 0 var(--green), -2px 0 0 0 var(--green), 2px 0 0 0 var(--green); }
+.vs-cell.won small { color: var(--green); }
+.vs-cell.lost .av { opacity: 0.75; }
+#card.card-count .versus { margin-top: 1rem; padding: 0 0.6rem; }
+#card.card-count .vs-title { color: #0b1020; background: var(--gold); padding: 0.1rem 0.6rem; }
+#final-recap { width: 100%; }
+#final-recap:empty { display: none; }
+.recap .vs-title { color: var(--gold); }
+
+/* ---------- result card: compact, so the race recap fits without scrolling ---------- */
+#final:not([hidden]) ~ #settings { display: none; }
+body #final, body.ios #final { padding-bottom: 0.8rem; }
+.ui .breakdown { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.3rem; }
+.ui .breakdown li { display: flex; flex-direction: column-reverse; align-items: center; gap: 0.1rem; min-width: 0; padding: 0.3rem 0.15rem; border-bottom: 0; background: #0b1020; box-shadow: inset 0 0 0 2px var(--line); }
+.ui .breakdown li span { max-width: 100%; font-size: 0.7rem; line-height: 1.05; text-align: center; color: var(--dim); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.ui .breakdown li em { display: none; }
+.ui .breakdown b { font-size: 1.25rem; text-align: center; }

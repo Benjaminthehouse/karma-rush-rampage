@@ -40,9 +40,20 @@ export function cleanRounds(input: unknown): number[] | null {
   return input.map(clampScore);
 }
 
+// Reddit avatars, remembered per player. '' means "looked up, has none".
+const AVATARS = 'avatars';
+export const avatarKnown = async (store: Store, name: string) => (await store.hGet(AVATARS, name)) != null;
+export const setAvatar = (store: Store, name: string, url: string | undefined) => store.hSet(AVATARS, { [name]: url ?? '' });
+const avatarOf = async (store: Store, name: string | null) => (name ? (await store.hGet(AVATARS, name)) || undefined : undefined);
+/** `{ avatar }` when the player has one, else nothing: no stray undefined fields go over the wire. */
+const withAvatar = async (store: Store, name: string | null) => {
+  const avatar = await avatarOf(store, name);
+  return avatar ? { avatar } : {};
+};
+
 async function top(store: Store, day: string, n = 10): Promise<LbEntry[]> {
   const rows = await store.zRange(lbKey(day), 0, n - 1, { by: 'rank', reverse: true });
-  return rows.map((r, i) => ({ name: r.member, score: r.score, rank: i + 1 }));
+  return Promise.all(rows.map(async (r, i) => ({ name: r.member, score: r.score, rank: i + 1, ...(await withAvatar(store, r.member)) })));
 }
 
 async function rankOf(store: Store, day: string, name: string | null, players: number) {
@@ -52,19 +63,29 @@ async function rankOf(store: Store, day: string, name: string | null, players: n
 }
 
 /** Up to three recorded runs from other players of this day, padded with house bots. */
+/**
+ * Who a player races. Not a random draw: the day's leader, someone from the top quarter and
+ * someone from the middle of the pack. So the race means what the leaderboard means: beat
+ * all three and you are top of the day, beat the middle one and you are in the top half.
+ * House bots fill in while fewer than three other people have played.
+ */
 async function pickRivals(store: Store, day: string, me: string | null, players: number) {
   const rivals: Rival[] = [];
-  const rng = mulberry32(hashStr(`rivals:${day}:${me ?? ''}:${players}`));
-  const tried = new Set<number>();
-  for (let attempt = 0; attempt < 8 && rivals.length < 3 && tried.size < players; attempt++) {
-    const idx = Math.floor(rng() * players);
-    if (tried.has(idx)) continue;
-    tried.add(idx);
-    const [row] = await store.zRange(lbKey(day), idx, idx, { by: 'rank' });
-    if (!row || row.member === me) continue;
-    const raw = await store.hGet(runsKey(day), row.member);
-    const rounds = raw ? cleanRounds(JSON.parse(raw)) : null;
-    if (rounds) rivals.push({ name: row.member, rounds });
+  const wanted = [1, Math.max(2, Math.round(players * 0.25)), Math.max(3, Math.round(players * 0.5))];
+  const taken = new Set<number>();
+  for (const want of wanted) {
+    // Slide down the board past the player themselves and anyone already picked.
+    for (let rank = want; rank <= players && rank < want + 4; rank++) {
+      if (taken.has(rank)) continue;
+      const [row] = await store.zRange(lbKey(day), rank - 1, rank - 1, { by: 'rank', reverse: true });
+      if (!row || row.member === me) continue;
+      const raw = await store.hGet(runsKey(day), row.member);
+      const rounds = raw ? cleanRounds(JSON.parse(raw)) : null;
+      if (!rounds) continue;
+      taken.add(rank);
+      rivals.push({ name: row.member, rounds, rank, ...(await withAvatar(store, row.member)) });
+      break;
+    }
   }
   for (const bot of botRounds(day)) if (rivals.length < 3) rivals.push({ ...bot, bot: true });
   return rivals;
@@ -106,6 +127,7 @@ export async function getInit(
   const stats = await userStats(store, p.username, p.today);
   return {
     username: p.username,
+    ...(await withAvatar(store, p.username)),
     day: p.day,
     isToday: p.day === p.today,
     lineup: await dayLineup(store, p.day),
@@ -228,7 +250,7 @@ async function partyState(store: Store, post: string, who: string, now: number):
     const age = now - seat.hb;
     if (age > SEAT_TTL && !(inMatch && meta.running)) dead.push(name);
     else if (age < LOBBY_TTL || inMatch) {
-      players.push({ name, inMatch, rounds: inMatch ? seat.r : [], live: inMatch ? seat.p : 0 });
+      players.push({ name, inMatch, rounds: inMatch ? seat.r : [], live: inMatch ? seat.p : 0, ...(await withAvatar(store, name)) });
     }
   }
   if (dead.length) await store.hDel(seatsKey(post), dead);

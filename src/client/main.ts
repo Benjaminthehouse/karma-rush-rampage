@@ -9,6 +9,7 @@ import {
 } from '../shared/api';
 import { GAME_IDS, GAME_META, MAX_TOTAL, TIMING, botRounds, dayKey, lineupFor, prettyDay, roundsFromIds, type Round } from '../shared/daily';
 import { api, fmt } from './api';
+import { avatar, shortName } from './avatar';
 import { rating, runMatch, standings, type Match } from './engine';
 import { createFx } from './fx';
 import { h, type Btn } from './games/common';
@@ -68,7 +69,7 @@ function setPads(labels: [string, string, string], actions?: ((() => void) | nul
 
 const held = [false, false, false];
 /** Shown on the menu so a tester can tell which build they are looking at. */
-const BUILD = 25;
+const BUILD = 26;
 let dayLine = '';
 /** The menu's status line, with the audio state so "no sound" can be told apart by cause. */
 function paintStatus() {
@@ -358,6 +359,7 @@ async function arcadePlay(id: string) {
     lineup: [{ id, level: 2, seed }],
     clock: () => Date.now() - startAt,
     me: myName(),
+    avatar: init?.avatar,
     rivals: () => [],
     setPads,
     pulsePad,
@@ -390,6 +392,7 @@ async function solo(kind: 'daily' | 'practice', lineup: Round[], rivals: Rival[]
     lineup,
     clock: () => Date.now() - startAt,
     me: myName(),
+    avatar: init?.avatar,
     rivals: () => rivals,
     setPads,
     pulsePad,
@@ -408,11 +411,11 @@ async function solo(kind: 'daily' | 'practice', lineup: Round[], rivals: Rival[]
   if (kind === 'daily') track.end(total, total >= 2800);
 
   if (kind === 'practice') {
-    final({ kind: 'PRACTICE RUN', lineup, rounds, total, boardTitle: 'This run', board: standings(myName(), rounds, rivals, rounds.length) });
+    final({ kind: 'PRACTICE RUN', lineup, rounds, total, raced: rivals, boardTitle: 'This run', board: standings(myName(), rounds, rivals, rounds.length, init?.avatar) });
     return;
   }
   if (offline && init) {
-    final({ kind: `TODAY’S RUSH · ${prettyDay(init.day)}`, lineup, rounds, total, badges: ['Demo: play it again any time'], boardTitle: 'You vs the house bots', board: standings(myName(), rounds, rivals, rounds.length) });
+    final({ kind: `TODAY’S RUSH · ${prettyDay(init.day)}`, lineup, rounds, total, badges: ['Demo: play it again any time'], raced: rivals, boardTitle: 'You vs the house bots', board: standings(myName(), rounds, rivals, rounds.length, init?.avatar) });
     return;
   }
   let board: LbEntry[] = init?.leaderboard ?? [];
@@ -431,7 +434,7 @@ async function solo(kind: 'daily' | 'practice', lineup: Round[], rivals: Rival[]
     console.error(err);
     toast('Could not save your score. Check your connection.');
   }
-  final({ kind: `TODAY’S RUSH · ${prettyDay(init?.day ?? '')}`, lineup, rounds, total, badges, boardTitle: 'Leaderboard', board: leaderboard(board), social: !!init?.myRun });
+  final({ kind: `TODAY’S RUSH · ${prettyDay(init?.day ?? '')}`, lineup, rounds, total, badges, raced: rivals, boardTitle: 'Leaderboard', board: leaderboard(board), social: !!init?.myRun });
 }
 
 const dailyLineup = (): Round[] => (init ? roundsFromIds(init.day, init.lineup) : []);
@@ -450,9 +453,10 @@ function daily() {
       total: init.myRun.total,
       badges,
       boardTitle: offline ? 'You vs the house bots' : 'Leaderboard',
-      board: offline ? standings(myName(), init.myRun.rounds, init.rivals, 5) : leaderboard(init.leaderboard),
+      board: offline ? standings(myName(), init.myRun.rounds, init.rivals, 5, init.avatar) : leaderboard(init.leaderboard),
       announce: false,
       social: true,
+      raced: init.rivals,
     });
     return;
   }
@@ -475,10 +479,36 @@ function leaderboard(entries: LbEntry[]): HTMLElement {
     const li = h('li', e.name === init?.username ? 'you' : '');
     const bar = h('i');
     bar.style.width = `${Math.max(2, (e.score / MAX_TOTAL) * 100)}%`;
-    li.append(bar, h('span', 'who', `${e.rank}. ${e.name}`), h('span', 'pts', fmt(e.score)));
+    const who = h('span', 'who', `${e.rank}. ${e.name}`);
+    who.prepend(avatar(e.name, { url: e.avatar }));
+    li.append(bar, who, h('span', 'pts', fmt(e.score)));
     list.append(li);
   });
   return list;
+}
+
+/** The race, settled: each rival's face with a tick if you beat their total, and what that means. */
+function raceRecap(total: number, rivals: Rival[]): HTMLElement {
+  const box = h('div', 'recap');
+  const them = rivals.slice(0, 3);
+  if (!them.length) return box;
+  const sum = (r: Rival) => r.rounds.reduce((a, b) => a + b, 0);
+  const beaten = them.filter((r) => total > sum(r));
+  const line = h('div', 'vs-line');
+  for (const r of them) {
+    const won = total > sum(r);
+    const cell = h('div', `vs-cell ${won ? 'won' : 'lost'}`);
+    cell.append(avatar(r.name, { url: r.avatar, bot: r.bot }), h('b', '', shortName(r.name, 12)), h('small', '', `${won ? 'beaten' : 'ahead'} · ${fmt(sum(r))}`));
+    line.append(cell);
+  }
+  // The rivals are the day's leader and the middle of the board, so the race says where you stand.
+  const leader = them.find((r) => r.rank === 1);
+  const text =
+    beaten.length === them.length
+      ? leader ? 'You beat everyone you raced, the day’s leader included!' : 'You beat everyone you raced!'
+      : beaten.length ? `You beat ${beaten.length} of the ${them.length} you raced` : 'They all stayed ahead this time';
+  box.append(h('span', 'vs-title', text), line);
+  return box;
 }
 
 // ------------------------------------------------------------------ final
@@ -505,6 +535,8 @@ function final(o: {
   announce?: boolean;
   /** True for a saved daily run on Reddit: offer to comment the score, wear flair, join. */
   social?: boolean;
+  /** Who was raced, to show how the race came out. */
+  raced?: Rival[];
 }) {
   show('final');
   paintSocial(!!o.social);
@@ -518,6 +550,7 @@ function final(o: {
   stamp.className = `verdict v${VERDICTS.indexOf(verdict)}`;
   if (o.announce !== false) window.setTimeout(() => screen === 'final' && voice.say(verdict.text, { rate: 1.05, pitch: 1.2 }), 950);
   $('final-badges').replaceChildren(...(o.badges ?? []).map((b) => h('span', 'chip', b)));
+  $('final-recap').replaceChildren(...(o.raced?.length ? [raceRecap(o.total, o.raced)] : []));
   $('final-rounds').replaceChildren(
     ...o.lineup.map((r, i) => {
       const li = h('li');
@@ -698,6 +731,7 @@ async function joinParty(state: PartyState) {
     lineup,
     clock: () => serverNow() - state.startAt,
     me: myName(),
+    avatar: init?.avatar,
     rivals: partyRivals,
     setPads,
     pulsePad,
@@ -722,7 +756,7 @@ async function joinParty(state: PartyState) {
     rounds,
     total: rounds.reduce((a, b) => a + b, 0),
     boardTitle: 'Party standings',
-    board: standings(myName(), rounds, rivals, rounds.length),
+    board: standings(myName(), rounds, rivals, rounds.length, init?.avatar),
     again: lobby,
   });
   stopParty();

@@ -5,7 +5,7 @@ import express from 'express';
 import path from 'node:path';
 import { feedChannel, partyChannel } from '../src/shared/api';
 import { GAME_META, dayKey } from '../src/shared/daily';
-import { cleanRounds, getInit, guestName, hasShared, markFlair, markShared, shareText, streakFlair, wantsFlair, partyBeat, partyScore, partyStart, submitRun, type Store } from '../src/server/core';
+import { cleanRounds, getInit, guestName, hasShared, markFlair, setAvatar, markShared, shareText, streakFlair, wantsFlair, partyBeat, partyScore, partyStart, submitRun, type Store } from '../src/server/core';
 
 const hashes = new Map<string, Map<string, string>>();
 const zsets = new Map<string, Map<string, number>>();
@@ -67,6 +67,11 @@ app.get('/api/init', async (req, res) => {
   const name = user(req);
   const init = await getInit(store, { username: name, day: dayKey(), today: dayKey(), now: Date.now() });
   res.json({ ...init, subreddit: 'mocksub', shared: name ? await hasShared(store, dayKey(), name) : false, flair: name ? await wantsFlair(store, name) : false });
+});
+// Test aid: give a player an avatar image, as Reddit would.
+app.get('/mock/avatar', async (req, res) => {
+  await setAvatar(store, String(req.query.u), String(req.query.url));
+  res.json({ ok: true });
 });
 /** Comments "posted" in this session, so a test can read them back. */
 const comments: string[] = [];

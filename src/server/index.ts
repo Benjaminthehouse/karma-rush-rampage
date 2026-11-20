@@ -14,6 +14,7 @@ import {
 import { GAME_META, dayKey, prettyDay } from '../shared/daily';
 import {
   cleanRounds,
+  avatarKnown,
   getInit,
   guestName,
   hasShared,
@@ -22,6 +23,7 @@ import {
   partyBeat,
   partyScore,
   partyStart,
+  setAvatar,
   shareText,
   streakFlair,
   submitRun,
@@ -43,6 +45,16 @@ function postDay(): string {
 
 async function username(): Promise<string | null> {
   return context.username ?? (await reddit.getCurrentUsername()) ?? null;
+}
+
+/** Looks a player's Reddit avatar up the first time they are seen, and remembers it. */
+async function rememberAvatar(name: string | null) {
+  if (!name || (await avatarKnown(store, name))) return;
+  try {
+    await setAvatar(store, name, await reddit.getSnoovatarUrl(name));
+  } catch (err) {
+    console.error(`avatar lookup for ${name} failed`, err);
+  }
 }
 
 async function push<T extends FeedMessage | PartyMessage>(channel: string, msg: T) {
@@ -68,6 +80,7 @@ router.get(
   route(async (_req, res) => {
     const name = await username();
     const day = postDay();
+    await rememberAvatar(name);
     const init = await getInit(store, { username: name, day, today: dayKey(), now: Date.now() });
     res.json({
       ...init,
@@ -164,7 +177,9 @@ router.post(
 );
 
 async function partyWho(body: PartyBeat): Promise<string | null> {
-  return (await username()) ?? guestName(body?.guest);
+  const name = await username();
+  await rememberAvatar(name);
+  return name ?? guestName(body?.guest);
 }
 
 function partyRoute(

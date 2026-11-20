@@ -1,6 +1,6 @@
 // Rules check for src/server/core.ts on an in-memory store: `npm test`.
 import assert from 'node:assert/strict';
-import { getInit, partyBeat, partyScore, partyStart, submitRun, type Store } from '../src/server/core';
+import { getInit, partyBeat, partyScore, partyStart, setAvatar, submitRun, type Store } from '../src/server/core';
 import { GAME_IDS, GAME_META, lineupFor, matchLength, roundsFromIds } from '../src/shared/daily';
 
 function memory(): Store {
@@ -103,5 +103,26 @@ now += 5000 + matchLength(lineupFor(id)) + 2000;
 p = await partyBeat(s, 't3_x', 'ann', now);
 assert.equal(p.status, 'lobby');
 assert.notEqual((await partyStart(s, 't3_x', 'ann', now)).id, id);
+
+
+// ---- rivals come from the leaderboard: the leader, the top quarter, the middle
+{
+  const s = memory();
+  const day = '2030-01-01';
+  for (let i = 1; i <= 20; i++) {
+    // player p01 is the best, p20 the worst
+    await submitRun(s, { username: `p${String(i).padStart(2, '0')}`, day, today: day, rounds: [1000 - i * 40, 500, 500, 500, 500] });
+  }
+  await setAvatar(s, 'p01', 'https://example.test/p01.png');
+  const fresh = await getInit(s, { username: 'newbie', day, today: day, now: 0 });
+  assert.deepEqual(fresh.rivals.map((r) => [r.name, r.rank]), [['p01', 1], ['p05', 5], ['p10', 10]]);
+  assert.equal(fresh.rivals[0].avatar, 'https://example.test/p01.png');
+  assert.ok(!('avatar' in fresh.rivals[1]));
+  assert.equal(fresh.leaderboard[0].avatar, 'https://example.test/p01.png');
+  // the leader does not race themselves: the next one down steps in
+  const leader = await getInit(s, { username: 'p01', day, today: day, now: 0 });
+  assert.deepEqual(leader.rivals.map((r) => r.name), ['p02', 'p05', 'p10']);
+  console.log('rivals: leader, top quarter and middle of the board');
+}
 
 console.log('core rules: all checks passed');
