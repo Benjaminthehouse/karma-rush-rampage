@@ -1,10 +1,9 @@
 import './maincharacter.css';
-import { actor, h, padDots, pick, pulse, ratio, shuffled, type Actor, type ActorMood, type GameFactory } from './common';
+import { actor, defineSprite, h, padDots, pick, pulse, ratio, setSprite, shuffled, sprite, type Actor, type ActorMood, type GameFactory } from './common';
 
 const SPOTS = [0, 1, 2, 3, 4];
-// OP Cat's body under its big head, on a 40x36 grid: the neck is at (20, 0) and the head
-// sits above y = 0, so raised arms bend out past the head (elbows beyond x 6..34).
-const TORSO = 'M15 3H25V18H15Z';
+// OP Cat's poses, as limb lines on a 40x36 grid: the neck is at (20, 0) and the head sits
+// above y = 0, so raised arms bend out past the head. Each is drawn once as a pixel sprite.
 const STAND = 'M20 4L10 9L8 17M20 4L30 9L32 17M20 17L14 34M20 17L26 34';
 const STRIDE = [
   'M20 4L11 10L9 17M20 4L29 8L34 13M20 17L10 33M20 17L27 34',
@@ -44,16 +43,108 @@ const GRACE = 250; // ms after the light walks off in which a pose is late, not 
 const ENCORE = 160; // ms after a lit pose in which a second tap is the same pose, not a new one
 const HEAD = 0.29; // one art pixel of OP Cat's head, in em (4.6em wide)
 
-/** OP Cat with a body: the cast's head on an outlined stick body that strikes poses. */
+// The pixel body: 23x26 art pixels, two grid units each, the neck at pixel (11, 7).
+const BW = 23;
+const BH = 26;
+const BODY = 0.28; // one art pixel of the body, in em
+const bodies = new Map<string, string>();
+function bodySprite(d: string) {
+  let name = bodies.get(d);
+  if (name) return name;
+  const g = Array.from({ length: BH }, () => Array<string>(BW).fill('.'));
+  const cell = (ux: number, uy: number) => [Math.min(BW - 2, Math.max(1, Math.round(ux / 2) + 1)), Math.min(BH - 2, Math.max(1, Math.round(uy / 2) + 7))];
+  const limb: number[][] = [];
+  let x = 0;
+  let y = 0;
+  for (const [, c, a, b] of d.matchAll(/([MLH])(-?\d+)(?: (-?\d+))?/g)) {
+    const nx = +a;
+    const ny = c === 'H' ? y : +b;
+    if (c !== 'M') {
+      // A one-pixel limb, stepped from joint to joint.
+      let [x0, y0] = cell(x, y);
+      const [x1, y1] = cell(nx, ny);
+      const dx = Math.abs(x1 - x0);
+      const dy = -Math.abs(y1 - y0);
+      let e = dx + dy;
+      for (;;) {
+        limb.push([x0, y0]);
+        if (x0 === x1 && y0 === y1) break;
+        if (2 * e >= dy) (e += dy), (x0 += x0 < x1 ? 1 : -1);
+        if (2 * e <= dx) (e += dx), (y0 += y0 < y1 ? 1 : -1);
+      }
+    }
+    x = nx;
+    y = ny;
+  }
+  for (const [px, py] of limb) for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) g[py + j][px + i] = 'k';
+  for (const [px, py] of limb) g[py][px] = 'y';
+  // The shirt over the shoulders and hips, lit from the top left.
+  for (let r = 8; r <= 16; r++) {
+    for (let c = 8; c <= 14; c++) {
+      const edge = r === 8 || r === 16 || c === 8 || c === 14;
+      g[r][c] = edge ? 'k' : c === 9 || r === 9 ? 'L' : c === 13 || r === 15 ? 'a' : 'A';
+    }
+  }
+  g[9][11] = 'k';
+  name = `maincharacter-body${bodies.size}`;
+  defineSprite(name, g.map((row) => row.join('')));
+  bodies.set(d, name);
+  return name;
+}
+for (const d of [STAND, ...STRIDE, SLUMP, ...POSES.map((p) => p.limbs)]) bodySprite(d);
+
+// The cape at its longest, hung from the shoulders; shorter streaks scale it down.
+defineSprite(
+  'maincharacter-cape',
+  Array.from({ length: 16 }, (_, r) => {
+    const w = Math.round(3 + (r * 5.5) / 15);
+    let row = '';
+    for (let c = 0; c < BW; c++) {
+      const o = Math.abs(c - 11);
+      row += o > w ? '.' : o === w || r === 15 ? 'k' : c === 11 - w + 1 ? 'L' : r > 4 && (c - 11) % 3 === 0 ? 'R' : c > 11 + w - 2 ? 'R' : 'r';
+    }
+    return row;
+  }),
+);
+
+// A spot on the boards, dark and lit.
+defineSprite('maincharacter-spot', `
+...kkkkkkkkkk...
+.kkaaaaaaaaaakk.
+kaaAaaaaaaaaaaak
+.kkaaaaaaaaaakk.
+...kkkkkkkkkk...`);
+defineSprite('maincharacter-spotlit', `
+...kkkkkkkkkk...
+.kkLLLLLLLLLLkk.
+kLLWWWWWWWWLLLAk
+.kkAAAAAAAAAAkk.
+...kkkkkkkkkk...`);
+// The light cone: a stepped beam that dithers out toward the boards.
+defineSprite(
+  'maincharacter-cone',
+  Array.from({ length: 80 }, (_, r) => {
+    const w = 1.3 + (r * 6.7) / 79;
+    let row = '';
+    for (let c = 0; c < 16; c++) {
+      const o = Math.abs(c - 7.5);
+      const on = o <= w && (r < 40 || (c + r) % 2 === 0 || (r < 64 && c % 2 === 0));
+      row += !on ? '.' : o < w / 3 ? 'W' : o > w - 1 ? 'y' : 'Y';
+    }
+    return row;
+  }),
+);
+
+/** OP Cat with a body: the cast's head on a pixel body that strikes poses. */
 function figure(cls: string, mood: ActorMood) {
   // `track` is one lane wide and slides a lane at a time; `fig` is the cat standing in it.
   const track = h('div', `track ${cls}`);
   const fig = h('div', 'fig');
   const head = actor('op', { px: HEAD, mood });
   const body = h('div', 'body');
-  body.innerHTML =
-    `<svg viewBox="0 0 40 36" aria-hidden="true"><path class="cape"/><path class="out"/><path class="shirt" d="${TORSO}"/><path class="limbs"/></svg>`;
-  const [cape, out, , limbs] = body.firstElementChild!.children;
+  const cape = sprite('maincharacter-cape', { px: BODY }, 'cape');
+  const limbs = sprite(bodySprite(STAND), { px: BODY, tone: 'purple' }, 'limbs');
+  body.append(cape, limbs);
   fig.append(head.el, body);
   track.append(fig);
   return {
@@ -62,8 +153,8 @@ function figure(cls: string, mood: ActorMood) {
     head,
     cape,
     draw: (d: string) => {
-      out.setAttribute('d', d);
-      limbs.setAttribute('d', d);
+      const tone = track.classList.contains('cringe') ? 'grey' : track.classList.contains('posing') ? 'gold' : 'purple';
+      setSprite(limbs, bodySprite(d), { px: BODY, tone });
     },
   };
 }
@@ -113,7 +204,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const floor = h('div', 'floor');
   const lanes = SPOTS.map(() => {
     const lane = h('div', 'lane');
-    lane.append(h('i', 'lamp'), h('i', 'cone'), h('i', 'spot'));
+    lane.append(h('i', 'lamp'), sprite('maincharacter-cone', {}, 'cone'), sprite('maincharacter-spot', { tone: 'brown' }, 'spot'));
+    lane.lastElementChild!.append(sprite('maincharacter-spotlit', { tone: 'gold' }, 'lit'));
     floor.append(lane);
     return lane;
   });
@@ -129,6 +221,9 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const crowd = h('div', 'crowd');
   const fans: Actor[] = [0, 1, 2, 3, 4].map(() => actor('npc', { px: 0.22 }));
   for (const f of fans) crowd.append(f.el);
+  const flashes = h('div', 'flashes');
+  for (let i = 0; i < 5; i++) flashes.append(sprite('spark', { px: 0.2 }));
+  crowd.append(flashes);
   scene.append(rig, floor, marquee, crowd);
   wrap.append(top, scene);
   root.append(wrap);
@@ -160,7 +255,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     pulse(points, 'pop-in');
     // The cape grows with every clean pose in a row.
     const s = Math.min(streak, 5);
-    hero.cape.setAttribute('d', s ? `M15 3H25L${25 + s * 2} ${16 + s * 3}H${15 - s * 2}Z` : '');
+    hero.cape.style.transform = `scale(${0.5 + s * 0.1})`;
+    hero.cape.style.visibility = s ? 'visible' : 'hidden';
   }
   function thaw() {
     frozen = false;

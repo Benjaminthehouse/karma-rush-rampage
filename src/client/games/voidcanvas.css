@@ -1,6 +1,6 @@
 /* The paint queue: the big blinking swatch is the colour to press now. */
 .g-voidcanvas .queue { display: flex; align-items: center; gap: 0.45em; }
-.g-voidcanvas .queue i { width: 1.8em; height: 1.8em; border-radius: 0.35em; background: var(--c); box-shadow: inset 0 -0.22em 0 var(--cd); opacity: 0.4; }
+.g-voidcanvas .queue i { width: 1.8em; height: 1.8em; border-radius: 0; background: var(--c); box-shadow: inset 0 -0.22em 0 var(--cd); opacity: 0.4; }
 .g-voidcanvas .queue i:first-child { width: 5.6em; height: 3em; margin-right: 0.35em; opacity: 1; display: grid; place-items: center; font-style: normal; font-weight: 900; letter-spacing: 0.06em; color: #071022; outline: 0.2em solid var(--ink); outline-offset: 0.14em; animation: g-voidcanvas-blink 0.3s steps(1) infinite; }
 .g-voidcanvas .queue i:nth-child(2) { opacity: 0.95; }
 .g-voidcanvas .queue i:nth-child(3) { opacity: 0.75; }
@@ -25,7 +25,7 @@
 .g-voidcanvas .void { position: absolute; inset: 0; background-color: #05060f; background-image: linear-gradient(90deg, #b14bff24 50%, #0000 0), linear-gradient(#3f8cff1a 50%, #0000 0); background-size: 10% 100%, 100% 14.2857%; clip-path: inset(0 0 0 calc(var(--held) * 5%)); animation: g-voidcanvas-creep 0.9s linear infinite; }
 /* The stripes crawl one tile to the left, forever: the void never stops coming. */
 @keyframes g-voidcanvas-creep { to { background-position: -11.1111% 0, 0 0; } }
-.g-voidcanvas .front, .g-voidcanvas .splat { position: absolute; z-index: 1; top: -0.45em; bottom: -0.45em; width: 5%; background: var(--c); border-radius: 0.12em; }
+.g-voidcanvas .front, .g-voidcanvas .splat { position: absolute; z-index: 1; top: -0.45em; bottom: -0.45em; width: 5%; background: var(--c); border-radius: 0; }
 .g-voidcanvas .front { left: calc(var(--held) * 5%); box-shadow: 0 0 0 0.14em var(--ink), 0 0 1.1em 0.25em var(--c); animation: g-voidcanvas-blink 0.3s steps(1) infinite; }
 .g-voidcanvas .splat { opacity: 0; }
 .g-voidcanvas .bite { position: absolute; top: 0; bottom: 0; background: var(--purple); opacity: 0; }

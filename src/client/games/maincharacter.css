@@ -14,13 +14,14 @@
 .g-maincharacter .lane { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; padding-bottom: 3.3em; }
 .g-maincharacter .lamp { flex: none; width: 1.6em; height: 1.2em; margin-top: 0.4em; background: #3a4370; box-shadow: 0 0 0 0.18em #0b1020; position: relative; }
 .g-maincharacter .lamp::after { content: ''; position: absolute; left: 0.25em; right: 0.25em; bottom: 0; height: 0.35em; background: #151c33; }
-.g-maincharacter .cone { flex: 1; width: 150%; margin-bottom: -0.9em; background: linear-gradient(#fff0a8ee, #fff0a855); clip-path: polygon(42% 0, 58% 0, 100% 100%, 0 100%); opacity: 0; }
-.g-maincharacter .spot { flex: none; width: 88%; height: 1.4em; border-radius: 50%; background: #6e3f1c; box-shadow: 0 0 0 0.18em #0b1020; position: relative; z-index: 0; }
+.g-maincharacter .cone { flex: 1; width: 150% !important; height: auto !important; min-height: 0; margin-bottom: -0.9em; opacity: 0; }
+.g-maincharacter .spot { width: 92% !important; height: 1.5em !important; position: relative; z-index: 0; }
+.g-maincharacter .spot .lit { position: absolute; inset: 0; width: 100% !important; height: 100% !important; opacity: 0; }
 .g-maincharacter .lane.lit .lamp::after { background: var(--gold); }
-.g-maincharacter .lane.lit .cone { opacity: 1; transform: scaleX(calc(0.45 + 0.55 * var(--life, 1))); }
-.g-maincharacter .lane.lit .spot { background: #fff0a8; }
+.g-maincharacter .lane.lit .cone { opacity: 0.85; transform: scaleX(calc(0.45 + 0.55 * var(--life, 1))); }
+.g-maincharacter .lane.lit .spot .lit { opacity: 1; }
 .g-maincharacter .scene.going .lane.lit .cone { animation: g-maincharacter-going 0.16s steps(1) infinite; }
-@keyframes g-maincharacter-going { 50% { opacity: 0.3; } }
+@keyframes g-maincharacter-going { 50% { opacity: 0.25; } }
 
 /* Where the pose names pop from: centre stage, under the rig. */
 .g-maincharacter .marquee { position: absolute; left: 50%; top: 2.6em; }
@@ -30,14 +31,11 @@
 .g-maincharacter .fig { position: absolute; left: 50%; bottom: 0; width: 5.6em; margin-left: -2.8em; display: flex; flex-direction: column; align-items: center; transform-origin: 50% 100%; }
 .g-maincharacter .fig > .actor { position: relative; z-index: 0; margin-bottom: -0.35em; }
 .g-maincharacter .body { position: relative; z-index: 1; width: 5.6em; height: 5.04em; }
-.g-maincharacter .body svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.g-maincharacter .out { fill: none; stroke: #0b1020; stroke-width: 5; stroke-linecap: square; stroke-linejoin: miter; }
-.g-maincharacter .limbs { fill: none; stroke: #ffcf3f; stroke-width: 2.4; stroke-linecap: square; stroke-linejoin: miter; }
-.g-maincharacter .shirt { fill: #b14bff; stroke: #0b1020; stroke-width: 1.3; }
-.g-maincharacter .cape { fill: #ff4b55; stroke: #0b1020; stroke-width: 1.3; }
-.g-maincharacter .hero.posing .shirt { fill: var(--gold); }
+/* The pixel body (23x26 art pixels) hangs from the neck, 7 pixels down from its top. */
+.g-maincharacter .body .limbs { position: absolute; left: 50%; top: -1.96em; margin-left: -3.22em; }
+/* The cape hangs from the shoulders and grows with the streak (scaled from the top). */
+.g-maincharacter .body .cape { position: absolute; left: 50%; top: 0.28em; margin-left: -3.22em; transform-origin: 50% 0; visibility: hidden; }
 .g-maincharacter .hero.cringe .fig { animation: g-maincharacter-cringe 0.4s; }
-.g-maincharacter .hero.cringe .shirt { fill: #646e9c; }
 @keyframes g-maincharacter-cringe { 20% { transform: translateX(-0.3em) rotate(-4deg); } 55% { transform: translateX(0.25em) rotate(3deg); } }
 /* The freeze-frame left where the pose was struck floats up and fades. */
 .g-maincharacter .ghost { z-index: 0; transition: none; }
@@ -53,6 +51,7 @@
 /* The audience along the front edge, camera flashes going off over their heads. */
 .g-maincharacter .crowd { position: absolute; left: -0.7em; right: -0.7em; bottom: 0; z-index: 2; display: flex; justify-content: center; gap: 0; }
 .g-maincharacter .crowd > .actor { margin: 0 -0.15em; }
-.g-maincharacter .crowd::after { content: ''; position: absolute; left: 0; right: 0; top: -0.6em; height: 1.4em; background: radial-gradient(circle, #fff 0.2em, #fff9 0.3em, #fff0 0.7em) 0.3em 0 / 3.8em 100% repeat-x; opacity: 0; }
-.g-maincharacter .crowd.flash::after { animation: g-maincharacter-flash 0.36s steps(1); }
+.g-maincharacter .flashes { position: absolute; left: 0; right: 0; top: -0.7em; display: flex; justify-content: space-around; opacity: 0; }
+.g-maincharacter .flashes > .px:nth-child(even) { transform: translateY(0.5em); }
+.g-maincharacter .crowd.flash .flashes { animation: g-maincharacter-flash 0.36s steps(1); }
 @keyframes g-maincharacter-flash { 0%, 60% { opacity: 1; } 30% { opacity: 0.15; } }
