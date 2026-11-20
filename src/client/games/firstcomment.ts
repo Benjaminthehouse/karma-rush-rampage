@@ -1,5 +1,5 @@
 import './firstcomment.css';
-import { COLOR, COLOR_NAME, clamp1000, h, pick, pulse, randBtn, randInt, type Btn, type GameFactory } from './common';
+import { actor, COLOR, COLOR_NAME, clamp1000, h, padDots, pick, postCard, pulse, randBtn, randInt, type Actor, type ActorMood, type Btn, type GameFactory } from './common';
 
 const POSTS = [
   'Cat sits in a box',
@@ -28,31 +28,62 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let firsts = 0;
   // A stray tap at the bell, or a late answer to a post that just timed out, is not a false start.
   let quiet = 250;
+  let waitAt = 0; // when the blocks reset after somebody else won
 
-  const wrap = h('div', 'g-firstcomment');
-  const post = h('div', 'post');
-  const title = h('div', 'title');
-  const box = h('div', 'box');
+  // The race track: the post board hangs over the finish, three commenters crouch on
+  // their blocks below it. The post dropping is the starter's gun.
+  const wrap = h('div', 'g-firstcomment scene-stage');
+  const board = h('div', 'board');
+  const card = postCard({ sub: 'r/all', title: '', votes: 1, tone: 'grey', big: true });
+  const call = h('div', 'call');
   // Verdicts and reaction times float up from just above the card, clear of its text.
   const stamp = h('i', 'stamp');
-  post.append(title, box, stamp);
+  board.append(card.el, call, stamp);
+  const track = h('div', 'track');
+  const lanes = h('div', 'lanes');
+  const racers: { a: Actor; el: HTMLElement }[] = [
+    actor('npc', { px: 0.26 }),
+    actor('op', { px: 0.44 }),
+    actor('lurker', { px: 0.26 }),
+  ].map((a, i) => {
+    const el = h('div', `racer${i === 1 ? ' you' : ''}`);
+    el.append(a.el, h('i', 'block'));
+    lanes.append(el);
+    return { a, el };
+  });
+  const you = racers[1];
   const note = h('div', 'g-note');
-  wrap.append(post, note);
+  track.append(lanes, note);
+  wrap.append(board, track);
   root.append(wrap);
+
+  /** Who bursts off the blocks (or nobody), and everyone's face. */
+  function race(go: number, moods: [ActorMood, ActorMood, ActorMood]) {
+    racers.forEach((r, i) => {
+      r.el.classList.toggle('go', i === go);
+      r.a.mood(moods[i]);
+    });
+  }
 
   function waiting() {
     state = 'wait';
-    post.className = 'post loading';
-    title.textContent = `${drops[idx] ? drops[idx].sub : 'r/all'} is loading`;
-    box.textContent = 'wait for it…';
+    wrap.classList.remove('live', 'done');
+    card.tone('grey');
+    card.set({ sub: drops[idx] ? drops[idx].sub : 'r/all', title: 'loading…' });
+    card.votes(1);
+    call.className = 'call';
+    call.textContent = 'ON YOUR MARKS…';
+    race(-1, ['idle', 'angry', 'peep']);
     note.textContent = `${firsts} first comment${firsts === 1 ? '' : 's'}`;
   }
   waiting();
 
   function close(text: string) {
     state = 'done';
-    post.className = 'post closed';
-    box.textContent = text;
+    wrap.classList.remove('live');
+    wrap.classList.add('done');
+    call.className = 'call closed';
+    call.textContent = text;
   }
 
   return {
@@ -62,13 +93,15 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       if (state === 'wait') {
         if (t < quiet) return;
         // Jumping the gun forfeits the upcoming post.
-        pulse(post, 'shake');
-        bad(stamp, 'TOO SOON');
+        pulse(you.el, 'shake');
+        race(-1, ['happy', 'shock', 'happy']);
+        bad(stamp, 'FALSE START');
         close('Removed: commenting on nothing');
         return;
       }
       if (!d) return;
       if (b !== d.btn) {
+        race(-1, ['happy', 'sad', 'happy']);
         bad(stamp, 'WRONG COLOUR');
         close('You commented on the wrong post');
         return;
@@ -77,9 +110,12 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       const share = Math.max(0.25, Math.min(1, 1 - (ms - fullMarks) / 600));
       earned += share;
       firsts++;
+      race(1, ['shock', 'happy', 'shock']);
+      card.votes(2);
       good(stamp, `${Math.round(ms)} ms`);
-      if (share >= 1) fx.burst(post, COLOR[d.btn], 14);
+      if (share >= 1) fx.burst(card.el, COLOR[d.btn], 14);
       close('FIRST!');
+      call.classList.add('win');
     },
     tick(t) {
       const d = drops[idx];
@@ -92,15 +128,30 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       }
       if (state === 'wait' && t >= d.at) {
         state = 'live';
-        post.className = `post live c-${COLOR[d.btn]}`;
-        title.textContent = d.text;
-        box.textContent = `Hit ${COLOR_NAME[d.btn]}!`;
+        wrap.classList.add('live');
+        card.tone(COLOR[d.btn]);
+        card.set({ title: d.text });
+        pulse(card.el, 'pop-in');
+        call.className = `call live c-${COLOR[d.btn]}`;
+        call.textContent = `Hit ${COLOR_NAME[d.btn]}!`;
+        call.append(padDots(d.btn));
+        race(-1, ['shock', 'shock', 'shock']);
         fx.sound('ding');
       } else if (state === 'live' && t >= d.at + LIVE) {
+        // Somebody else got there first.
+        race(idx % 2 ? 0 : 2, ['happy', 'sad', 'happy']);
         bad(stamp, 'SECOND.');
         quiet = t + 250;
         idx++;
-        waiting();
+        state = 'wait';
+        call.className = 'call closed';
+        call.textContent = 'Beaten to it';
+        // The winner gets a moment before the blocks reset.
+        waitAt = t + 300;
+      }
+      if (waitAt && t >= waitAt) {
+        waitAt = 0;
+        if (state === 'wait') waiting();
       }
     },
     score: () => clamp1000((1000 * earned) / drops.length),

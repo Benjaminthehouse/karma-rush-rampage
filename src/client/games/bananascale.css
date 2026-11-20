@@ -1,11 +1,27 @@
-.g-bananascale .title { flex: none; min-height: 2.4em; display: flex; align-items: center; text-align: center; font-size: 1.15em; font-weight: 800; line-height: 1.2; }
-.g-bananascale .title.count { min-height: 1.725em; font-size: 1.6em; font-weight: 900; font-style: italic; color: var(--gold); font-variant-numeric: tabular-nums; }
+/* A photo studio in the kitchen: OP Cat and its caption up top, the backdrop paper with the
+   thing and its banana in the middle, three answer placards on the counter at the bottom. */
+.g-bananascale { justify-content: space-between !important; gap: 0.45em !important; padding: 0.6em 0.7em 0.5em !important; }
+.g-bananascale .head { flex: none; width: min(100%, 26em); display: flex; align-items: center; gap: 0.7em; }
+.g-bananascale .head > .actor { flex: none; }
+/* The caption is OP's speech bubble, its tail pointing back at the cat. */
+.g-bananascale .title { position: relative; flex: 1; min-width: 0; min-height: 2.6em; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0.3em 0.5em; background: #fff; color: #0b1020; font-size: 1.1em; line-height: 1.1;
+  box-shadow: 0 0 0 0.18em #0b1020, 0.3em 0.35em 0 0.18em #0b102055; }
+.g-bananascale .title::before { content: ''; position: absolute; right: 100%; top: 50%; margin: -0.5em 0.14em 0 0; border: 0.5em solid #0000; border-right: 0.6em solid #0b1020; border-left: 0; }
+.g-bananascale .title.count { font-size: 1.6em; min-height: 1.81em; color: #c98a10; font-variant-numeric: tabular-nums; }
 
-/* The scene is a size container: the thing is --h tall and each banana is exactly --h / --k. */
-.g-bananascale .scene { flex: 1 1 0; min-height: 8em; max-height: 17em; width: min(100%, 26em); position: relative; container-type: size; }
-.g-bananascale .floor { --c: var(--gold); position: absolute; left: 0; bottom: 0; height: 0.4em; background: var(--dim); }
+/* The backdrop paper is a size container: the thing is --h tall and each banana is exactly --h / --k. */
+.g-bananascale .scene { flex: 1 1 0; min-height: 8em; max-height: 17em; width: min(100%, 26em); position: relative; container-type: size; background: #fff7e0;
+  box-shadow: 0 0 0 0.2em #0b1020, 0.35em 0.4em 0 0.2em #0b102055; }
+/* A height chart down the left edge of the paper: ticks, no numbers. */
+.g-bananascale .chart { position: absolute; left: 0.3em; top: 0.4em; bottom: 0.8em; width: 0.9em; background: repeating-linear-gradient(#0000 0 0.55em, #7c86b0 0.55em 0.7em), linear-gradient(90deg, #7c86b0 0 0.15em, #0000 0); }
+.g-bananascale .lamp { position: absolute; top: 0.3em; opacity: 0.85; }
+.g-bananascale .lamp.left { left: 1.5em; }
+.g-bananascale .lamp.right { right: 0.3em; }
+/* The floor line doubles as the progress meter. */
+.g-bananascale .floor { --c: var(--gold); position: absolute; left: 0; bottom: 0; height: 0.4em; border-radius: 0; background: #c4cbe4; }
+.g-bananascale .floor i { width: 100%; transform: scaleX(0); transform-origin: 0 50%; transition: transform 0.12s ease-out; }
 .g-bananascale .pair { --h: min(92cqh - 0.4em, (100cqw - 1.5em) / (var(--ar) + 0.25)); position: absolute; left: 0; right: 0; bottom: 0.4em; height: var(--h); display: flex; justify-content: center; align-items: flex-end; gap: 1em; border-top: 0.12em dashed #0000; }
-.g-bananascale .pair.done { border-top-color: var(--gold); }
+.g-bananascale .pair.done { border-top-color: #c98a10; }
 .g-bananascale .stack { flex: none; display: flex; flex-direction: column-reverse; }
 .g-bananascale .thing { flex: none; position: relative; }
 .g-bananascale .thing svg { display: block; height: var(--h); width: calc(var(--h) * var(--ar)); }
@@ -15,16 +31,17 @@
 .g-bananascale .stack .nana.on { opacity: 1; animation: g-bananascale-drop 0.12s ease-out; }
 .g-bananascale .pair.spin .nana:last-child { animation: g-bananascale-spin 0.3s ease-out; }
 
-.g-bananascale .stamp { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%) rotate(-9deg); white-space: pre; text-align: center; line-height: 1.05; font-size: 1.2em; font-weight: 900; letter-spacing: 0.04em; padding: 0.2em 0.45em; border: 0.14em solid; border-radius: 0.3em; background: #0b1020e6; color: var(--gold); opacity: 0; }
+.g-bananascale .stamp { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%) rotate(-9deg); white-space: pre; text-align: center; line-height: 1.05; font-size: 1.2em; letter-spacing: 0.04em; padding: 0.2em 0.45em; background: #0b1020; color: var(--gold); box-shadow: 0 0 0 0.14em currentColor; opacity: 0; }
 .g-bananascale .stamp.on { opacity: 1; animation: g-bananascale-slam 0.16s ease-out; }
-.g-bananascale .stamp.no { color: var(--dim); }
+.g-bananascale .stamp.no { color: #ff4b55; }
 
-.g-bananascale .picks { flex: none; display: flex; gap: 0.5em; width: 100%; }
-.g-bananascale .pick { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.2em; padding: 0.3em 0 0.45em; background: var(--c); color: #071022; border-radius: 0.6em; box-shadow: inset 0 -0.22em 0 var(--cd); transition: opacity 0.1s; }
-.g-bananascale .pick b { font-size: 2.2em; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+/* The answers: three placards in the pad colours, standing on the counter. */
+.g-bananascale .picks { flex: none; display: flex; gap: 0.6em; width: min(100%, 26em); }
+.g-bananascale .pick { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.2em; padding: 0.25em 0 0.35em; background: var(--c); color: #0b1020; box-shadow: 0 0 0 0.18em #0b1020, inset 0 -0.25em 0 var(--cd), 0.25em 0.3em 0 0.18em #0b102055; transition: opacity 0.1s; }
+.g-bananascale .pick b { font-size: 2.2em; font-weight: inherit; line-height: 1; font-variant-numeric: tabular-nums; }
 .g-bananascale .pick .nana { height: 1.8em; width: 0.8em; transform: rotate(16deg); }
 .g-bananascale .pick.no { opacity: 0.3; }
-.g-bananascale .pick.yes { outline: 0.18em solid var(--ink); }
+.g-bananascale .pick.yes { box-shadow: 0 0 0 0.18em #0b1020, 0 0 0 0.4em #fff, inset 0 -0.25em 0 var(--cd); }
 
 @keyframes g-bananascale-drop { from { transform: translateY(-50%) scale(1.25); opacity: 0; } }
 @keyframes g-bananascale-spin { to { transform: rotate(360deg); } }

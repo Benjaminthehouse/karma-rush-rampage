@@ -1,25 +1,47 @@
-.g-hypeballoon { gap: 0.6em !important; }
-.g-hypeballoon .post { display: flex; flex-direction: column; align-items: center; gap: 0.35em; }
-.g-hypeballoon .post b { font-weight: 900; font-size: 1.15em; line-height: 1.1; white-space: nowrap; }
-.g-hypeballoon .tag { font-weight: 900; font-size: 0.85em; line-height: 1.2; padding: 0.2em 0.9em; border-radius: 99em; background: var(--panel-2); color: var(--dim); white-space: nowrap; }
-.g-hypeballoon .tag.s1 { background: var(--gold); color: #071022; }
+/* A rooftop launch party: the launch post up top, the Dev and the investors around the balloon, the hype gauge on the roof ledge. */
+.g-hypeballoon { justify-content: space-between !important; gap: 0.35em !important; padding: 0.5em 0.5em 0 !important; color: #0b1020; }
+.g-hypeballoon .post { display: flex; flex-direction: column; align-items: center; gap: 0.3em; padding: 0.35em 0.8em; background: #fff; box-shadow: 0 0 0 0.2em #0b1020, 0.3em 0.35em 0 0.2em #0b102055; }
+.g-hypeballoon .post b { font-weight: inherit; font-size: 1.1em; line-height: 1.1; white-space: nowrap; }
+.g-hypeballoon .tag { font-size: 0.85em; line-height: 1.2; padding: 0.1em 0.7em; background: #c4cbe4; color: #0b1020; white-space: nowrap; box-shadow: 0 0 0 0.12em #0b1020; }
+.g-hypeballoon .tag.s1 { background: var(--gold); }
 .g-hypeballoon .tag.s2 { background: var(--purple); color: #fff; animation: g-hypeballoon-alarm 0.16s steps(2) infinite; }
-.g-hypeballoon .tag.bust { background: var(--red); color: #071022; }
+.g-hypeballoon .tag.bust { background: var(--red); }
 @keyframes g-hypeballoon-alarm { 50% { opacity: 0.6; } }
 
-/* As big as the stage allows: 15em on a phone, a little less on a short desktop stage. */
-.g-hypeballoon .sky { position: relative; flex: 0 1 15em; min-height: 0; aspect-ratio: 1; }
-.g-hypeballoon .sky::before { content: ''; position: absolute; left: 50%; top: 50%; bottom: -0.4em; width: 0.14em; margin-left: -0.07em; background: var(--dim); }
+/* The party: the Dev on the pump, the balloon, the investors. Wide stages put them side by side;
+   tall ones put the balloon on top and the people on the roof below it. */
+.g-hypeballoon .party { flex: 1 1 auto; min-height: 0; width: 100%; display: grid; grid-template-columns: 1fr auto 1fr; grid-template-rows: minmax(0, 1fr); grid-template-areas: 'rig sky crowd'; align-items: end; justify-items: center; column-gap: 0.4em; }
+.g-hypeballoon .rig { grid-area: rig; display: flex; align-items: flex-end; }
+.g-hypeballoon .crowd { grid-area: crowd; display: flex; align-items: flex-end; gap: 0.2em; }
+.g-hypeballoon .rig .actor { position: relative; z-index: 1; margin-right: -0.6em; transform-origin: 50% 100%; }
+.g-hypeballoon .pump { transform-origin: 50% 100%; }
+/* While pumping the Dev stomps and the bellows squash, on a quick loop. */
+.g-hypeballoon.pumping .rig .actor { animation: g-hypeballoon-stomp 0.24s ease-in-out infinite; }
+.g-hypeballoon.pumping .pump { animation: g-hypeballoon-bellows 0.24s ease-in-out infinite; }
+@keyframes g-hypeballoon-stomp { 50% { transform: translateY(0.35em); } }
+@keyframes g-hypeballoon-bellows { 50% { transform: scaleY(0.78); } }
+@container (max-aspect-ratio: 4/5) {
+  .g-hypeballoon .party { grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: 'sky sky' 'rig crowd'; row-gap: 0.2em; }
+  .g-hypeballoon .rig { justify-self: start; }
+  .g-hypeballoon .crowd { justify-self: end; }
+}
+
+/* As big as the stage allows. */
+.g-hypeballoon .sky { grid-area: sky; position: relative; height: 100%; max-height: 14em; width: auto; aspect-ratio: 1; align-self: center; }
+@container (max-aspect-ratio: 4/5) { .g-hypeballoon .sky { max-height: 15em; } }
+@container (min-aspect-ratio: 5/4) { .g-hypeballoon .rig, .g-hypeballoon .crowd { transform: scale(1.3); transform-origin: 50% 100%; } }
+/* The hose from the balloon down to the pump. */
+.g-hypeballoon .sky::before { content: ''; position: absolute; left: 50%; top: 50%; bottom: -0.6em; width: 0.3em; margin-left: -0.15em; background: #0b1020; }
 .g-hypeballoon .sky.empty::before { opacity: 0; }
-.g-hypeballoon .line { position: absolute; z-index: 1; inset: 0; border: 0.2em dashed var(--ink); border-radius: 50%; }
-.g-hypeballoon .line span { position: absolute; left: 50%; top: -0.75em; transform: translateX(-50%); padding: 0 0.5em; background: var(--panel); font-weight: 900; font-size: 0.7em; line-height: 1.3; letter-spacing: 0.1em; white-space: nowrap; }
-.g-hypeballoon .balloon { position: absolute; inset: 0; color: #071022; display: flex; align-items: center; justify-content: center; }
+.g-hypeballoon .line { position: absolute; z-index: 1; inset: 0; border: 0.2em dashed #0b1020; border-radius: 50%; }
+.g-hypeballoon .line span { position: absolute; left: 50%; top: -0.75em; transform: translateX(-50%); padding: 0 0.5em; background: #0b1020; color: #fff; font-size: 0.7em; line-height: 1.3; letter-spacing: 0.1em; white-space: nowrap; }
+.g-hypeballoon .balloon { position: absolute; inset: 0; color: #0b1020; display: flex; align-items: center; justify-content: center; }
 /* The rubber is drawn once at full size and scaled; the text scales with it. Nothing is resized while pumping. */
-.g-hypeballoon .skin { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 30% 26%, #fffb 0 7%, #fff0 20%), var(--c); box-shadow: inset -0.5em -0.7em 0 #0003; transform: scale(0.34); will-change: transform; }
-.g-hypeballoon .skin::after { content: ''; position: absolute; left: 50%; top: 100%; margin: -0.15em 0 0 -0.4em; border: 0.4em solid #0000; border-top: 0; border-bottom: 0.55em solid var(--cd); }
+.g-hypeballoon .skin { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 30% 26%, #fffc 0 8%, #fff0 8.5%), var(--c); box-shadow: 0 0 0 0.3em #0b1020, inset -0.6em -0.8em 0 #0b102040; transform: scale(0.34); will-change: transform; }
+.g-hypeballoon .skin::after { content: ''; position: absolute; left: 50%; top: 100%; margin: 0 0 0 -0.5em; border: 0.5em solid #0000; border-top: 0; border-bottom: 0.7em solid #0b1020; }
 .g-hypeballoon .text { position: relative; display: flex; flex-direction: column; align-items: center; will-change: transform; }
-.g-hypeballoon .balloon b { font-size: 1.05em; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
-.g-hypeballoon .balloon .cap { font-size: 0.68em; font-weight: 800; line-height: 1.2; }
+.g-hypeballoon .balloon b { font-size: 1.05em; font-weight: inherit; line-height: 1; font-variant-numeric: tabular-nums; }
+.g-hypeballoon .balloon .cap { font-size: 0.68em; line-height: 1.2; }
 /* Left, middle or right pad: white on any balloon colour. */
 .g-hypeballoon .which { display: flex; margin-top: 0.3em; font-size: 0.85em; line-height: 1; }
 .g-hypeballoon .which .pad-dots i.on { background: #fff; }
@@ -30,11 +52,15 @@
 .g-hypeballoon .balloon.flop { animation: g-hypeballoon-flop 0.2s ease-in forwards; }
 .g-hypeballoon .balloon.fly .text, .g-hypeballoon .balloon.flop .text { visibility: hidden; }
 .g-hypeballoon .balloon.popped { display: none; }
-.g-hypeballoon .boom { position: absolute; left: 50%; top: 50%; display: none; font-size: 3.6em; font-weight: 900; font-style: italic; line-height: 1; letter-spacing: 0.03em; white-space: nowrap; color: var(--ink); text-shadow: 0.07em 0.07em 0 var(--red); transform: translate(-50%, -50%) rotate(-7deg); }
+.g-hypeballoon .boom { position: absolute; left: 50%; top: 50%; display: none; font-size: 3.4em; font-style: italic; line-height: 1; letter-spacing: 0.03em; white-space: nowrap; color: #fff; text-shadow: 0.06em 0 #0b1020, -0.06em 0 #0b1020, 0 0.06em #0b1020, 0 -0.06em #0b1020, 0.1em 0.1em 0 var(--red); transform: translate(-50%, -50%) rotate(-7deg); }
 .g-hypeballoon .sky.popped .boom { display: block; animation: g-hypeballoon-boom 0.22s ease-out; }
 @keyframes g-hypeballoon-tremble { 25% { transform: translate(-0.1em, 0.06em); } 75% { transform: translate(0.1em, -0.06em); } }
 @keyframes g-hypeballoon-fly { to { transform: translateY(-9em) scale(0.5); opacity: 0; } }
 @keyframes g-hypeballoon-flop { to { transform: translateY(3em) scale(0.15); opacity: 0; } }
 @keyframes g-hypeballoon-boom { from { transform: translate(-50%, -50%) rotate(-7deg) scale(0.3); opacity: 0; } 60% { transform: translate(-50%, -50%) rotate(-7deg) scale(1.15); opacity: 1; } }
 
-.g-hypeballoon .meter i { background: var(--gold); width: 100% !important; transform: scaleX(0); transform-origin: left center; }
+/* The roof ledge everyone stands on, with the hype gauge painted along it. */
+.g-hypeballoon .roof { align-self: stretch; margin: 0 -0.5em; display: flex; flex-direction: column; align-items: center; gap: 0.25em; padding: 0.45em 0.6em 0.4em; background: #8a94c8; box-shadow: 0 -0.22em 0 0 #0b1020, inset 0 0.4em 0 0 #a8b0dc; }
+.g-hypeballoon .gauge { width: min(100%, 22em); height: 1.1em; padding: 0.18em; background: #0b1020; }
+.g-hypeballoon .gauge i { display: block; height: 100%; background: var(--gold); transform: scaleX(0); transform-origin: 0 50%; }
+.g-hypeballoon .tally { font-size: 0.85em; text-align: center; color: #0b1020; }

@@ -1,9 +1,31 @@
-.g-firstcomment .post { position: relative; width: min(100%, 22em); min-height: 9em; border-radius: 1em; border: 0.2em solid var(--line); background: var(--panel-2); padding: 1em; display: flex; flex-direction: column; justify-content: space-between; gap: 0.8em; }
-.g-firstcomment .stamp { position: absolute; left: 50%; top: -0.8em; }
-.g-firstcomment .title { font-weight: 800; font-size: 1.25em; line-height: 1.15; }
-.g-firstcomment .box { border-radius: 0.6em; padding: 0.6em 0.8em; background: var(--bg); color: var(--dim); font-weight: 800; }
-.g-firstcomment .post.loading .title { color: var(--dim); animation: g-firstcomment-load 0.6s steps(2) infinite; }
-.g-firstcomment .post.live { border-color: var(--c); background: color-mix(in srgb, var(--c) 35%, var(--panel-2)); box-shadow: 0 0 2em var(--c); }
-.g-firstcomment .post.live .box { background: var(--c); color: #071022; font-size: 1.3em; font-weight: 900; text-align: center; }
-.g-firstcomment .post.closed { opacity: 0.7; }
-@keyframes g-firstcomment-load { 50% { opacity: 0.45; } }
+/* The race: the post board hangs over the finish up top, the runners crouch on the track below. */
+.g-firstcomment { justify-content: space-between !important; gap: 0.4em !important; padding: 0.8em 0.7em 0 !important; overflow: hidden; }
+.g-firstcomment .board { position: relative; flex: none; width: min(100%, 21em); display: flex; flex-direction: column; align-items: stretch; gap: 0.5em; }
+.g-firstcomment .rx-post { width: 100%; }
+.g-firstcomment .rx-title { min-height: 2.3em; }
+.g-firstcomment .stamp { position: absolute; left: 50%; top: -0.4em; }
+.g-firstcomment:not(.live):not(.done) .rx-title { color: #7c86b0; }
+.g-firstcomment.done .rx-post { opacity: 0.75; }
+
+/* The starter's call: a dark strip that turns the post's colour when it drops. */
+.g-firstcomment .call { align-self: center; display: flex; align-items: center; justify-content: center; gap: 0.5em; min-width: 11em; padding: 0.15em 0.8em; background: #0b1020; color: #fff0a8; font-size: 1.2em; white-space: nowrap; box-shadow: 0 0 0 0.15em #fff0a8, 0.3em 0.4em 0 0.15em #0b102088; }
+.g-firstcomment:not(.live):not(.done) .call { animation: g-firstcomment-ready 0.6s steps(2) infinite; }
+@keyframes g-firstcomment-ready { 50% { opacity: 0.55; } }
+.g-firstcomment .call.live { background: var(--c); color: #0b1020; font-size: 1.5em; box-shadow: 0 0 0 0.12em #0b1020, 0.25em 0.3em 0 0.12em #0b102088; }
+.g-firstcomment .call.closed { color: #c4cbe4; font-size: 0.95em; }
+
+/* The track: three lanes on the boards, a block behind each runner. */
+.g-firstcomment .track { position: relative; flex: 1 1 auto; min-height: 0; align-self: stretch; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 0.2em; padding-bottom: 0.4em; }
+.g-firstcomment .lanes { width: min(100%, 22em); display: flex; justify-content: space-between; align-items: flex-end; padding: 0 0.3em 0.6em;
+  background: linear-gradient(90deg, #0000 0 calc(33.3% - 0.12em), #fff 0 calc(33.3% + 0.12em), #0000 0 calc(66.6% - 0.12em), #fff 0 calc(66.6% + 0.12em), #0000 0) 0 100% / 100% 70% no-repeat,
+    linear-gradient(#c8551a, #c8551a) 0 100% / 100% 70% no-repeat; box-shadow: 0 0.2em 0 0 #0b1020; }
+.g-firstcomment .racer { position: relative; display: flex; flex-direction: column; align-items: center; transform: translateY(0.4em) scaleY(0.9); transform-origin: 50% 100%; transition: transform 0.12s ease-out; }
+.g-firstcomment.live .racer { transform: none; }
+.g-firstcomment .racer.go { transform: translateY(-1.6em) scale(1.06); }
+.g-firstcomment .racer > .actor { position: relative; z-index: 1; }
+.g-firstcomment .block { width: 70%; height: 0.8em; margin-top: -0.3em; background: #a8b1d6; box-shadow: 0 0 0 0.16em #0b1020; }
+.g-firstcomment .g-note { color: #fff0a8; min-height: 1.1em; }
+/* On the coloured strip the lit pad is dark and the others white, so the dots still read. */
+.g-firstcomment .call.live .pad-dots i { background: #fff; }
+.g-firstcomment .call.live .pad-dots i.on { background: #0b1020; }
+.g-firstcomment .call.closed.win { color: #0b1020; background: var(--gold); font-size: 1.5em; }

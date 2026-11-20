@@ -1,5 +1,19 @@
 import './hypeballoon.css';
-import { COLOR, h, padDots, pulse, randBtn, ratio, shuffled, type GameFactory } from './common';
+import { actor, COLOR, defineSprite, h, padDots, pulse, randBtn, ratio, shuffled, sprite, type ActorMood, type GameFactory } from './common';
+
+// The Dev's foot pump: a pedal on a bellows. Its top half squashes while pumping.
+defineSprite('hypeballoon-pump', `
+....kkkkkkkk....
+...kddddddddk...
+...kkkkkkkkkk...
+....kRrrrrrk....
+....kkkkkkkk....
+....kRrrrrrk....
+....kkkkkkkk....
+....kRrrrrrk....
+..kkkkkkkkkkkk..
+.kxxxxxxxxxxxdk.
+kkkkkkkkkkkkkkkk`);
 
 const APPS = [
   'To-do list, but AI',
@@ -56,11 +70,14 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
   let shownStep = -1;
   let wasStuck = false;
 
-  const wrap = h('div', 'g-hypeballoon');
+  // The scene: a rooftop launch party on feed street. The Dev stomps a foot pump to blow up
+  // the hype balloon while two NPC investors cheer it on; it floats off or pops into confetti.
+  const wrap = h('div', 'g-hypeballoon scene-street');
   const post = h('div', 'post');
   const app = h('b');
   const tag = h('span', 'tag');
   post.append(app, tag);
+  const party = h('div', 'party');
   const sky = h('div', 'sky');
   const line = h('div', 'line');
   line.append(h('span', '', 'POP LINE'));
@@ -72,12 +89,31 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
   text.append(count, h('span', 'cap', 'waitlist'), which);
   balloon.append(skin, text);
   sky.append(line, balloon, h('div', 'boom', 'POP!'));
-  const meter = h('div', 'meter big');
+  const rig = h('div', 'rig');
+  const dev = actor('dev', { px: 0.38 });
+  const pedal = sprite('hypeballoon-pump', { px: 0.24 }, 'pump');
+  rig.append(dev.el, pedal);
+  const crowd = h('div', 'crowd');
+  const investors = [actor('npc', { px: 0.22 }), actor('npc', { px: 0.22 })];
+  crowd.append(...investors.map((n) => n.el));
+  party.append(rig, sky, crowd);
+  const roof = h('div', 'roof');
+  const meter = h('div', 'gauge');
   const bar = h('i');
   meter.append(bar);
-  const note = h('div', 'g-note');
-  wrap.append(post, sky, meter, note);
+  const note = h('div', 'tally');
+  roof.append(meter, note);
+  wrap.append(post, party, roof);
   root.append(wrap);
+  // Faces: actor.mood() only repaints on a change.
+  const faces = (d: ActorMood, c: ActorMood) => {
+    dev.mood(d);
+    investors.forEach((n) => n.mood(c));
+  };
+  let pumping = false;
+  const setPumping = (on: boolean) => {
+    if (on !== pumping) wrap.classList.toggle('pumping', (pumping = on));
+  };
 
   const cur = () => launches[idx % launches.length];
   const worth = (f: number) => Math.round(100 * f * f);
@@ -105,6 +141,9 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
     const s = f < 0.5 ? 0 : f < 0.85 ? 1 : 2;
     if (s === buzz) return;
     buzz = s;
+    // The investors start cheering at half full; the Dev starts sweating near the line.
+    if (s === 0) faces(state === 'pump' ? 'talk' : 'idle', 'idle');
+    else faces(s === 1 ? 'happy' : 'shock', 'happy');
     tag.className = `tag s${s}`;
     tag.textContent = BUZZ[s];
     if (s) pulse(tag, 'pop-in');
@@ -124,6 +163,8 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
     t0 = t;
     balloon.classList.remove('jam');
     wasStuck = false;
+    setPumping(true);
+    faces('talk', 'idle');
     fx.sound('power');
   }
 
@@ -138,6 +179,7 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
     shownStep = -1;
     which.replaceChildren(padDots(cur().col));
     app.textContent = cur().app;
+    setPumping(false);
     paint(0);
     pulse(balloon, 'pop-in');
   }
@@ -146,6 +188,7 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
     state = 'gap';
     live = 0;
     nextAt = t + pause;
+    setPumping(false);
     sky.classList.add('empty');
   }
 
@@ -156,10 +199,12 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
     bank();
     if (f < 0.5) {
       balloon.classList.add('flop');
+      faces('sad', 'sad');
       bad(balloon, pts ? `FLOP +${pts}` : 'FLOP');
       return;
     }
     balloon.classList.add('fly');
+    faces('cool', 'happy');
     good(balloon);
     fx.pop(meter, `BANKED ${pts}!`, 'gold'); // rises off the hype meter, clear of the next launch post
     fx.sound('whoosh');
@@ -176,8 +221,10 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
     tag.className = 'tag bust';
     tag.textContent = cur().pop;
     pulse(tag, 'pop-in');
+    faces('dead', 'shock');
     bad(sky);
     fx.burst(sky, COLOR[cur().col], 26);
+    fx.burst(sky, 'gold', 12); // confetti
     fx.flash('white');
     fx.shake();
     fx.sound('pop');
@@ -195,6 +242,8 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
         live = 0;
         jamUntil = t + KINK_MS;
         paint(0);
+        setPumping(false);
+        faces('angry', 'idle');
         balloon.classList.add('jam');
         wasStuck = true;
         pulse(balloon, 'shake');

@@ -1,5 +1,5 @@
 import './npccheck.css';
-import { COLOR, h, pick, pulse, ratio, shuffled, type Btn, type GameFactory } from './common';
+import { actor, COLOR, h, pick, pulse, ratio, shuffled, type Actor, type Btn, type GameFactory } from './common';
 
 // What both NPCs say, in unison, every single time.
 const LINES = [
@@ -28,17 +28,23 @@ const BOLD = ['sway', 'squat', 'jack'];
 const WAVERS = ['hop', 'spin', 'flail'];
 const SQUIRMERS = ['crouch', 'zoom'];
 
-// Drawn around the feet at 0,0 so the body sways, squats and spins about the floor.
-const FIGURE =
-  '<svg viewBox="-34 -140 68 144" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><g class="body">' +
-  '<line class="leg" x1="-6" y1="-44" x2="-8" y2="-4"/><line class="leg" x1="6" y1="-44" x2="8" y2="-4"/>' +
-  '<g transform="translate(-12 -78)"><line class="arm l" x1="0" y1="0" x2="-10" y2="23"/></g>' +
-  '<g transform="translate(12 -78)"><line class="arm r" x1="0" y1="0" x2="10" y2="23"/></g>' +
-  '<rect class="shirt" x="-14" y="-85" width="28" height="45" rx="9"/>' +
-  '<circle class="head" cx="0" cy="-102" r="15"/>' +
-  '<circle class="face" cx="-5.5" cy="-103" r="2.4"/><circle class="face" cx="5.5" cy="-103" r="2.4"/>' +
-  '<rect class="face" x="-4.5" y="-96" width="9" height="2.4" rx="1.2"/>' +
-  '</g></svg>';
+// One dancer on the pavement: an NPC head from the shared cast on a little body. The body
+// pivots about the feet; each arm hangs from a shoulder that sets its resting slant, so the
+// pose classes only ever rotate the arm itself.
+function dancer(): { el: HTMLElement; face: Actor } {
+  const body = h('div', 'body');
+  const face = actor('npc', { px: 0.25 });
+  const torso = h('div', 'torso');
+  for (const side of ['l', 'r']) {
+    const shoulder = h('div', `shoulder ${side}`);
+    shoulder.append(h('i', `arm ${side}`));
+    torso.append(shoulder);
+  }
+  const legs = h('div', 'legs');
+  legs.append(h('i', 'leg'), h('i', 'leg'));
+  body.append(face.el, torso, legs);
+  return { el: body, face };
+}
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const par = 11 + level * 0.75;
@@ -70,7 +76,9 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let nextAt = -1; // while a reveal is on screen: when the next trio walks in
   let cleared = false;
 
-  const wrap = h('div', 'g-npccheck');
+  // The scene: feed street. Three people dance on coloured mats on the pavement. Two are NPCs
+  // stepping in perfect sync; the real player is doing their own thing.
+  const wrap = h('div', 'g-npccheck scene-street');
   const rule = h('div', 'rule');
   rule.innerHTML = 'Hit the one <b>out of sync</b>!';
   const row = h('div', 'row');
@@ -79,23 +87,24 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     const top = h('div', 'top');
     const say = h('span', 'say');
     const fig = h('div', 'fig');
-    fig.innerHTML = FIGURE;
+    const d = dancer();
+    fig.append(d.el);
     top.append(say);
     pod.append(top, fig, h('i', 'floor'));
     row.append(pod);
-    return { pod, say, fig };
+    return { pod, say, fig, face: d.face };
   });
-  const meter = h('div', 'meter big');
+  const meter = h('div', 'gauge');
   const fill = h('i');
   meter.append(fill);
-  const note = h('div', 'g-note');
+  const note = h('div', 'tally');
   wrap.append(rule, row, meter, note);
   root.append(wrap);
 
   const score = () => ratio(right - wrong / 2, par);
 
   function progress() {
-    fill.style.width = `${score() / 10}%`;
+    fill.style.transform = `scaleX(${score() / 1000})`;
     note.textContent = right ? `${right} real player${right === 1 ? '' : 's'} found` : 'Two are NPCs. One is real.';
   }
 
@@ -106,6 +115,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       p.pod.className = `pod c-${COLOR[i]}`;
       p.fig.className = i === trio.real && trio.wild ? `fig w-${trio.wild}` : `fig m-${trio.idle}`;
       p.say.textContent = '';
+      p.face.mood('idle');
     });
     pulse(row, 'pop-in');
     progress();
@@ -130,9 +140,11 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         nextAt = t + 300;
         real.pod.classList.add('found');
         real.say.textContent = trio.caught;
+        real.face.mood('happy');
         pods.forEach((p) => {
           if (p === real) return;
           p.pod.classList.add('npc');
+          p.face.mood('sleep');
           p.say.textContent = trio.line;
         });
         good(real.fig);
@@ -147,6 +159,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         nextAt = t + 450;
         // The NPC just says its one line again. Twice.
         pods[b].pod.classList.add('npc');
+        pods[b].face.mood('sleep');
+        real.face.mood('wink');
         pods[b].say.textContent = `${trio.line}\n${trio.line}`;
         real.pod.classList.add('missed');
         real.say.textContent = 'over here!';

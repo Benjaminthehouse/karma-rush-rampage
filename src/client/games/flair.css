@@ -1,2 +1,38 @@
-.g-flair .pill { font-size: 3em; font-weight: 900; letter-spacing: 0.06em; background: var(--bg); border: 3px solid var(--line); border-radius: 99px; padding: 0.15em 0.7em; }
-.g-flair .pill.empty { font-size: 1.5em; color: var(--dim); }
+/* Feed street tagging stand: Mod Bear and the rule sign up top, the conveyor of flair tags below. */
+.g-flair { justify-content: space-between !important; gap: 0.3em !important; padding: 0.6em 0.5em 0.5em !important; color: #0b1020; }
+.g-flair .top { display: flex; align-items: flex-end; justify-content: center; width: 100%; }
+.g-flair .top .actor { flex: none; position: relative; z-index: 1; }
+/* The rule sign on a stick, held up beside the bear. */
+.g-flair .sign { position: relative; flex: 0 1 9.5em; min-width: 0; margin-left: -0.6em; margin-bottom: 1.6em; display: flex; flex-direction: column; align-items: center; transform: rotate(3deg); }
+.g-flair .rule { position: relative; z-index: 1; padding: 0.45em 0.6em; background: #fff; box-shadow: 0 0 0 0.2em #0b1020, 0.35em 0.4em 0 0.2em #0b102055; font-size: 1.05em; line-height: 1.2; text-align: center; }
+.g-flair .rule b { font-weight: inherit; color: #fff; background: #0b1020; padding: 0 0.2em; }
+.g-flair .stick { width: 0.6em; height: 2.4em; margin-top: -0.1em; background: #b0703c; box-shadow: 0 0 0 0.16em #0b1020; }
+.g-flair .tally { font-size: 0.85em; padding: 0.1em 0.6em; background: #0b1020; color: #fff0a8; }
+
+/* The stand: a row of tags riding on the conveyor belt. */
+.g-flair .stand { flex: 1 1 auto; min-height: 0; max-height: 17em; width: min(100%, 24em); display: flex; flex-direction: column; align-items: stretch; justify-content: flex-end; margin-top: 0.4em; background: #8a5a2c; background-image: repeating-linear-gradient(90deg, #0000 0 2.2em, #7a4e25 2.2em 2.4em); box-shadow: 0 0 0 0.2em #0b1020; }
+/* The awning: gold and white stripes with a scalloped edge, the tally hung on it. */
+.g-flair .awning { position: relative; display: flex; justify-content: center; align-items: center; height: 2.2em; margin: 0 -0.5em auto; background: repeating-linear-gradient(90deg, #ffcf3f 0 1.6em, #fff 1.6em 3.2em); box-shadow: 0 0 0 0.2em #0b1020, 0 0.5em 0 0 #0b102033; }
+.g-flair .awning::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 0.55em; background: radial-gradient(circle at 50% 0, #ffcf3f 0 0.5em, #0000 0.55em) 0 0 / 1.6em 0.55em repeat-x; }
+.g-flair .legs { display: flex; justify-content: space-between; padding: 0 1.2em; height: 0.9em; }
+.g-flair .legs i { width: 0.7em; background: #646e9c; box-shadow: 0 0 0 0.16em #0b1020; }
+.g-flair .row { margin-top: 0.8em; display: flex; align-items: flex-end; justify-content: center; gap: 0.45em; padding: 0 0.2em; }
+.g-flair .pill.slide { animation: g-flair-slide 0.14s ease-out; }
+.g-flair .prev.slide { animation: g-flair-slide 0.14s ease-out; }
+@keyframes g-flair-slide { from { transform: translateX(2.6em); } }
+/* A flair tag: a dark luggage tag with a punched hole, the word printed in its ink colour. */
+.g-flair .tag { position: relative; display: flex; align-items: center; justify-content: center; background: #1f2648; box-shadow: 0 0 0 0.18em #0b1020, 0.25em 0.3em 0 0.18em #0b102055; white-space: nowrap; }
+.g-flair .tag::before { content: ''; position: absolute; left: 0.35em; top: 50%; width: 0.45em; height: 0.45em; margin-top: -0.22em; background: #646e9c; box-shadow: 0 0 0 0.1em #0b1020; }
+.g-flair .pill { flex: none; min-width: 5.4em; padding: 0.3em 0.3em 0.3em 0.8em; font-size: 1.8em; letter-spacing: 0.04em; }
+.g-flair .pill::before { left: 0.2em; width: 0.25em; height: 0.25em; margin-top: -0.12em; }
+.g-flair .pill.empty { font-size: 1.3em; color: #fff0a8; }
+.g-flair .prev, .g-flair .next { flex: 0 1 4em; min-width: 0; height: 2.6em; font-size: 0.85em; opacity: 0.75; }
+.g-flair .prev .word { padding-left: 0.6em; }
+.g-flair .prev .stamp { position: absolute; right: -0.4em; top: -0.6em; }
+.g-flair .next { color: #646e9c; font-size: 1.2em; height: 1.85em; }
+.g-flair .gone { visibility: hidden; }
+/* The belt: a dark rubber tread on rollers; the tread jumps along on every stamp. */
+.g-flair .belt { position: relative; height: 1.6em; margin-top: 0.4em; overflow: hidden; background: #3a4370; box-shadow: 0 0 0 0.2em #0b1020, inset 0 -0.45em 0 0 #2c3763; }
+.g-flair .tread { position: absolute; left: -2em; right: -2em; top: 0.25em; height: 0.5em; background: repeating-linear-gradient(90deg, #0b1020 0 0.9em, #646e9c 0.9em 1.8em); }
+.g-flair .tread.roll { animation: g-flair-roll 0.14s ease-out; }
+@keyframes g-flair-roll { from { transform: translateX(1.8em); } }

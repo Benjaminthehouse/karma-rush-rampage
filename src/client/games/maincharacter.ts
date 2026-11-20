@@ -1,24 +1,25 @@
 import './maincharacter.css';
-import { h, pick, pulse, ratio, shuffled, type GameFactory } from './common';
+import { actor, h, padDots, pick, pulse, ratio, shuffled, type Actor, type ActorMood, type GameFactory } from './common';
 
 const SPOTS = [0, 1, 2, 3, 4];
-// Stick-figure arms and legs on a 40x56 grid; the head and torso never move.
-const TORSO = 'M20 16V36';
-const STAND = 'M20 21L13 33M20 21L27 33M20 36L15 53M20 36L25 53';
+// OP Cat's body under its big head, on a 40x36 grid: the neck is at (20, 0) and the head
+// sits above y = 0, so raised arms bend out past the head (elbows beyond x 6..34).
+const TORSO = 'M15 3H25V18H15Z';
+const STAND = 'M20 4L10 9L8 17M20 4L30 9L32 17M20 17L14 34M20 17L26 34';
 const STRIDE = [
-  'M20 21L14 32M20 21L27 31M20 36L11 52M20 36L27 53',
-  'M20 21L26 32M20 21L13 31M20 36L29 52M20 36L13 53',
+  'M20 4L11 10L9 17M20 4L29 8L34 13M20 17L10 33M20 17L27 34',
+  'M20 4L29 10L31 17M20 4L11 8L6 13M20 17L30 33M20 17L13 34',
 ];
-const SLUMP = 'M20 21L17 35M20 21L23 35M20 36L17 53M20 36L23 53';
+const SLUMP = 'M20 5L15 12L14 20M20 5L25 12L26 20M20 17L17 34M20 17L23 34';
 const POSES = [
-  { name: 'STARFISH!', limbs: 'M20 21L5 8M20 21L35 8M20 36L6 53M20 36L34 53' },
-  { name: 'FLEX!', limbs: 'M20 22H9V10M20 22H31V10M20 36L13 53M20 36L27 53' },
-  { name: 'T-POSE!', limbs: 'M3 22H37M20 36L17 53M20 36L23 53' },
-  { name: 'DISCO!', limbs: 'M20 21L35 5M20 21L11 26L18 32M20 36L10 52M20 36L24 53' },
-  { name: 'JAZZ HANDS!', limbs: 'M20 21L10 26L4 16M20 21L30 26L36 16M20 36L11 44L14 53M20 36L29 44L26 53' },
-  { name: 'HIGH KICK!', limbs: 'M20 21L7 14M20 21L33 14M20 36L37 24M20 36L18 53' },
-  { name: 'POWER STANCE!', limbs: 'M20 21L10 27L18 33M20 21L30 27L22 33M20 36L9 53M20 36L31 53' },
-  { name: 'DAB!', limbs: 'M20 21L36 8M20 21L28 15L14 9M20 36L13 53M20 36L27 53' },
+  { name: 'STARFISH!', limbs: 'M20 4L5 -2M20 4L35 -2M20 17L5 34M20 17L35 34' },
+  { name: 'FLEX!', limbs: 'M20 5L5 5L5 -7M20 5L35 5L35 -7M20 17L13 34M20 17L27 34' },
+  { name: 'T-POSE!', limbs: 'M0 5H40M20 17L17 34M20 17L23 34' },
+  { name: 'DISCO!', limbs: 'M20 4L34 2L39 -12M20 4L9 10L15 16M20 17L9 33M20 17L24 34' },
+  { name: 'JAZZ HANDS!', limbs: 'M20 5L6 9L2 -2M20 5L34 9L38 -2M20 17L11 25L14 34M20 17L29 25L26 34' },
+  { name: 'HIGH KICK!', limbs: 'M20 4L4 0M20 4L36 0M20 17L39 7M20 17L18 34' },
+  { name: 'POWER STANCE!', limbs: 'M20 5L8 10L15 15M20 5L32 10L25 15M20 17L7 34M20 17L33 34' },
+  { name: 'DAB!', limbs: 'M20 4L38 -8M20 4L30 -3L12 -10M20 17L13 34M20 17L27 34' },
 ];
 const HYPE = [
   'The crowd goes feral.',
@@ -41,13 +42,30 @@ const CRINGE = [
 const SLOW = ['The spotlight got bored and left.', 'Too slow. The moment passed.', 'The light found a new main character.'];
 const GRACE = 250; // ms after the light walks off in which a pose is late, not cringe
 const ENCORE = 160; // ms after a lit pose in which a second tap is the same pose, not a new one
+const HEAD = 0.29; // one art pixel of OP Cat's head, in em (4.6em wide)
 
-function figure(cls: string) {
-  const el = h('div', cls);
-  el.innerHTML =
-    '<svg viewBox="0 0 40 56" aria-hidden="true"><path class="cape"/><path class="limbs"/><circle cx="20" cy="9" r="6.5"/></svg>';
-  const [cape, limbs] = el.firstElementChild!.children;
-  return { el, cape, draw: (d: string) => limbs.setAttribute('d', TORSO + d) };
+/** OP Cat with a body: the cast's head on an outlined stick body that strikes poses. */
+function figure(cls: string, mood: ActorMood) {
+  // `track` is one lane wide and slides a lane at a time; `fig` is the cat standing in it.
+  const track = h('div', `track ${cls}`);
+  const fig = h('div', 'fig');
+  const head = actor('op', { px: HEAD, mood });
+  const body = h('div', 'body');
+  body.innerHTML =
+    `<svg viewBox="0 0 40 36" aria-hidden="true"><path class="cape"/><path class="out"/><path class="shirt" d="${TORSO}"/><path class="limbs"/></svg>`;
+  const [cape, out, , limbs] = body.firstElementChild!.children;
+  fig.append(head.el, body);
+  track.append(fig);
+  return {
+    track,
+    fig,
+    head,
+    cape,
+    draw: (d: string) => {
+      out.setAttribute('d', d);
+      limbs.setAttribute('d', d);
+    },
+  };
 }
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
@@ -78,12 +96,20 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let encoreUntil = 0;
   let leftSpot = -1; // where the light last walked off from, and when
   let leftAt = 0;
+  let life = '';
+  let crowdUntil = 0;
 
-  const wrap = h('div', 'g-maincharacter');
+  // The party stage: a lighting rig with five lamps, one spot lit on the boards, OP Cat
+  // walking between them, and a row of NPCs at the front with their phones out.
+  const wrap = h('div', 'g-maincharacter scene-stage');
+  const top = h('div', 'top');
   const aura = h('div', 'aura');
   const points = h('b', '', '0');
   aura.append('AURA ', points);
+  const note = h('div', 'g-note', 'Find the light. Strike a pose.');
+  top.append(aura, note);
   const scene = h('div', 'scene');
+  const rig = h('i', 'rig');
   const floor = h('div', 'floor');
   const lanes = SPOTS.map(() => {
     const lane = h('div', 'lane');
@@ -91,24 +117,36 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     floor.append(lane);
     return lane;
   });
-  const ghost = figure('ghost');
-  const hero = figure('hero');
+  const ghost = figure('ghost', 'happy');
+  const hero = figure('hero', 'idle');
   hero.draw(STAND);
   // Green means pose: the cue only shows while the hero is standing in the light.
-  hero.el.append(h('b', 'cue', 'POSE!'));
-  floor.append(ghost.el, hero.el);
+  const cue = h('b', 'cue', 'POSE!');
+  cue.append(padDots(1));
+  hero.fig.append(cue);
+  floor.append(ghost.track, hero.track);
   const marquee = h('i', 'marquee');
   const crowd = h('div', 'crowd');
-  scene.append(floor, marquee, crowd);
-  const note = h('div', 'g-note', 'Find the light. Strike a pose.');
-  wrap.append(aura, scene, note);
+  const fans: Actor[] = [0, 1, 2, 3, 4].map(() => actor('npc', { px: 0.22 }));
+  for (const f of fans) crowd.append(f.el);
+  scene.append(rig, floor, marquee, crowd);
+  wrap.append(top, scene);
   root.append(wrap);
 
   const light = () => lights[idx % lights.length];
 
+  function face() {
+    const lit = pos === light();
+    hero.head.mood(frozen ? 'shock' : hero.track.classList.contains('posing') ? 'happy' : lit ? 'cool' : 'idle');
+  }
+  function cheer(m: ActorMood, t: number) {
+    for (const f of fans) f.mood(m);
+    crowdUntil = t + 500;
+  }
   function place() {
-    hero.el.style.left = `${pos * 20 + 10}%`;
-    hero.el.classList.toggle('lit', pos === light());
+    hero.track.style.transform = `translateX(${pos * 100}%)`;
+    hero.track.classList.toggle('lit', pos === light());
+    face();
   }
   function shine(t: number) {
     litAt = t;
@@ -119,15 +157,16 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     const total = posed * 100 - cringes * 1000;
     points.textContent = total > 0 ? `+${total}` : String(total);
     aura.classList.toggle('neg', total < 0);
-    pulse(points, 'bump');
+    pulse(points, 'pop-in');
     // The cape grows with every clean pose in a row.
     const s = Math.min(streak, 5);
-    hero.cape.setAttribute('d', s ? `M15 19H25L${25 + s * 2} ${27 + s * 5}H${15 - s * 2}Z` : '');
+    hero.cape.setAttribute('d', s ? `M15 3H25L${25 + s * 2} ${16 + s * 3}H${15 - s * 2}Z` : '');
   }
   function thaw() {
     frozen = false;
-    hero.el.classList.remove('cringe');
+    hero.track.classList.remove('cringe');
     hero.draw(STAND);
+    face();
   }
   shine(0);
 
@@ -139,12 +178,12 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       if (b !== 1) {
         const to = pos + b - 1;
         if (to < 0 || to > 4) {
-          pulse(hero.el, 'shake');
+          pulse(hero.fig, 'shake');
           fx.sound('boing');
           return;
         }
         pos = to;
-        hero.el.classList.remove('posing');
+        hero.track.classList.remove('posing');
         hero.draw(STRIDE[strides++ % 2]);
         place();
         fx.sound('tick');
@@ -155,7 +194,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         if (pos === leftSpot && t - leftAt < GRACE) {
           // A beat too slow: the pose is wasted but not also fined (once per light).
           leftSpot = -1;
-          pulse(hero.el, 'shake');
+          pulse(hero.fig, 'shake');
           bad(marquee, 'TOO LATE!');
           return;
         }
@@ -163,9 +202,11 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         streak = 0;
         frozen = true;
         frozenUntil = t + 400;
-        hero.el.classList.remove('posing');
-        hero.el.classList.add('cringe');
+        hero.track.classList.remove('posing');
+        hero.track.classList.add('cringe');
         hero.draw(SLUMP);
+        face();
+        cheer('shock', t);
         note.textContent = cringe[cringes % cringe.length];
         bad(marquee, '-1000 AURA');
         fx.sound('thud');
@@ -177,19 +218,20 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       streak++;
       missed = 0;
       encoreUntil = t + ENCORE;
-      hero.el.classList.add('posing');
+      hero.track.classList.add('posing');
       hero.draw(pose.limbs);
       // The freeze-frame lingers where the pose was struck.
       ghost.draw(pose.limbs);
-      ghost.el.style.left = `${pos * 20 + 10}%`;
-      pulse(ghost.el, 'snap');
+      ghost.track.style.transform = `translateX(${pos * 100}%)`;
+      pulse(ghost.fig, 'snap');
       pulse(crowd, 'flash');
+      cheer('happy', t);
       note.textContent = hype[posed % hype.length];
       // The aura floats up off the hero; popped from the counter it left the top of a short stage.
-      good(hero.el, '+100');
+      good(hero.fig, '+100');
       fx.pop(marquee, pose.name, 'gold');
       if (streak % 3 === 0) {
-        fx.burst(hero.el, 'gold', 22);
+        fx.burst(hero.fig, 'gold', 22);
         fx.flash('gold');
         fx.sound('coin');
       }
@@ -199,6 +241,10 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     },
     tick(t) {
       if (frozen && t >= frozenUntil) thaw();
+      if (crowdUntil && t >= crowdUntil) {
+        crowdUntil = 0;
+        for (const f of fans) f.mood('idle');
+      }
       const patience = stay + missed * 400;
       if (t - litAt >= patience) {
         note.textContent = SLOW[idx % SLOW.length];
@@ -208,11 +254,15 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         missed++;
         idx++;
         shine(t);
+        cheer('sleep', t);
       }
       // The cone narrows as the light loses patience, then flickers before it leaves.
-      const life = 1 - (t - litAt) / patience;
-      scene.style.setProperty('--life', life.toFixed(2));
-      scene.classList.toggle('going', life < 0.3);
+      const l = (1 - (t - litAt) / patience).toFixed(2);
+      if (l !== life) {
+        life = l;
+        scene.style.setProperty('--life', l);
+        scene.classList.toggle('going', +l < 0.3);
+      }
     },
     score: () => ratio(posed - cringes / 2, par),
     hint(t) {

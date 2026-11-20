@@ -1,5 +1,5 @@
 import './poll.css';
-import { COLOR, clamp1000, h, pulse, shuffled, type Btn, type GameFactory } from './common';
+import { actor, COLOR, clamp1000, h, pulse, shuffled, type ActorMood, type Btn, type GameFactory } from './common';
 
 export const create: GameFactory = ({ root, rng, level, good, bad }) => {
   const par = level >= 2 ? 10 : 9;
@@ -35,31 +35,64 @@ export const create: GameFactory = ({ root, rng, level, good, bad }) => {
   let right = 0;
   let wrong = 0;
   let lockedUntil = 0;
+  let moodUntil = 0;
 
-  const wrap = h('div', 'g-poll');
-  const box = h('div', 'ballot');
-  // Verdicts float up from the ballot's top edge, so they never cover the next poll's votes.
+  // Election night: the Mod Bear returning officer looks over three glass ballot boxes
+  // while poll workers drop the votes in. The votes are spread across all three boxes;
+  // call the colour with the most.
+  const wrap = h('div', 'g-poll scene-stage');
+  const note = h('div', 'headline');
+  const hall = h('div', 'hall');
+  const back = h('div', 'back');
+  const officer = actor('modbear', { mood: 'peep', px: 0.5 });
+  officer.el.classList.add('officer');
+  const workers = [actor('npc', { px: 0.2 }), actor('npc', { px: 0.2 })];
+  back.append(workers[0].el, officer.el, workers[1].el);
+  const row = h('div', 'boxes');
+  const boxes = [0, 1, 2].map(() => {
+    const box = h('div', 'box');
+    const glass = h('div', 'glass');
+    const slip = h('i', 'slip');
+    box.append(slip, h('i', 'lid'), glass);
+    row.append(box);
+    return { glass, slip };
+  });
+  // Verdicts float up from the boxes' top edge, so they never cover the next poll's votes.
   const stamp = h('i', 'stamp');
-  const note = h('div', 'g-note');
-  wrap.append(box, note);
+  const closed = h('div', 'closed', 'POLLS CLOSED');
+  hall.append(back, row, stamp, closed);
+  wrap.append(note, hall);
   root.append(wrap);
 
+  function react(m: ActorMood, t: number) {
+    officer.mood(m);
+    for (const w of workers) w.mood(m === 'angry' ? 'shock' : 'idle');
+    moodUntil = t + 500;
+  }
+
   function show() {
-    box.replaceChildren(stamp);
+    for (const g of boxes) g.glass.replaceChildren();
     const p = polls[idx];
     if (!p) {
-      box.append(h('div', 'closed', 'Polls closed!'));
-      note.textContent = '';
+      closed.classList.add('on');
+      note.textContent = 'All polls called';
       return;
     }
+    // Each vote keeps its place on the one big ballot it used to be, split three ways:
+    // the left third of the votes is in the left box, and so on.
     for (const d of p.dots) {
+      const k = Math.min(2, Math.floor(d.x * 3));
       const dot = h('i', `dot c-${COLOR[d.c]}`);
-      dot.style.left = `${6 + d.x * 88}%`;
-      dot.style.top = `${8 + d.y * 84}%`;
-      box.append(dot);
+      dot.style.left = `calc(0.75em + ${((d.x * 3 - k) * 100).toFixed(1)}% - ${((d.x * 3 - k) * 1.5).toFixed(2)}em)`;
+      dot.style.top = `calc(0.75em + ${(d.y * 100).toFixed(1)}% - ${(d.y * 1.5).toFixed(2)}em)`;
+      boxes[k].glass.append(dot);
     }
-    pulse(box, 'pop-in');
-    note.textContent = `Poll ${idx + 1} — most votes?`;
+    for (const g of boxes) {
+      pulse(g.glass, 'pop-in');
+      pulse(g.slip, 'drop');
+    }
+    pulse(back, 'bump');
+    note.textContent = `Poll ${idx + 1}: most votes?`;
   }
   show();
 
@@ -69,16 +102,25 @@ export const create: GameFactory = ({ root, rng, level, good, bad }) => {
       if (!p || t < lockedUntil) return;
       if (b === p.win) {
         right++;
+        react('peep', t);
+        for (const w of workers) w.mood('happy');
         good(stamp, 'CALLED IT');
       } else {
         wrong++;
         lockedUntil = t + 500;
+        react('angry', t);
         bad(stamp, 'RECOUNT');
       }
       idx++;
       show();
     },
-    tick() {},
+    tick(t) {
+      if (moodUntil && t >= moodUntil) {
+        moodUntil = 0;
+        officer.mood('peep');
+        for (const w of workers) w.mood('idle');
+      }
+    },
     score: () => clamp1000((1000 * (right - wrong)) / par),
     hint: (t) => (polls[idx] && t >= lockedUntil ? polls[idx].win : null),
   };

@@ -1,5 +1,5 @@
 import './slashs.css';
-import { COLOR, COLOR_NAME, clamp1000, dealer, defineSprite, h, person, pulse, randBtn, shuffled, sprite, type Btn, type GameFactory, type Tone } from './common';
+import { actor, COLOR, COLOR_NAME, clamp1000, dealer, defineSprite, h, person, pulse, randBtn, shuffled, sprite, type Btn, type GameFactory, type Tone } from './common';
 
 // The joke, sailing over your head.
 defineSprite('slashs-plane', `
@@ -40,6 +40,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     // The opening comment is always a plain, sincere order: obey first, then the twist.
     const isDry = rng() < level * 0.2 && n > 0;
     const sarcasm = rng() < 0.4 && n > 0;
+    // tone and kind are no longer drawn (the Troll holds every sign) but are still dealt,
+    // so every seed keeps the exact round it always had.
     return { btn, sarcasm, dry: isDry, line: (isDry ? dry : plain)(), user: user(), tone: skin(), kind: Math.floor(rng() * KINDS.length) };
   });
   const awards = shuffled(rng, AWARDS);
@@ -50,53 +52,51 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let pinned = 0;
   let nextAt = -1; // when the answered card makes way for the next; -1 while a card is live
 
-  // The scene: a comment thread. The rule is pinned up top, one loud comment fills the
-  // middle, and the awards you earn for reading the room line up underneath.
-  const wrap = h('div', 'g-slashs scene-feed');
+  // The scene: feed street. The Troll stands on the pavement holding up a picket sign with
+  // the order on it. When it is sarcasm, a gold /s sticker is slapped on the sign's corner.
+  const wrap = h('div', 'g-slashs scene-street');
   const rule = h('div', 'rule');
   rule.innerHTML = '<em>/s</em> = any <b>OTHER</b> colour';
+  const picket = h('div', 'picket');
   const card = h('div', 'card');
   const who = h('div', 'who');
-  const faces = KINDS.map((kind) => person({ kind, px: 0.17 }));
-  let face = faces[0];
   const name = h('span');
-  who.append(face.el, name);
+  who.append(name);
   const say = h('div', 'say');
   const text = h('span');
   say.append(text);
   const foot = h('div', 'foot');
   const up = sprite('up', { tone: 'orange', px: 0.17 }, 'up');
   const votes = h('b', 'votes', '0');
-  foot.append(up, votes, h('span', 'act', 'Reply'), h('span', 'act', 'Share'));
+  foot.append(up, votes);
+  const sticker = h('div', 'sticker', '/s');
   // Only shown when a /s is taken literally.
   const over = h('div', 'over');
   const you = person({ tone: 'gold', mood: 'shock', px: 0.2 });
   over.append(sprite('slashs-plane', { px: 0.28 }, 'plane'), you.el, h('b', '', 'WHOOSH'));
-  card.append(who, say, foot, over);
+  card.append(who, say, foot, sticker, over);
+  const troll = actor('troll', { px: 0.42 });
+  picket.append(card, h('i', 'stick'), troll.el);
   const me = h('div', 'me');
   const shelf = h('div', 'shelf');
   const slots = Array.from({ length: 5 }, () => h('i', 'slot'));
   shelf.append(...slots);
   const note = h('div', 'note', '3 IN A ROW PINS AN AWARD');
   me.append(shelf, note);
-  wrap.append(rule, card, me);
+  wrap.append(rule, picket, me);
   root.append(wrap);
 
   const now = () => cards[idx % cards.length];
 
   function show() {
     const c = now();
-    card.className = 'card';
-    if (faces[c.kind] !== face) {
-      face.el.replaceWith(faces[c.kind].el);
-      face = faces[c.kind];
-    }
-    face.tone(c.tone);
-    // A sarcastic commenter cannot keep a straight face.
-    face.mood(c.sarcasm ? 'wink' : 'idle');
+    card.className = c.sarcasm ? 'card sarcasm' : 'card';
+    // The Troll cannot keep a straight face when it is being sarcastic.
+    troll.mood(c.sarcasm ? 'wink' : 'idle');
     name.textContent = `u/${c.user}`;
     const word = c.dry ? `<b>${COLOR_NAME[c.btn].toLowerCase()}</b>` : `<b class="chip c-${COLOR[c.btn]}">${COLOR_NAME[c.btn]}</b>`;
-    text.innerHTML = c.line.replace('{c}', word) + (c.sarcasm ? ' <em>/s</em>' : '');
+    text.innerHTML = c.line.replace('{c}', word);
+    if (c.sarcasm) pulse(sticker, 'slap');
     pulse(card, 'pop-in');
   }
   show();
@@ -120,11 +120,12 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         nextAt = t + LOCK;
         if (c.sarcasm) {
           card.classList.add('whoosh');
+          troll.mood('happy'); // got you
           fx.sound('whoosh');
           bad(card);
         } else {
           card.classList.add('miss');
-          face.mood('angry');
+          troll.mood('angry');
           pulse(card, 'shake');
           bad(card, 'THEY MEANT IT');
         }
@@ -133,7 +134,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         streak++;
         nextAt = t + GAP;
         card.classList.add('ok');
-        face.mood('happy');
+        troll.mood(c.sarcasm ? 'sad' : 'happy');
         pulse(up, 'bump');
         good(up);
         if (c.sarcasm) fx.pop(card, 'GOT THE JOKE', 'gold');

@@ -1,37 +1,55 @@
-.g-slashs { justify-content: space-between !important; padding: 0 0 0.6em !important; gap: 0.6em !important; }
-/* The rule, pinned to the top of the thread. */
-.g-slashs .rule { align-self: stretch; background: #0b1020; color: #fff; font-size: 1.25em; padding: 0.35em 0.3em 0.45em; box-shadow: 0 0.25em 0 #0b102033; }
-.g-slashs .rule em, .g-slashs .say em { font-style: normal; background: var(--gold); color: #0b1020; padding: 0 0.3em; white-space: nowrap; box-shadow: 0 0 0 0.1em #0b1020; }
-.g-slashs .rule em { margin-right: 0.15em; }
+.g-slashs { justify-content: space-between !important; padding: 0 0 0.5em !important; gap: 0.4em !important; color: #0b1020; }
+/* The rule, pinned to the top of the street like a banner. */
+.g-slashs .rule { align-self: stretch; background: #0b1020; color: #fff; font-size: 1.2em; padding: 0.35em 0.3em 0.45em; box-shadow: 0 0.25em 0 #0b102033; text-align: center; }
+.g-slashs .rule em { font-style: normal; background: var(--gold); color: #0b1020; padding: 0 0.3em; white-space: nowrap; box-shadow: 0 0 0 0.1em #0b1020; margin-right: 0.15em; }
 
-/* One loud comment. */
-.g-slashs .card { position: relative; width: min(100% - 1.8em, 21em); background: #fff; color: #0b1020; padding: 0.55em 0.75em 0.5em; display: flex; flex-direction: column; gap: 0.35em; box-shadow: 0 0 0 0.22em #0b1020, 0.5em 0.8em 0 0.22em #0b102055; }
-.g-slashs .card.ok { box-shadow: 0 0 0 0.22em #0b1020, 0 0 0 0.55em var(--gold), 0.5em 0.8em 0 0.55em #0b102055; }
-.g-slashs .card.miss { filter: grayscale(1) brightness(0.8); }
-.g-slashs .who { display: flex; align-items: center; gap: 0.55em; font-size: 0.85em; color: #6a7399; }
-.g-slashs .say { display: flex; align-items: center; min-height: 2.35em; font-size: 1.75em; line-height: 1.14; }
+/* The Troll on the pavement, holding the picket sign up over its head. */
+.g-slashs .picket { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.g-slashs .stick { width: 0.7em; height: 1.4em; flex: 0 1 auto; margin-bottom: -0.6em; background: #b0703c; box-shadow: 0 0 0 0.16em #0b1020; }
+.g-slashs .picket .actor { position: relative; flex: none; transform-origin: 50% 100%; }
+
+/* The sign: a white board, the order in big letters, the vote count along the bottom. */
+.g-slashs .card { position: relative; width: 19em; max-width: calc(100% - 1.6em); background: #fff; color: #0b1020; padding: 0.5em 0.7em 0.45em; display: flex; flex-direction: column; gap: 0.3em; box-shadow: 0 0 0 0.22em #0b1020, 0.45em 0.6em 0 0.22em #0b102055; transform: rotate(-1.5deg); }
+.g-slashs .card.ok { box-shadow: 0 0 0 0.22em #0b1020, 0 0 0 0.55em var(--gold), 0.45em 0.6em 0 0.55em #0b102055; }
+.g-slashs .card.miss { background: #c4cbe4; }
+.g-slashs .who { font-size: 0.8em; color: #6a7399; }
+.g-slashs .say { display: flex; align-items: center; min-height: 2.35em; font-size: 1.7em; line-height: 1.14; }
 .g-slashs .say b { text-decoration: underline; text-underline-offset: 0.14em; }
 .g-slashs .say .chip { text-decoration: none; background: var(--c); padding: 0 0.16em; margin: 0 0.12em; box-shadow: 0 0 0 0.08em #0b1020; }
-.g-slashs .say em { margin-left: 0.1em; }
-.g-slashs .foot { display: flex; align-items: center; gap: 0.5em; }
-.g-slashs .votes { flex: 1; font-size: 1.35em; color: #c8551a; font-variant-numeric: tabular-nums; }
-.g-slashs .act { font-size: 0.75em; color: #6a7399; }
-.g-slashs .over { position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15em; background: repeating-linear-gradient(135deg, #ff4b55 0 1.2em, #d63642 1.2em 2.4em); visibility: hidden; }
+.g-slashs .foot { display: flex; align-items: center; gap: 0.4em; }
+.g-slashs .votes { font-size: 1.2em; color: #c8551a; font-variant-numeric: tabular-nums; }
+
+/* The /s sticker: slapped crooked onto the sign's corner when the order is sarcasm. */
+.g-slashs .sticker { position: absolute; right: -0.3em; bottom: -0.35em; z-index: 1; padding: 0.05em 0.3em; font-size: 1.7em; line-height: 1.1; background: var(--gold); color: #0b1020; box-shadow: 0 0 0 0.12em #0b1020, 0.12em 0.16em 0 0.12em #0b102055; transform: rotate(-12deg); visibility: hidden; }
+.g-slashs .card.sarcasm .sticker { visibility: visible; }
+.g-slashs .sticker.slap { animation: g-slashs-slap 0.16s ease-out; }
+@keyframes g-slashs-slap { from { transform: rotate(-30deg) scale(1.8); opacity: 0.3; } }
+
+/* Taking a /s literally: the joke flies right over your head. */
+.g-slashs .over { position: absolute; inset: 0; z-index: 2; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15em; background: repeating-linear-gradient(135deg, #ff4b55 0 1.2em, #d63642 1.2em 2.4em); visibility: hidden; }
 .g-slashs .card.whoosh .over { visibility: visible; }
 .g-slashs .card.whoosh .plane { animation: g-slashs-fly 0.4s steps(10) both; }
 @keyframes g-slashs-fly { from { transform: translate(-9em, 0.8em); } to { transform: translate(4.5em, -0.1em); } }
-.g-slashs .over b { font-size: 2.6em; line-height: 1; letter-spacing: 0.04em; color: var(--gold); text-shadow: 0.07em 0 #0b1020, -0.07em 0 #0b1020, 0 0.07em #0b1020, 0 -0.07em #0b1020, 0.14em 0.14em 0 #0b1020; }
+.g-slashs .over b { font-size: 2.4em; line-height: 1; letter-spacing: 0.04em; color: var(--gold); text-shadow: 0.07em 0 #0b1020, -0.07em 0 #0b1020, 0 0.07em #0b1020, 0 -0.07em #0b1020, 0.14em 0.14em 0 #0b1020; }
 
 /* The awards you have been given for reading the room. */
-.g-slashs .me { display: flex; flex-direction: column; align-items: center; gap: 0.45em; }
-.g-slashs .shelf { display: flex; gap: 0.55em; }
-.g-slashs .slot { width: 2.8em; height: 2.8em; display: grid; place-items: center; background: #0b102014; box-shadow: inset 0 0 0 0.14em #0b102044; }
+.g-slashs .me { display: flex; flex-direction: column; align-items: center; gap: 0.35em; }
+.g-slashs .shelf { display: flex; gap: 0.5em; }
+.g-slashs .slot { width: 2.5em; height: 2.5em; display: grid; place-items: center; background: #ffffff55; box-shadow: inset 0 0 0 0.14em #0b102066; }
 .g-slashs .slot.on { background: #fff; box-shadow: 0 0 0 0.16em #0b1020, 0.25em 0.35em 0 0.16em #0b102055; }
 .g-slashs .note { background: #0b1020; color: var(--gold); font-size: 0.8em; letter-spacing: 0.05em; padding: 0.1em 0.7em; white-space: nowrap; }
 
-/* A tall phone stage has room to spare: let the comment shout. */
+/* A tall phone stage has room to spare: a bigger sign and a bigger Troll. */
 @container (max-aspect-ratio: 2/3) {
-  .g-slashs .card { padding: 0.8em 0.8em 0.7em; gap: 0.6em; }
-  .g-slashs .who .person { font-size: 1.3em; }
-  .g-slashs .say { font-size: 2.2em; min-height: 3.5em; }
+  .g-slashs .card { padding: 0.7em 0.8em 0.6em; gap: 0.5em; }
+  .g-slashs .say { font-size: 2.1em; min-height: 3.4em; }
+  .g-slashs .picket .actor { transform: scale(1.25); margin-top: 1.4em; }
+  .g-slashs .stick { height: 3em; }
+}
+/* A wide stage is short: the Troll stands beside its sign instead of under it. */
+@container (min-aspect-ratio: 5/4) {
+  .g-slashs .picket { display: grid; grid-template-columns: auto auto; grid-template-rows: 1fr auto; column-gap: 0.8em; align-items: end; justify-content: center; }
+  .g-slashs .card { grid-column: 1; grid-row: 1; align-self: end; }
+  .g-slashs .stick { grid-column: 1; grid-row: 2; justify-self: center; height: 2.2em; margin: 0; }
+  .g-slashs .picket .actor { grid-column: 2; grid-row: 1 / 3; transform: scale(1.15); }
 }

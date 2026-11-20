@@ -1,6 +1,38 @@
-.g-crosspost .post { width: min(100%, 22em); background: var(--panel-2); border: 0.16em solid var(--line); border-radius: 0.8em; padding: 0.7em 0.9em; font-weight: 800; font-size: 1.15em; text-align: center; }
-.g-crosspost .subs { display: flex; gap: 0.5em; width: 100%; }
-.g-crosspost .sub { flex: 1; min-width: 0; text-align: center; font-weight: 900; font-size: 0.85em; padding: 1.5em 0.1em; border-radius: 0.8em; border: 0.18em dashed var(--line); color: var(--dim); background: var(--bg); }
-.g-crosspost .sub.lit { border: 0.18em solid var(--c); color: #071022; background: var(--c); box-shadow: 0 0 1.4em var(--c); animation: g-crosspost-lit 0.5s ease-in-out infinite; }
-.g-crosspost .sub.half { filter: brightness(1.5); }
-@keyframes g-crosspost-lit { 50% { transform: translateY(-0.25em); } }
+/* Feed street: OP Cat with the post up top, three community houses along the pavement. */
+.g-crosspost { justify-content: space-between !important; gap: 0.3em !important; padding: 0.7em 0.5em 0.5em !important; color: #0b1020; }
+.g-crosspost .top { display: flex; align-items: center; justify-content: center; gap: 0.6em; width: 100%; }
+.g-crosspost .top .actor { flex: none; transform-origin: 50% 100%; }
+
+/* The post OP is about to deliver: a white card with an envelope pinned to it. */
+.g-crosspost .parcel { position: relative; flex: 0 1 12em; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.25em; padding: 0.5em 0.6em; background: #fff; box-shadow: 0 0 0 0.2em #0b1020, 0.35em 0.4em 0 0.2em #0b102055; }
+.g-crosspost .post { font-size: 1.05em; line-height: 1.15; text-align: center; }
+.g-crosspost .tally { font-size: 0.85em; padding: 0.1em 0.6em; background: #0b1020; color: #fff0a8; }
+
+/* The houses: a roof, a wall with a window, the community's sign and a door in its button colour. */
+.g-crosspost .subs { flex: 1 1 auto; max-height: 17em; min-height: 0; display: flex; justify-content: center; align-items: stretch; gap: 0.4em; width: 100%; }
+.g-crosspost .house { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.g-crosspost .wall { flex: 1 1 auto; justify-content: flex-end; }
+.g-crosspost .attic { flex: 0 1 auto; display: flex; gap: 0.5em; margin-bottom: auto; overflow: hidden; }
+.g-crosspost .attic i { width: 1.3em; height: 1.7em; max-height: 100%; background: #2c3763; box-shadow: 0 0 0 0.14em #0b1020, inset 0 0.5em 0 0 #3a4370; }
+.g-crosspost .roof { display: block; margin-bottom: -0.1em; }
+.g-crosspost .wall { position: relative; width: calc(100% - 0.6em); display: flex; flex-direction: column; align-items: center; gap: 0.3em; padding: 0.45em 0.2em 0; background: #f2e2c4; box-shadow: 0 0 0 0.18em #0b1020, inset -0.4em 0 0 0 #dcc6a0; }
+.g-crosspost .win { position: relative; width: 3.2em; height: 2.6em; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; background: #2c3763; box-shadow: 0 0 0 0.16em #0b1020; }
+.g-crosspost .win::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 0.16em; margin-left: -0.08em; background: #0b1020; }
+.g-crosspost .fan { opacity: 0; transform: translateY(0.6em); }
+.g-crosspost .house.lit .fan { transition: transform 0.1s; }
+.g-crosspost .sign { font-size: 0.8em; padding: 0.05em 0.35em; background: #0b1020; color: #fff; white-space: nowrap; }
+.g-crosspost .door { position: relative; width: 2.4em; height: 3.2em; background: #0b1020; box-shadow: 0 0 0 0.16em #0b1020; }
+.g-crosspost .leaf { position: absolute; inset: 0; background: var(--c); box-shadow: inset -0.35em 0 0 0 var(--cd, #0b102055), inset 0 0 0 0.25em #0b102033; transform-origin: 0 50%; transition: transform 0.08s; }
+.g-crosspost .leaf::after { content: ''; position: absolute; right: 0.4em; top: 50%; width: 0.3em; height: 0.3em; background: #ffcf3f; box-shadow: 0 0 0 0.08em #0b1020; }
+.g-crosspost .mail { position: absolute; left: 50%; bottom: 1em; margin-left: -0.96em; opacity: 0; pointer-events: none; }
+.g-crosspost .mail.drop { animation: g-crosspost-drop 0.32s ease-in; }
+@keyframes g-crosspost-drop { from { opacity: 1; transform: translateY(-4em) scale(1.3); } 80% { opacity: 1; } to { opacity: 0; transform: none; } }
+
+/* A lit house wants the post: the window glows and a fan leans out. */
+.g-crosspost .house.lit .win { background: #ffe27a; }
+.g-crosspost .house.lit .fan { opacity: 1; transform: none; }
+.g-crosspost .house.lit .sign { background: var(--c); color: #0b1020; box-shadow: 0 0 0 0.12em #0b1020; }
+.g-crosspost .house.lit .roof { animation: g-crosspost-hop 0.5s ease-in-out infinite; }
+@keyframes g-crosspost-hop { 50% { transform: translateY(-0.2em); } }
+/* One finger is down: that door swings open, waiting for the other. */
+.g-crosspost .house.half .leaf { transform: scaleX(0.3); }

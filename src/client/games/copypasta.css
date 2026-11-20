@@ -1,4 +1,30 @@
-.g-copypasta .pasta { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.4em; width: min(100%, 24em); }
-.g-copypasta .cell { aspect-ratio: 1; border-radius: 0.5em; background: var(--c); box-shadow: inset 0 -0.25em 0 var(--cd); }
-.g-copypasta .cell.done { opacity: 0.16; }
-.g-copypasta .cell.next { outline: 0.2em solid var(--ink); outline-offset: 0.12em; }
+/* The kitchen: the recipe in pasta on a chopping board up top, Chef OP Cat and the pot on the counter. */
+.g-copypasta { justify-content: space-between !important; gap: 0.5em !important; padding: 0.8em 0.7em 0.4em !important; }
+
+/* The chopping board: seven pieces a row, read left to right, top to bottom. */
+.g-copypasta .pasta { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25em; width: min(100%, 22em); padding: 0.55em 0.6em; background: #dba678;
+  box-shadow: 0 0 0 0.22em #0b1020, 0.4em 0.45em 0 0.22em #0b102055, inset 0 -0.3em 0 #b0703c; }
+.g-copypasta .cell { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 1; }
+.g-copypasta .cell.done .px { opacity: 0.18; }
+/* The next piece sits in a white ring. */
+.g-copypasta .cell.next { background: #fff7e0; box-shadow: 0 0 0 0.18em #0b1020; }
+
+/* The cooking station: the chef beside the pot on the stove. */
+.g-copypasta .cook { flex: 1 1 auto; min-height: 0; width: min(100%, 22em); display: flex; justify-content: center; align-items: flex-end; gap: 0.6em; }
+.g-copypasta .chef { position: relative; flex: none; display: flex; flex-direction: column; align-items: center; }
+.g-copypasta .chef .hat { margin-bottom: -1.1em; position: relative; z-index: 1; }
+.g-copypasta .station { flex: none; display: flex; flex-direction: column; align-items: center; }
+.g-copypasta .pot { position: relative; width: 8.6em; height: 5.2em; background: #3a4370; box-shadow: 0 0 0 0.22em #0b1020, inset 0.5em 0 0 #4b5890; }
+.g-copypasta .water { position: absolute; left: 0; right: 0; top: 0; height: 1.1em; background: #fff0a8; box-shadow: 0 0.2em 0 #0b1020; }
+.g-copypasta .handle { position: absolute; top: 1.4em; width: 0.9em; height: 0.6em; background: #0b1020; }
+.g-copypasta .handle.l { right: 100%; margin-right: 0.2em; }
+.g-copypasta .handle.r { left: 100%; margin-left: 0.2em; }
+.g-copypasta .label { position: absolute; left: 50%; bottom: 0.6em; transform: translateX(-50%); padding: 0 0.5em; background: #fff7e0; color: #0b1020; font-size: 0.95em; white-space: nowrap; box-shadow: 0 0 0 0.14em #0b1020; }
+.g-copypasta .stove { width: 10em; height: 0.8em; margin-top: 0.22em; background: #0b1020; box-shadow: inset 0 0.25em 0 #ff8a3d; }
+/* Each pasted piece drops into the water. */
+.g-copypasta .flyer { position: absolute; left: 50%; top: -0.6em; margin-left: -1.3em; z-index: 0; opacity: 0; }
+.g-copypasta .flyer.drop { animation: g-copypasta-drop 0.22s ease-in; }
+@keyframes g-copypasta-drop { from { opacity: 1; transform: translateY(-2.6em) rotate(-30deg); } 80% { opacity: 1; } to { opacity: 0; transform: translateY(0.4em) rotate(20deg); } }
+.g-copypasta .water.bump { animation: g-copypasta-splash 0.18s ease-out; }
+@keyframes g-copypasta-splash { 40% { transform: scaleY(1.5); } }
+.g-copypasta .water { transform-origin: 50% 100%; z-index: 1; }

@@ -1,3 +1,42 @@
-.g-peak .track { position: relative; display: flex; width: 100%; height: 4.2em; border-radius: 0.8em; overflow: hidden; border: 3px solid var(--bg); }
+/* The clock tower at peak hour: the order on a sign up top, OP Cat and the tower in the
+   middle, the crowd along the bottom. */
+.g-peak { justify-content: space-between !important; gap: 0.3em !important; padding: 0.6em 0.8em 0.3em !important; overflow: hidden; }
+.g-peak .rule { flex: none; display: flex; align-items: center; gap: 0.5em; padding: 0.15em 0.8em; background: #0b1020; color: #fff0a8; font-size: 1.2em; white-space: nowrap;
+  box-shadow: 0 0 0 0.15em #ffcf3f, 0 0 0 0.3em #0b1020, 0.3em 0.45em 0 0.3em #0b102088; margin-top: 0.3em; }
+.g-peak .rule b { font-weight: inherit; text-decoration: underline; text-decoration-thickness: 0.1em; text-underline-offset: 0.12em; }
+.g-peak .rule .pad-dots { font-size: 0.8em; }
+.g-peak .rule .pad-dots i:not(.on) { background: #3a4370; box-shadow: 0 0 0 0.08em #fff0a8; }
+
+.g-peak .mid { position: relative; flex: 1 1 auto; padding-top: 1.9em; min-height: 0; width: min(100%, 24em); display: flex; align-items: flex-end; justify-content: center; gap: 0.6em; }
+.g-peak .poster { position: relative; flex: none; margin-bottom: 0.4em; }
+.g-peak .poster .phone { position: absolute; right: -0.5em; bottom: -0.2em; transform: rotate(12deg); }
+
+/* The tower: stone, a clock face on top, the crowd meter down its front. */
+.g-peak .tower { position: relative; flex: none; width: 8.4em; height: 100%; max-height: 19em; display: flex; flex-direction: column; align-items: center; gap: 0.5em; padding: 0.6em 0 0.6em;
+  background: linear-gradient(90deg, #0000 0 calc(100% - 0.6em), #646e9c 0), repeating-linear-gradient(#0000 0 1.1em, #7c86b0 1.1em 1.25em), #a8b1d6;
+  box-shadow: 0 -0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, 0.45em 0.3em 0 0 #0b102088; }
+.g-peak .tower::before { content: ''; position: absolute; left: -0.6em; right: -0.6em; top: -1.6em; height: 1.4em; background: #a81f2e; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.g-peak .clock { position: relative; flex: none; width: 4.4em; height: 4.4em; border-radius: 50%; background: #fff0a8; box-shadow: 0 0 0 0.22em #0b1020, 0 0 0 0.5em #ffcf3f, 0 0 0 0.72em #0b1020; margin-top: 0.4em; }
+.g-peak .clock i { position: absolute; left: 50%; bottom: 50%; width: 0.36em; margin-left: -0.18em; background: #0b1020; transform-origin: 50% 100%; }
+.g-peak .clock .hour { height: 1.2em; transform: rotate(-60deg); }
+.g-peak .clock .minute { height: 1.8em; animation: g-peak-tick 2s steps(12) infinite; }
+@keyframes g-peak-tick { to { transform: rotate(360deg); } }
+
+/* The crowd meter: three bands bottom to top, a gold marker riding a rail as tall as the meter. */
+.g-peak .track { position: relative; flex: 1 1 auto; min-height: 5em; width: 3.4em; display: flex; flex-direction: column-reverse; box-shadow: 0 0 0 0.22em #0b1020; }
 .g-peak .zone { flex: 0 0 auto; background: var(--c); }
-.g-peak .marker { position: absolute; top: -0.2em; bottom: -0.2em; width: 0.45em; margin-left: -0.22em; background: var(--ink); border: 2px solid var(--bg); border-radius: 0.3em; }
+.g-peak .zone + .zone { box-shadow: 0 0.12em 0 0 #0b1020; }
+.g-peak .clip { position: absolute; left: -1.6em; right: -1.6em; top: -0.5em; bottom: -0.5em; overflow: hidden; pointer-events: none; }
+.g-peak .rail { position: absolute; left: 0.7em; right: 0.7em; top: calc(100% - 0.5em); height: calc(100% - 1em); will-change: transform; pointer-events: none; }
+.g-peak .marker { position: absolute; left: 0; right: 0; top: 0; height: 0.5em; margin-top: -0.25em; background: #ffcf3f; box-shadow: 0 0 0 0.18em #0b1020; }
+.g-peak .marker::before, .g-peak .marker::after { content: ''; position: absolute; top: 50%; margin-top: -0.55em; border: 0.55em solid #0000; }
+.g-peak .marker::before { left: -0.7em; border-left: 0.65em solid #0b1020; border-right: 0; }
+.g-peak .marker::after { right: -0.7em; border-right: 0.65em solid #0b1020; border-left: 0; }
+
+/* The crowd: fans join from the middle out, each holding up a sign in the meter's colour. */
+.g-peak .crowd { flex: none; display: flex; justify-content: center; align-items: flex-end; height: 4.5em; }
+.g-peak .fan { position: relative; display: flex; flex-direction: column; align-items: center; margin: 0 -0.15em; opacity: 0; transform: translateY(1.2em); transition: opacity 0.12s, transform 0.12s; }
+.g-peak .fan.in { opacity: 1; transform: none; }
+.g-peak .sign { width: 1.9em; height: 1.1em; margin-bottom: -0.2em; background: var(--c, #dde2f5); box-shadow: 0 0 0 0.16em #0b1020; position: relative; z-index: 1; }
+.g-peak .sign::after { content: ''; position: absolute; left: 50%; top: 100%; width: 0.25em; height: 0.5em; margin-left: -0.125em; background: #6e3f1c; }
+.g-peak .g-note { flex: none; color: #fff0a8; min-height: 1.1em; }

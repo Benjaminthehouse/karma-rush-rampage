@@ -1,18 +1,24 @@
-.g-npccheck .rule { font-size: 1.1em; }
-.g-npccheck .row { flex: 1; min-height: 0; max-height: 17em; width: 100%; max-width: 27em; display: flex; gap: 0.4em; }
-.g-npccheck .pod { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; background: var(--bg); border: 0.16em solid var(--cd); border-radius: 0.9em; padding: 0.3em 0.2em 0.5em; overflow: hidden; isolation: isolate; }
+/* Feed street: the rule as a banner up top, three dancers on mats, the progress gauge below. */
+.g-npccheck { justify-content: space-between !important; gap: 0.35em !important; padding: 0 0.4em 0.5em !important; color: #0b1020; }
+.g-npccheck .rule { align-self: stretch; margin: 0 -0.4em; padding: 0.35em 0.3em 0.45em; background: #0b1020; color: #fff; font-size: 1.1em; text-align: center; box-shadow: 0 0.25em 0 #0b102033; }
+.g-npccheck .rule b { font-weight: inherit; color: #0b1020; background: var(--gold); padding: 0 0.25em; }
+.g-npccheck .row { flex: 1; min-height: 0; max-height: 17em; width: 100%; max-width: 27em; display: flex; gap: 0.4em; padding: 0 0.5em; }
+.g-npccheck .pod { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 0.3em 0.1em 0.3em; }
 .g-npccheck .top { flex: none; position: relative; z-index: 1; height: 2.9em; display: flex; align-items: center; justify-content: center; }
-.g-npccheck .say { visibility: hidden; font-size: 0.7em; font-weight: 800; line-height: 1.15; text-align: center; white-space: pre-line; color: #071022; background: var(--ink); border-radius: 0.7em; padding: 0.2em 0.4em; }
-.g-npccheck .fig { flex: 1; min-height: 0; width: 100%; }
-.g-npccheck .fig svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.g-npccheck .floor { flex: none; width: 74%; height: 0.55em; margin-top: -0.3em; border-radius: 50%; background: var(--c); opacity: 0.45; }
+.g-npccheck .say { visibility: hidden; font-size: 0.7em; line-height: 1.15; text-align: center; white-space: pre-line; color: #0b1020; background: #fff; padding: 0.2em 0.4em; box-shadow: 0 0 0 0.16em #0b1020, 0.2em 0.25em 0 0.16em #0b102055; }
+.g-npccheck .fig { flex: none; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.g-npccheck .floor { flex: none; width: 86%; height: 0.7em; margin-top: -0.2em; background: var(--c); box-shadow: 0 0 0 0.16em #0b1020, 0.2em 0.25em 0 0.16em #0b102055; }
 
-/* The figure: shirt and arms in the button colour. */
-.g-npccheck .shirt { fill: var(--c); }
-.g-npccheck .arm { stroke: var(--c); stroke-width: 8; stroke-linecap: round; }
-.g-npccheck .leg { stroke: var(--dim); stroke-width: 8; stroke-linecap: round; }
-.g-npccheck .head { fill: var(--ink); }
-.g-npccheck .face { fill: var(--bg); }
+/* The dancer: an NPC head, a shirt and arms in the button colour, grey legs. Pivots about the feet. */
+.g-npccheck .body { position: relative; display: flex; flex-direction: column; align-items: center; transform-origin: 50% 100%; }
+.g-npccheck .body > .actor { position: relative; z-index: 1; }
+.g-npccheck .torso { position: relative; width: 2.6em; height: 2.5em; margin-top: -0.45em; background: var(--c); box-shadow: 0 0 0 0.16em #0b1020, inset -0.4em 0 0 0 #0b102033; }
+.g-npccheck .shoulder { position: absolute; top: 0.35em; width: 0; height: 0; }
+.g-npccheck .shoulder.l { left: 0.1em; transform: rotate(23deg); }
+.g-npccheck .shoulder.r { right: 0.1em; transform: rotate(-23deg); }
+.g-npccheck .arm { position: absolute; left: -0.3em; top: -0.3em; width: 0.6em; height: 2.2em; background: var(--c); box-shadow: 0 0 0 0.14em #0b1020; transform-origin: 50% 0.3em; }
+.g-npccheck .legs { display: flex; gap: 0.5em; margin-top: 0.12em; }
+.g-npccheck .leg { width: 0.7em; height: 1.5em; background: #3a4370; box-shadow: 0 0 0 0.14em #0b1020; }
 .g-npccheck .body, .g-npccheck .arm { transition: transform 0.12s ease-out; }
 
 /* NPC loops: two poses, swapped on the beat by the p1 class. */
@@ -48,10 +54,19 @@
 
 /* The reveal: spotlight on the player, the NPCs recite their line. */
 .g-npccheck .npc .say { visibility: visible; animation: g-npccheck-say 0.12s ease-out; }
-.g-npccheck .found { border-color: var(--gold); box-shadow: 0 0 1.2em #ffcf3f99; background: conic-gradient(from 155deg at 50% -8%, #0000 0deg, #ffcf3f66 0deg 50deg, #0000 50deg) var(--bg); }
-.g-npccheck .found .say, .g-npccheck .missed .say { visibility: visible; font-size: 0.8em; font-weight: 900; background: var(--gold); animation: g-npccheck-say 0.12s ease-out; }
+.g-npccheck .found { background: conic-gradient(from 155deg at 50% -8%, #0000 0deg, #fff4c4aa 0deg 50deg, #0000 50deg); }
+.g-npccheck .found .say, .g-npccheck .missed .say { visibility: visible; font-size: 0.8em; background: var(--gold); animation: g-npccheck-say 0.12s ease-out; }
 .g-npccheck .found .fig .body { animation: g-npccheck-jump 0.3s ease-out both; }
-.g-npccheck .missed { border-color: var(--gold); border-style: dashed; }
+.g-npccheck .missed .floor { background: var(--gold); }
 @keyframes g-npccheck-jump { 45% { transform: translateY(-9%) scale(1.08); } }
 @keyframes g-npccheck-say { from { transform: scale(0.4); } }
-.g-npccheck .meter i { background: var(--gold); }
+/* Progress: a gold gauge that fills from the left. */
+.g-npccheck .gauge { width: min(100%, 22em); height: 1.1em; padding: 0.18em; background: #0b1020; box-shadow: 0.2em 0.25em 0 0 #0b102055; }
+.g-npccheck .gauge i { display: block; height: 100%; background: var(--gold); transform: scaleX(0); transform-origin: 0 50%; transition: transform 0.08s linear; }
+.g-npccheck .tally { font-size: 0.85em; padding: 0.1em 0.6em; background: #0b1020; color: #fff0a8; text-align: center; }
+/* A tall phone stage has room: bigger dancers, the bubbles lifted clear of their heads. */
+@container (max-aspect-ratio: 2/3) {
+  .g-npccheck .row { padding: 0 1em; }
+  .g-npccheck .fig { transform: scale(1.08); transform-origin: 50% 100%; }
+  .g-npccheck .top { margin-bottom: 1.4em; }
+}

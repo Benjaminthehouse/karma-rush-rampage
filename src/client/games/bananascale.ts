@@ -1,5 +1,21 @@
 import './bananascale.css';
-import { COLOR, clamp1000, h, pick, pulse, randInt, shuffled, type Btn, type GameFactory } from './common';
+import { actor, COLOR, clamp1000, defineSprite, h, pick, pulse, randInt, shuffled, sprite, type Btn, type GameFactory } from './common';
+
+// A studio softbox on a stand, lighting the shoot.
+defineSprite('bananascale-lamp', `
+kkkkkkkkkk
+kWWWWWWWWk
+kWwwwwwwWk
+kWwwwwwwWk
+kkkkkkkkkk
+....kk....
+....kk....
+....kk....
+....kk....
+....kk....
+...kkkk...
+..kk..kk..
+.kk....kk.`);
 
 const OUTLINE = '<g stroke="#0b1020" stroke-width="2" stroke-linejoin="round">';
 
@@ -85,9 +101,16 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let reveal: { from: number; until: number; ok: boolean; shown: number } | null = null;
   const score = () => clamp1000((1000 * (right - wrong / 2)) / par);
 
-  const wrap = h('div', 'g-bananascale');
+  // A photo studio set up in the kitchen: OP Cat posts the photo (the caption is its
+  // speech bubble), the thing stands on the backdrop paper next to one banana, and the
+  // bananas stack up beside it when you answer.
+  const wrap = h('div', 'g-bananascale scene-kitchen');
+  const head = h('div', 'head');
+  const cat = actor('op', { px: 0.38 });
   const title = h('div', 'title');
+  head.append(cat.el, title);
   const scene = h('div', 'scene');
+  scene.append(h('i', 'chart'), sprite('bananascale-lamp', { px: 0.26 }, 'lamp left'), sprite('bananascale-lamp', { px: 0.26, flip: true }, 'lamp right'));
   const pair = h('div', 'pair');
   const stack = h('div', 'stack');
   const thing = h('div', 'thing');
@@ -107,7 +130,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     picks.append(chip);
     return chip;
   });
-  wrap.append(title, scene, picks);
+  wrap.append(head, scene, picks);
   root.append(wrap);
 
   function show() {
@@ -115,6 +138,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     reveal = null;
     title.className = 'title';
     title.textContent = r.cap;
+    cat.mood('idle');
     pair.className = 'pair';
     pair.style.setProperty('--ar', String(r.thing.w / 100));
     pair.style.setProperty('--k', String(r.tall));
@@ -150,9 +174,11 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       const ok = b === r.win;
       if (ok) {
         right++;
+        cat.mood('happy');
         good(chips[b]);
       } else {
         wrong++;
+        cat.mood('shock');
         bad(chips[b], 'NOPE');
       }
       reveal = { from: t, until: t + (ok ? RIGHT_MS : WRONG_MS), ok, shown: 1 };
@@ -160,7 +186,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       pulse(chips[b], 'bump');
       title.className = 'title count';
       title.textContent = '1';
-      fill.style.width = `${score() / 10}%`;
+      fill.style.transform = `scaleX(${score() / 1000})`;
     },
     tick(t) {
       if (!reveal) return;

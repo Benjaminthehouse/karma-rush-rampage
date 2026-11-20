@@ -1,5 +1,36 @@
-.g-commentchain .thread { width: 100%; display: flex; flex-direction: column; gap: 0.3em; min-height: 12.5em; }
-.g-commentchain .reply { background: var(--panel-2); border-left: 0.35em solid var(--line); border-radius: 0.5em; padding: 0.35em 0.6em; font-weight: 800; font-size: 0.9em; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.55; }
-.g-commentchain .reply.lit { opacity: 1; background: var(--c); border-left-color: var(--ink); color: #071022; box-shadow: 0 0 1.2em var(--c); transform: scale(1.04); }
-.g-commentchain .reply.done { opacity: 1; background: color-mix(in srgb, var(--c) 45%, var(--panel-2)); border-left-color: var(--c); color: var(--ink); }
-.g-commentchain .reply.hidden { opacity: 0.5; color: transparent; }
+/* Feed street: the speech bubble up top, an apartment block with three balconies below, the chain along the pavement. */
+.g-commentchain { justify-content: space-between !important; gap: 0.35em !important; padding: 0.6em 0.6em 0.4em !important; color: #0b1020; }
+.g-commentchain .top { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 0.35em; }
+.g-commentchain .rule { font-size: 1.05em; padding: 0.15em 0.7em; background: #0b1020; color: #fff0a8; box-shadow: 0.2em 0.2em 0 0 #0b102055; }
+.g-commentchain.turn .rule { background: var(--gold); color: #0b1020; box-shadow: 0 0 0 0.16em #0b1020, 0.3em 0.3em 0 0.16em #0b102055; }
+
+/* The speech bubble: white, thick outline, its tail pointing down at whoever spoke last. */
+.g-commentchain .bubble { position: relative; width: min(100%, 19em); min-height: 2.6em; display: flex; align-items: center; justify-content: center; padding: 0.35em 0.6em; background: #fff; box-shadow: 0 -0.2em 0 0 #0b1020, 0 0.2em 0 0 #0b1020, -0.2em 0 0 0 #0b1020, 0.2em 0 0 0 #0b1020, 0.35em 0.5em 0 0 #0b102055; }
+.g-commentchain .said { font-size: 1.15em; line-height: 1.1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g-commentchain .bubble::after { content: ''; position: absolute; left: 50%; top: 100%; margin: 0.16em 0 0 -0.65em; border: 0.65em solid #0000; border-top: 0.75em solid #0b1020; border-bottom: 0; }
+.g-commentchain .bubble::before { content: ''; position: absolute; left: 50%; top: 100%; z-index: 1; margin: -0.06em 0 0 -0.42em; border: 0.42em solid #0000; border-top: 0.52em solid #fff; border-bottom: 0; }
+.g-commentchain .bubble[data-at='0']::after, .g-commentchain .bubble[data-at='0']::before { left: 17%; }
+.g-commentchain .bubble[data-at='2']::after, .g-commentchain .bubble[data-at='2']::before { left: 83%; }
+
+/* The apartment block: a brick facade, three windows, a balcony rail in each button colour. */
+.g-commentchain .block { flex: 1 1 auto; min-height: 0; width: min(100%, 21em); display: flex; flex-direction: column; justify-content: flex-end; gap: 0.6em; padding: 0.7em 0.45em 0.5em; background: #c0644a; background-image: repeating-linear-gradient(#0000 0 1.1em, #a8523c 1.1em 1.25em); box-shadow: 0 -0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, 0 0.22em 0 0 #0b1020, 0.4em 0.4em 0 0.2em #0b102044; }
+.g-commentchain .spot { position: relative; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-top: 0.6em; background: #2c3763; box-shadow: 0 0 0 0.18em #0b1020, inset 0 0.3em 0 0 #3a4370; }
+.g-commentchain .glow { position: absolute; inset: 0; background: #ffe27a; opacity: 0; transition: opacity 0.08s; }
+.g-commentchain .spot.lit .glow { opacity: 1; }
+.g-commentchain .spot .actor { position: relative; transform-origin: 50% 100%; transition: transform 0.1s; margin-bottom: -0.5em; }
+.g-commentchain .spot.lit .actor { transform: translateY(-0.4em) scale(1.08); }
+.g-commentchain .rail { position: relative; align-self: stretch; height: 1.5em; margin: 0 -0.25em; background: repeating-linear-gradient(90deg, var(--c) 0 0.32em, #0000 0.32em 0.8em), linear-gradient(var(--c) 0 0.35em, #0000 0.35em calc(100% - 0.3em), var(--cd, var(--c)) calc(100% - 0.3em)); box-shadow: 0 0 0 0.16em #0b1020; }
+
+/* A dark cornice along the roof, and the shuttered upper floor. */
+.g-commentchain .block { position: relative; border-top: 0.55em solid #4a2a36; }
+.g-commentchain .upper { flex: 1 1 auto; max-height: 9em; min-height: 0; display: flex; justify-content: space-around; gap: 0.6em; padding: 0 0.4em; }
+.g-commentchain .win { flex: 0 1 4em; max-height: 8em; background: repeating-linear-gradient(#e8d2b0 0 0.35em, #b89870 0.35em 0.5em); box-shadow: 0 0 0 0.18em #0b1020, 0 0.35em 0 0.18em #8a3a2a; }
+.g-commentchain .balconies { display: flex; align-items: flex-end; justify-content: space-between; gap: 0.35em; }
+.g-commentchain .spot { background: #6a76b0; box-shadow: 0 0 0 0.18em #0b1020, inset 0 0.3em 0 0 #8a94c8; }
+
+/* The chain of replies so far, on the pavement. */
+.g-commentchain .links { display: flex; justify-content: center; gap: 0.1em; min-height: 1.6em; align-items: center; }
+.g-commentchain .link { opacity: 0.45; }
+.g-commentchain .link.on { opacity: 1; animation: g-commentchain-clink 0.15s ease-out; }
+@keyframes g-commentchain-clink { from { transform: scale(1.4); } }
+.g-commentchain .tally { font-size: 0.85em; text-align: center; color: #fff; }

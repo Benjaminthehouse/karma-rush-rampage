@@ -1,8 +1,40 @@
-.g-cakeday { flex-direction: row !important; flex-wrap: wrap; padding: 0 !important; gap: 0 !important; align-items: stretch !important; align-content: stretch; overflow: hidden; }
-.g-cakeday .lane { flex: 1; min-width: 0; height: 100%; position: relative; border-left: 0.1em dashed var(--line); }
-.g-cakeday .lane:first-child { border-left: 0; }
-.g-cakeday .flame { position: absolute; left: 50%; width: 1.8em; height: 2.4em; margin-left: -0.9em; background: var(--c); border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%; box-shadow: 0 0 1em var(--c); }
-.g-cakeday .candle { position: absolute; left: 50%; bottom: 3.2em; width: 0.9em; height: 4.2em; margin-left: -0.45em; border-radius: 0.3em; background: repeating-linear-gradient(135deg, var(--ink) 0 0.4em, var(--c) 0.4em 0.8em); }
-.g-cakeday .candle::before { content: ''; position: absolute; left: -0.95em; right: -0.95em; top: -0.5em; height: 0.25em; background: var(--ink); opacity: 0.7; border-radius: 1em; }
-.g-cakeday .candle.lit::after { content: ''; position: absolute; left: -0.25em; top: -1.7em; width: 1.4em; height: 1.7em; background: var(--gold); border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%; box-shadow: 0 0 1.2em var(--gold); }
-.g-cakeday .cake { position: absolute; left: 0; right: 0; bottom: 0; height: 3.2em; background: #ff7ac8; border-top: 0.5em solid var(--ink); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1em; letter-spacing: 0.1em; color: #071022; }
+/* The party stage. Everything is pinned to the floor so the flames get the whole sky to fall through. */
+.g-cakeday { padding: 0 !important; gap: 0 !important; overflow: hidden; color: #0b1020; }
+
+/* Bunting strung across the top, a banner in the middle. */
+.g-cakeday .bunting { position: absolute; left: 0; right: 0; top: 0; z-index: 3; display: flex; justify-content: space-around; align-items: flex-start; padding-top: 0.35em; background: linear-gradient(#0b1020, #0b1020) 0 0.35em / 100% 0.18em no-repeat; }
+.g-cakeday .flag { flex: none; }
+.g-cakeday .banner { position: absolute; left: 50%; top: 0.3em; transform: translateX(-50%) rotate(-2deg); padding: 0.15em 0.7em; background: #ff7ac8; font-size: 1.05em; line-height: 1.1; white-space: nowrap; box-shadow: 0 -0.18em 0 0 #0b1020, 0 0.18em 0 0 #0b1020, -0.18em 0 0 0 #0b1020, 0.18em 0 0 0 #0b1020, 0.3em 0.4em 0 0 #0b102088; }
+
+/* The play field: three lanes over the cake, capped so the cake stays cake-shaped on desktop. */
+.g-cakeday .field { position: absolute; top: 0; bottom: 0; left: 0; right: 0; margin: 0 auto; width: min(100%, 24em); display: flex; }
+.g-cakeday .lane { flex: 1; min-width: 0; position: relative; }
+/* A faint beam of the lane's colour shows where its flames fall. */
+.g-cakeday .lane::before { content: ''; position: absolute; left: 50%; top: 2.4em; bottom: 11em; width: 2.6em; margin-left: -1.3em; background: linear-gradient(#0000, color-mix(in srgb, var(--c) 30%, transparent)); }
+.g-cakeday .chute { position: absolute; left: 0; right: 0; top: 2.4em; bottom: 11em; overflow: hidden; }
+.g-cakeday .drop { position: absolute; inset: 0; will-change: transform; }
+.g-cakeday .drop .px { position: absolute; left: 50%; bottom: 0; margin-left: -1.1em; }
+/* Where the flame should land: a pale outline on the wick. */
+.g-cakeday .ghost { position: absolute; left: 50%; bottom: 11em; margin-left: -1.1em; opacity: 0.45; }
+
+/* The candles: striped in the lane's colour, standing on the cake. */
+.g-cakeday .candle { position: absolute; left: 50%; bottom: 8.2em; width: 1.1em; height: 2.8em; margin-left: -0.55em; z-index: 1;
+  background: repeating-linear-gradient(135deg, #fff 0 0.4em, var(--c) 0.4em 0.8em);
+  box-shadow: 0 -0.18em 0 0 #0b1020, -0.18em 0 0 0 #0b1020, 0.18em 0 0 0 #0b1020; }
+.g-cakeday .candle .lit { position: absolute; left: 50%; bottom: 100%; margin: 0 0 0.1em -1.1em; opacity: 0; transform: scale(0.4); transform-origin: 50% 100%; transition: opacity 0.08s, transform 0.12s; }
+.g-cakeday .candle.lit .lit { opacity: 1; transform: none; animation: g-cakeday-flicker 0.3s steps(2) infinite; }
+@keyframes g-cakeday-flicker { 50% { transform: scale(0.92, 1.08); } }
+
+/* The cake: pink sponge, white icing drips, a cream stripe, on a plate. */
+.g-cakeday .cake { position: absolute; left: 0.6em; right: 0.6em; bottom: 3.6em; height: 4.6em; z-index: 1;
+  background: linear-gradient(#0000 0 58%, #fff0a8 58% 66%, #0000 66%), #ff7ac8;
+  box-shadow: 0 -0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, 0.45em 0.2em 0 0 #0b102088; }
+.g-cakeday .icing { position: absolute; left: 0; right: 0; top: 0; height: 1.5em;
+  background: radial-gradient(circle at 50% 100%, #fff 0 0.55em, #0000 0.58em) 0 0.2em / 1.6em 1.3em repeat-x, linear-gradient(#fff 0 0.75em, #0000 0.75em); }
+.g-cakeday .plate { position: absolute; left: -0.5em; right: -0.5em; bottom: -0.7em; height: 0.7em; background: #dde2f5; box-shadow: 0 0.18em 0 0 #0b1020, -0.18em 0 0 0 #0b1020, 0.18em 0 0 0 #0b1020, 0 -0.18em 0 0 #0b1020; }
+
+/* The party in front of the cake: OP Cat in a hat between two guests. */
+.g-cakeday .party { position: absolute; left: 0; right: 0; bottom: 0.2em; z-index: 2; display: flex; justify-content: center; align-items: flex-end; gap: 0.4em; }
+.g-cakeday .star { position: relative; transform-origin: 50% 100%; }
+.g-cakeday .hat { position: absolute; left: 50%; top: -1.9em; margin-left: -1.2em; transform: rotate(-10deg); }
+.g-cakeday .guest { margin-bottom: 0.1em; }

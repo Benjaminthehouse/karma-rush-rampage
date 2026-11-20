@@ -1,5 +1,18 @@
 import './haikubot.css';
-import { COLOR, arrow, h, pulse, ratio, shuffled, type Btn, type GameFactory } from './common';
+import { actor, COLOR, arrow, defineSprite, h, pulse, ratio, shuffled, sprite, type ActorMood, type Btn, type GameFactory } from './common';
+
+// The bot's calligraphy brush.
+defineSprite('haikubot-brush', `
+.........kk.
+........kyyk
+.......kyyk.
+......knnk..
+.....knnk...
+....knnk....
+...kxxk.....
+..kxxk......
+.kkxk.......
+kkkk........`);
 
 // Spaces split words, hyphens split the syllables inside a word: 5, 7, 5.
 const HAIKUS = [
@@ -35,12 +48,24 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const GRACE = 280;
   let graceUntil = 0;
 
-  const wrap = h('div', 'g-haikubot');
-  const card = h('div', 'card');
+  // The scene: a zen garden off feed street. The little haiku robot stands at the top with its
+  // brush; below, three rows of stones in the raked sand, 5, 7 and 5, one syllable painted per tap.
+  const wrap = h('div', 'g-haikubot scene-street');
+  const top = h('div', 'top');
+  const painter = h('div', 'painter');
+  const bot = actor('automod', { px: 0.42 });
+  const brush = sprite('haikubot-brush', { px: 0.28 }, 'brush');
+  painter.append(bot.el, brush);
+  const sign = h('div', 'sign');
   const head = h('div', 'head');
-  const face = h('div', 'face');
-  face.append(h('i'), h('i'));
-  head.append(face, h('b', 'name', 'u/haiku_bot'), h('span', 'flair', 'BOT'));
+  head.append(h('b', 'name', 'u/haiku_bot'), h('span', 'flair', 'BOT'));
+  // The comment's vote count is the syllable count: it climbs with every tap.
+  const foot = h('div', 'foot');
+  const votes = h('b', 'votes');
+  foot.append(arrow('up'), votes);
+  const tally = h('div', 'tally');
+  sign.append(head, foot, tally);
+  top.append(painter, sign);
   const poem = h('div', 'poem');
   const lines = SIZES.map((size, i) => {
     const line = h('div', `line c-${COLOR[i]}`);
@@ -49,14 +74,15 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     poem.append(line);
     return { line, cells };
   });
-  // The comment's vote count is the syllable count: it climbs with every tap.
-  const foot = h('div', 'foot');
-  const votes = h('b', 'votes');
-  const tally = h('div', 'tally');
-  foot.append(arrow('up'), votes, tally);
-  card.append(head, poem, foot);
-  wrap.append(card);
+  wrap.append(top, poem);
   root.append(wrap);
+  let moodUntil = 0;
+  let calm = true;
+  function face(m: ActorMood, t: number, ms = 300) {
+    bot.mood(m);
+    moodUntil = t + ms;
+    calm = false;
+  }
   const typed = () => posted * ALL + filled[0] + filled[1] + filled[2];
   // The bot types top to bottom: the line being typed is the first one with room left.
   // (A full haiku is posted and dealt again at once, so there always is one.)
@@ -99,6 +125,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         // Not this line's turn yet. Mashing every button gets nowhere; a miscount gets told what is missing.
         if (b === 2 && t < graceUntil) return;
         jolt(lines[now].line, 'nudge');
+        face('shock', t);
         bad(lines[now].line);
         fx.pop(lines[now].line, `${WORD[SIZES[now] - filled[now]]} MORE`, COLOR[now]);
         return;
@@ -109,11 +136,15 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         wipe(b);
         refresh();
         jolt(line, 'spill');
+        face('angry', t, 450);
+        pulse(bot.el, 'shake');
         bad(line, 'BAD BOT');
         return;
       }
       const cell = cells[filled[b]++];
       cell.classList.add('on');
+      if (calm || moodUntil - t < 300) face('talk', t, 160);
+      pulse(brush, 'dab');
       good(cell);
       if (filled[b] < SIZES[b]) {
         refresh();
@@ -127,6 +158,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         fx.burst(poem, 'gold', 20);
         fx.flash('gold');
         fx.sound('coin');
+        face('happy', t, 500);
         deal();
         pulse(tally, 'bump');
         return;
@@ -136,8 +168,14 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       fx.pop(line, `${WORD[SIZES[b]]}!`, COLOR[b]);
       fx.burst(line, COLOR[b], 10);
       fx.sound('ding');
+      face('happy', t, 350);
     },
-    tick() {},
+    tick(t) {
+      if (!calm && t >= moodUntil) {
+        calm = true;
+        bot.mood('idle');
+      }
+    },
     score: () => ratio(typed(), par),
     hint: () => turn(),
   };
