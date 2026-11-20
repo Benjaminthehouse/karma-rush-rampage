@@ -1,22 +1,6 @@
 import './repostradar.css';
-import { actor, clamp1000, defineSprite, h, pulse, randBtn, setSprite, shuffled, sprite, type ActorMood, type Btn, type GameFactory } from './common';
+import { actor, clamp1000, COLOR, defineSprite, h, pulse, randBtn, setSprite, shuffled, sprite, type ActorMood, type Btn, type GameFactory } from './common';
 
-// The Lurker's magnifying glass, held up at an angle: a brass rim, a glinting lens, a wooden handle.
-defineSprite('repostradar-glass', `
-...........kk.
-..........knnk
-.........knnk.
-........knnk..
-.......kyyk...
-..kkkkkyyk....
-.kyyyyyyk.....
-kyywccyyk.....
-kywccccyk.....
-kycccccyk.....
-kycccccyk.....
-kyyccccyk.....
-.kyyyyyk......
-..kkkkk.......`);
 // A red push pin for the evidence board.
 defineSprite('repostradar-pin', `
 .kkk.
@@ -25,109 +9,80 @@ kRRRk
 .kkk.
 ..k..`);
 
-const SHAPES = ['disc', 'box', 'tri', 'star', 'gem', 'drop', 'cross', 'bolt', 'moon', 'ring'];
-const TINTS = ['gold', 'purple', 'ink', 'teal', 'pink'] as const;
-// Each polaroid shape as a pixel sprite: a test on a 14x14 grid, outlined in k and lit from the top left.
-const poly = (pts: number[]) => (u: number, v: number) => {
-  let hit = false;
-  for (let i = 0, j = pts.length - 2; i < pts.length; j = i, i += 2) {
-    const [xi, yi, xj, yj] = [pts[i], pts[i + 1], pts[j], pts[j + 1]];
-    if (yi > v !== yj > v && u < ((xj - xi) * (v - yi)) / (yj - yi) + xi) hit = !hit;
-  }
-  return hit;
-};
-const round = (u: number, v: number, x = 0.5, y = 0.5) => Math.hypot(u - x, v - y);
-const TESTS: Record<string, (u: number, v: number) => boolean> = {
-  disc: (u, v) => round(u, v) < 0.5,
-  box: () => true,
-  tri: poly([0.5, 0, 1, 1, 0, 1]),
-  star: poly([0.5, 0, 0.62, 0.35, 1, 0.38, 0.7, 0.6, 0.8, 1, 0.5, 0.76, 0.2, 1, 0.3, 0.6, 0, 0.38, 0.38, 0.35]),
-  gem: (u, v) => Math.abs(u - 0.5) + Math.abs(v - 0.5) < 0.52,
-  drop: (u, v) => round(u, v, 0.5, 0.64) < 0.36 || poly([0.5, 0, 0.84, 0.56, 0.16, 0.56])(u, v),
-  cross: (u, v) => Math.abs(u - 0.5) < 0.17 || Math.abs(v - 0.5) < 0.17,
-  bolt: poly([0.62, 0, 0.08, 0.56, 0.44, 0.56, 0.32, 1, 0.92, 0.4, 0.56, 0.4]),
-  moon: (u, v) => round(u, v) < 0.5 && round(u, v, 0.78, 0.32) > 0.42,
-  ring: (u, v) => round(u, v) < 0.5 && round(u, v) > 0.22,
-};
-for (const [name, test] of Object.entries(TESTS)) {
-  const on = (x: number, y: number) => x >= 1 && y >= 1 && x <= 14 && y <= 14 && test((x - 0.5) / 14, (y - 0.5) / 14);
-  defineSprite(
-    `repostradar-${name}`,
-    Array.from({ length: 16 }, (_, y) =>
-      Array.from({ length: 16 }, (_, x) => {
-        if (!on(x, y)) return on(x - 1, y) || on(x + 1, y) || on(x, y - 1) || on(x, y + 1) ? 'k' : '.';
-        if (!on(x + 1, y) || !on(x, y + 1)) return 'a';
-        return !on(x - 1, y) || !on(x, y - 1) ? 'L' : 'A';
-      }).join(''),
-    ),
-  );
-}
-const CAPTIONS = ['wow', 'OC', 'look', 'lol', 'me irl', 'TIL', 'cute', 'huh'];
+// What people post. Each is one unmistakable picture: a post is a repost when its picture
+// is already on the wall. No colours or captions to compare, just the picture.
+const PICS = [
+  'heart', 'star', 'coin', 'rocket', 'banana', 'cake', 'bell', 'trophy', 'bug', 'cookie', 'skull',
+  'bomb', 'gift', 'crown', 'hammer', 'lock', 'cloud', 'flame1', 'megaphone', 'thumb', 'laptop',
+];
+const WALL_PX = 0.2; // one art pixel on the wall, in em
+const NEW_PX = 0.36; // and on the three new posts
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
-  const par = 12 + Math.floor(level * 0.75);
-  // Every post is a shape + tint pair. Pairs are dealt once, then come back as reposts.
-  const deck = shuffled(
-    rng,
-    SHAPES.flatMap((s) => TINTS.map((c) => ({ shape: s, tint: c, cap: CAPTIONS[Math.floor(rng() * CAPTIONS.length)] })))
-  );
-  let fresh = 0;
-  const seen: typeof deck = [];
-  const next = () => deck[fresh++ % deck.length];
-  // Opening screen: three fresh posts to remember, nothing to press yet.
-  const intro = [next(), next(), next()];
-  seen.push(...intro);
-  // Two fresh posts a screen, and never more screens than the deck can fill: a "fresh"
-  // post that has been shown before would be a second repost, and calling it out a "miss".
-  const screens = Array.from({ length: Math.floor((deck.length - intro.length) / 2) }, () => {
-    // Later rounds reach further back for the repost.
-    const reach = Math.min(seen.length, 3 + level * 2);
-    const repost = seen[seen.length - 1 - Math.floor(rng() * reach)];
+  // Later rounds have a bigger wall to search and want more catches.
+  const wallSize = level >= 3 ? 9 : 6;
+  const par = 12 + level;
+
+  // The whole round is dealt up front, so everyone gets the same one however fast they play.
+  const start = shuffled(rng, PICS).slice(0, wallSize);
+  const wall = [...start];
+  const age = shuffled(rng, wall.map((_, i) => i)); // higher is newer
+  let clock = wallSize;
+  const screens = Array.from({ length: 140 }, () => {
+    const twin = Math.floor(rng() * wallSize); // the wall post that gets reposted
     const slot = randBtn(rng);
-    const tiles = [0, 1, 2].map((i) => (i === slot ? repost : next()));
-    tiles.forEach((t) => t !== repost && seen.push(t));
-    return { tiles, slot };
+    const spare = shuffled(rng, PICS.filter((p) => !wall.includes(p)));
+    const fresh = [spare[0], spare[1]];
+    let f = 0;
+    const tiles = [0, 1, 2].map((i) => (i === slot ? wall[twin] : fresh[f++]));
+    // The two new posts join the wall in place of its two oldest (never the one just
+    // matched, so the match can be shown), which keeps everything else where it was.
+    const oldest = wall.map((_, i) => i).filter((i) => i !== twin).sort((a, b) => age[a] - age[b]).slice(0, 2);
+    const swaps = oldest.map((pos, i) => ({ pos, pic: fresh[i] }));
+    swaps.forEach((s) => {
+      wall[s.pos] = s.pic;
+      age[s.pos] = clock++;
+    });
+    return { tiles, slot, twin, swaps };
   });
-  const INTRO_MS = 1100;
-  let idx = -1;
+
+  let idx = 0;
   let right = 0;
   let wrong = 0;
   let lockedUntil = 0;
 
-  // The scene: a detective's office. Three posts are pinned to the evidence board with red
-  // string; the Lurker sits below with a magnifying glass and swings it at your pick.
-  // Every repost caught goes into the case files on the desk.
+  // The scene: the Lurker's evidence board. Up top, everything already posted, pinned to
+  // cork. Below, three new posts arrive, one above each button. One of them is already
+  // on the wall: that is the repost.
   const wrap = h('div', 'g-repostradar scene-office');
-  const banner = h('div', 'rule', 'Remember these!');
-  const board = h('div', 'board');
-  const row = h('div', 'row');
-  const cells = [0, 1, 2].map(() => {
-    const c = h('div', 'tile');
-    const photo = h('div', 'photo');
-    const art = sprite('repostradar-disc', { px: 0.21 });
-    photo.append(art);
-    const cap = h('span');
-    c.append(sprite('repostradar-pin', { px: 0.2 }, 'pin'), photo, cap);
-    row.append(c);
-    return { c, art, cap };
+  const head = h('div', 'head');
+  const lurker = actor('lurker', { mood: 'peep', px: 0.2 });
+  head.append(h('span', 'label', 'ALREADY POSTED'), lurker.el);
+  const board = h('div', `wall n${wallSize}`);
+  const olds = start.map((pic) => {
+    const cell = h('div', 'old');
+    const art = sprite(pic, { px: WALL_PX });
+    cell.append(sprite('repostradar-pin', { px: 0.14 }, 'pin'), art);
+    board.append(cell);
+    return { cell, art };
   });
-  // Verdicts float up from above the row, so they never cover the next three posts
-  // (or get cut off at the edge of the stage).
+  const ask = h('div', 'ask');
+  ask.innerHTML = 'Which <b>new post</b> is on the wall?';
+  const row = h('div', 'row');
+  const news = ([0, 1, 2] as Btn[]).map((b) => {
+    const tile = h('div', `tile c-${COLOR[b]}`);
+    const art = sprite(start[0], { px: NEW_PX });
+    const photo = h('div', 'photo');
+    photo.append(art);
+    tile.append(h('span', 'tag', 'NEW'), photo, h('i', 'base'));
+    row.append(tile);
+    return { tile, art };
+  });
+  // Verdicts float up from the heading, clear of the wall, the question and the new posts.
   const stamp = h('i', 'stamp');
-  row.append(stamp);
-  board.append(h('i', 'string'), row);
-  const desk = h('div', 'desk');
-  const sleuth = h('div', 'sleuth');
-  const lurker = actor('lurker', { mood: 'peep', px: 0.42 });
-  sleuth.append(lurker.el);
-  const glassWay = h('div', 'glassway');
-  const glass = sprite('repostradar-glass', { px: 0.3 }, 'glass');
-  glassWay.append(glass);
-  const files = h('div', 'files');
-  const note = h('span', 'count');
-  files.append(note);
-  desk.append(glassWay, sleuth, files);
-  wrap.append(banner, board, desk);
+  head.append(stamp);
+  const note = h('div', 'count');
+  wrap.append(head, board, ask, row, note);
   root.append(wrap);
 
   let mood: ActorMood = 'peep';
@@ -140,57 +95,50 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   };
 
   function show() {
-    const tiles = idx < 0 ? intro : screens[idx % screens.length].tiles;
-    cells.forEach((cell, i) => {
-      setSprite(cell.art, `repostradar-${tiles[i].shape}`, { px: 0.21, tone: tiles[i].tint });
-      cell.cap.textContent = tiles[i].cap;
-    });
+    const s = screens[idx % screens.length];
+    news.forEach((n, i) => setSprite(n.art, s.tiles[i], { px: NEW_PX }));
     pulse(row, 'pop-in');
-    banner.textContent = idx < 0 ? 'Remember these!' : 'Which one is a repost?';
-    note.textContent = `${right} caught`;
+    note.textContent = right === 1 ? '1 repost caught' : `${right} reposts caught`;
   }
   show();
 
   return {
     press(b: Btn, t) {
-      if (idx < 0 || t < lockedUntil) {
-        // Too early: still answer the press.
+      if (t < lockedUntil) {
         fx.sound('tick');
-        if (idx < 0) pulse(banner, 'bump');
         return;
       }
       const s = screens[idx % screens.length];
+      // Right or wrong, the wall post that was copied lights up: that was the repost.
+      pulse(olds[s.twin].cell, b === s.slot ? 'caught' : 'missed');
       if (b === s.slot) {
         right++;
         good(stamp, 'REPOST!');
-        fx.burst(cells[b].c, 'gold', 10);
+        fx.burst(olds[s.twin].cell, 'gold', 10);
         look('cool', t);
-        // The caught repost goes into the case files: one stamped folder per catch.
-        if (files.childElementCount < 9) files.insertBefore(h('i', 'case'), note);
       } else {
         wrong++;
         lockedUntil = t + 450;
-        bad(stamp, 'THAT WAS OC');
+        bad(stamp, 'THAT ONE WAS NEW');
         look('shock', t);
       }
-      glassWay.className = `glassway at-${b}`;
-      pulse(glass, 'bump');
+      // The two posts that really were new get pinned to the wall.
+      for (const swap of s.swaps) {
+        setSprite(olds[swap.pos].art, swap.pic, { px: WALL_PX });
+        pulse(olds[swap.pos].art, 'pop-in');
+      }
       idx++;
       show();
     },
     tick(t) {
-      // Red frames while a wrong call has the buttons locked.
-      row.classList.toggle('locked', t < lockedUntil);
-      if (mood !== 'idle' && idx >= 0 && t >= moodUntil) {
-        mood = 'idle';
-        lurker.mood('idle');
-      }
-      if (idx < 0 && t >= INTRO_MS) {
-        idx = 0;
-        show();
+      const locked = t < lockedUntil;
+      if (locked !== row.classList.contains('locked')) row.classList.toggle('locked', locked);
+      if (mood !== 'peep' && t >= moodUntil) {
+        mood = 'peep';
+        lurker.mood('peep');
       }
     },
     score: () => clamp1000((1000 * (right - wrong)) / par),
-    hint: (t) => (idx >= 0 && t >= lockedUntil ? screens[idx % screens.length].slot : null),
+    hint: (t) => (t >= lockedUntil ? screens[idx % screens.length].slot : null),
   };
 };

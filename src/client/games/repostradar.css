@@ -1,28 +1,40 @@
-/* A detective's office: the clue up top, the evidence board on the wall, the Lurker at the desk below. */
-.g-repostradar { justify-content: space-between !important; gap: 0.4em !important; padding: 0.7em 0.6em 0.5em !important; color: #0b1020; }
-.g-repostradar .rule { padding: 0.15em 0.7em; background: #fff0a8; font-size: 1.2em; white-space: nowrap; box-shadow: 0 0 0 0.18em #0b1020, 0.25em 0.3em 0 0.18em #0b1020; transform: rotate(-1.5deg); }
+/* The Lurker's evidence board: everything already posted up top, three new posts below. */
+.g-repostradar { justify-content: space-between !important; gap: 0.35em !important; padding: 0.6em 0.6em 0.5em !important; color: #0b1020; }
 
-/* The evidence board: cork in a wooden frame, three posts pinned on it as polaroids, red string between them. */
-.g-repostradar .board { position: relative; flex: none; display: flex; align-items: center; width: min(100%, 26em); padding: 0.9em 0.5em 0.6em; background: conic-gradient(at 25% 25%, #0000 75%, #a8703a 0) 0 0 / 0.7em 0.7em, conic-gradient(at 25% 25%, #0000 75%, #a8703a 0) 0.35em 0.35em / 0.7em 0.7em, #c98a4a; box-shadow: 0 0 0 0.3em #6e3f1c, 0 0 0 0.5em #0b1020, 0.35em 0.4em 0 0.5em #0b102066; }
-.g-repostradar .string { position: absolute; left: 16%; right: 16%; top: 1.15em; height: 0.2em; background: #c8323c; }
-.g-repostradar .row { position: relative; display: flex; gap: 0.5em; width: 100%; }
-.g-repostradar .stamp { position: absolute; left: 50%; top: -0.8em; }
-.g-repostradar .tile { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 0.25em; padding: 0.35em 0.35em 0.3em; background: #fff; box-shadow: 0 0 0 0.16em #0b1020, 0.2em 0.25em 0 0.16em #0b102088; }
-/* Pinned a little unevenly; offsets rather than tilts keep the pixels square. */
-.g-repostradar .tile:nth-child(2) { transform: translateY(0.2em); }
-.g-repostradar .tile:nth-child(3) { transform: translateY(-0.1em); }
-.g-repostradar .row.locked .tile { box-shadow: 0 0 0 0.16em #0b1020, 0 0 0 0.36em #ff4b55; }
-.g-repostradar .pin { position: absolute; z-index: 1; left: 50%; top: -0.55em; margin-left: -0.5em; }
-.g-repostradar .photo { aspect-ratio: 1; max-height: 5.8em; display: flex; align-items: center; justify-content: center; background: #1a1f40; }
-.g-repostradar .tile span { font-size: 0.8em; line-height: 1.1; text-align: center; white-space: nowrap; }
+/* The heading over the wall, with the Lurker keeping watch beside it. */
+.g-repostradar .head { flex: none; display: flex; align-items: flex-end; justify-content: space-between; width: min(100%, 24em); }
+.g-repostradar .label { padding: 0.1em 0.6em; background: #0b1020; color: var(--gold); font-size: 1.05em; letter-spacing: 0.06em; white-space: nowrap; }
+.g-repostradar .head .actor { margin-bottom: -0.5em; }
 
-/* The desk: the Lurker behind it, the magnifying glass swinging to your pick, the case files piling up. */
-.g-repostradar .desk { position: relative; flex: none; width: min(100%, 26em); height: 8em; }
-.g-repostradar .desk::after { content: ''; position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; height: 1.9em; background: #8a5a2c; box-shadow: 0 0 0 0.2em #0b1020, inset 0 0.35em 0 0 #b0703c; }
-.g-repostradar .sleuth { position: absolute; left: 50%; bottom: 1.5em; margin-left: -3.36em; }
-.g-repostradar .glassway { position: absolute; z-index: 2; left: 33.333%; width: 33.334%; top: -0.6em; display: flex; justify-content: center; transition: transform 0.1s ease-out; }
-.g-repostradar .glassway.at-0 { transform: translateX(-100%); }
-.g-repostradar .glassway.at-2 { transform: translateX(100%); }
-.g-repostradar .files { position: absolute; z-index: 2; right: 0.3em; bottom: 0.35em; display: flex; align-items: flex-end; gap: 0.12em; }
-.g-repostradar .case { width: 0.9em; height: 1.2em; background: #ffcf3f; box-shadow: 0 0 0 0.12em #0b1020, inset 0 -0.3em 0 0 #ff4b55; }
-.g-repostradar .count { margin-left: 0.3em; padding: 0 0.35em; background: #fff; font-size: 0.85em; white-space: nowrap; box-shadow: 0 0 0 0.14em #0b1020; }
+/* The wall: cork in a wooden frame, the posts already posted pinned to it in a grid. */
+.g-repostradar .wall { flex: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.45em 0.5em; width: min(100%, 24em); padding: 0.75em 0.6em 0.5em; background: conic-gradient(#c98a4a 25%, #bd7f41 0 50%, #c98a4a 0 75%, #bd7f41 0) 0 0 / 0.7em 0.7em; box-shadow: 0 0 0 0.2em #0b1020, 0 0 0 0.5em #8a5a2c, 0 0 0 0.7em #0b1020; margin: 0.5em 0 0.6em; }
+.g-repostradar .wall.n9 { grid-template-columns: repeat(3, 1fr); }
+.g-repostradar .old { position: relative; height: 3.5em; display: flex; align-items: center; justify-content: center; background: #fff; box-shadow: 0 0 0 0.14em #0b1020, 0.16em 0.2em 0 0.14em #0b102066; }
+.g-repostradar .wall.n9 .old { height: 2.9em; }
+.g-repostradar .pin { position: absolute; z-index: 1; left: 50%; top: -0.4em; margin-left: -0.35em; }
+/* The copied post flashes when a repost is called: gold if caught, red if missed. */
+.g-repostradar .old.caught { animation: g-repostradar-caught 0.45s steps(3); }
+.g-repostradar .old.missed { animation: g-repostradar-missed 0.45s steps(3); }
+@keyframes g-repostradar-caught { 0%, 60% { background: var(--gold); transform: scale(1.12); } }
+@keyframes g-repostradar-missed { 0%, 60% { background: #ff9aa0; transform: scale(1.12); } }
+
+/* The question, between the wall and the new posts. */
+.g-repostradar .ask { flex: none; font-size: 1.05em; text-align: center; line-height: 1.1; }
+.g-repostradar .ask b { font-weight: inherit; background: var(--gold); padding: 0 0.25em; box-shadow: 0 0 0 0.1em #0b1020; }
+
+/* Three new posts, one over each button, standing on a base in the button's colour. */
+.g-repostradar .row { position: relative; flex: none; display: flex; gap: 0.5em; width: min(100%, 24em); }
+.g-repostradar .head { position: relative; }
+.g-repostradar .stamp { position: absolute; left: 50%; top: 0.4em; }
+.g-repostradar .tile { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; background: #fff; box-shadow: 0 0 0 0.18em #0b1020, 0.22em 0.28em 0 0.18em #0b102088; }
+.g-repostradar .photo { height: 6.2em; display: flex; align-items: center; justify-content: center; }
+.g-repostradar .tag { position: absolute; left: -0.1em; top: -0.45em; padding: 0 0.3em; background: #0b1020; color: #fff; font-size: 0.7em; letter-spacing: 0.06em; }
+.g-repostradar .base { height: 0.7em; background: var(--c); box-shadow: 0 -0.14em 0 0 #0b1020; }
+.g-repostradar .row.locked .tile { opacity: 0.45; }
+.g-repostradar .count { flex: none; padding: 0 0.5em; background: #fff; font-size: 0.85em; white-space: nowrap; box-shadow: 0 0 0 0.14em #0b1020; }
+
+/* Wide, short stages (desktop): shorter new posts so the tally fits under them. */
+@container (min-aspect-ratio: 5 / 4) {
+  .g-repostradar .photo { height: 4.6em; }
+  .g-repostradar .wall { margin-bottom: 0.4em; }
+}
