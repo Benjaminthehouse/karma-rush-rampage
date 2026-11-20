@@ -1,7 +1,82 @@
 import './automodsays.css';
-import { COLOR, COLOR_NAME, clamp1000, h, pick, pulse, randBtn, type GameFactory } from './common';
+import { COLOR, COLOR_NAME, clamp1000, defineSprite, h, padDots, pick, pulse, randBtn, setSprite, sprite, type GameFactory } from './common';
+
+// The cast. The real AutoModerator is a grey robot with a cyan screen face.
+defineSprite('automodsays-bot', `
+.......kk.......
+.......ky.......
+......kkkk......
+..kkkkkkkkkkkk..
+.kddddddddddddk.
+.kdkkkkkkkkkkdk.
+.kdkcckkkkcckdk.
+.kdkcckkkkcckdk.
+.kdkkkkkkkkkkdk.
+.kdkkkcccckkkdk.
+.kdkkkkkkkkkkdk.
+.kDddddddddddDk.
+..kkkkkkkkkkkk..
+..kDDDkggkDDDk..
+..kDDkggggkDDk..
+..kkkkkkkkkkkk..`);
+// Its mouth open: alternated with the frame above while it speaks.
+defineSprite('automodsays-bot-talk', `
+.......kk.......
+.......ky.......
+......kkkk......
+..kkkkkkkkkkkk..
+.kddddddddddddk.
+.kdkkkkkkkkkkdk.
+.kdkcckkkkcckdk.
+.kdkcckkkkcckdk.
+.kdkkkkkkkkkkdk.
+.kdkkcwwwwckkdk.
+.kdkkcccccckkdk.
+.kDddddddddddDk.
+..kkkkkkkkkkkk..
+..kDDDkggkDDDk..
+..kDDkggggkDDk..
+..kkkkkkkkkkkk..`);
+// Impostor one: a troll in a cardboard-box AutoMod costume. The horns give it away.
+defineSprite('automodsays-troll', `
+.kk..........kk.
+.krk........krk.
+..krk......krk..
+..kkkkkkkkkkkk..
+.knnnnnnnnnnnnk.
+.knnnnnnnnnnnnk.
+.knnkknnnnkknnk.
+.knnkknnnnkknnk.
+.knnnnnnnnnnnnk.
+.knnnkkkkkknnnk.
+.knnnnnnnnnnnnk.
+.kNnnnnnnnnnnNk.
+..kkkkkkkkkkkk..
+..kgggggggggGk..
+..kggGggggGggk..
+..kkkkkkkkkkkk..`);
+// Impostor two: a regular user in a tin-foil antenna and a stuck-on moustache.
+defineSprite('automodsays-stache', `
+....kk....kk....
+....kd....dk....
+.....kd..dk.....
+...kkkkkkkkkk...
+..kssssssssssk..
+.kssssssssssssk.
+.ksskksssskksssk
+.ksskksssskksssk
+.kssssssssssssk.
+.kskkkkkkkkkksk.
+.kskk.kkkk.kksk.
+.kssssssssssssk.
+..kkkkkkkkkkkk..
+..kpppppppppPk..
+..kpPpppppPppk..
+..kkkkkkkkkkkk..`);
 
 const FAKES = ['AutoMaud', 'OttoMod', 'AutoMob', 'Aut0Mod', 'AutoModd', 'NotAMod', 'AutoToad', 'AutoMood'];
+const LOOKS = ['automodsays-troll', 'automodsays-stache'] as const;
+const PX = 0.56; // one art pixel, in em: the speaker is about 9em wide
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const par = 10 + level;
@@ -11,7 +86,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     // Never two impostors in a row, so the round keeps moving.
     const fake = !lastFake && rng() < 0.38;
     lastFake = fake;
-    return { fake, btn: randBtn(rng), name: fake ? pick(rng, FAKES) : 'AutoModerator' };
+    return { fake, btn: randBtn(rng), name: fake ? pick(rng, FAKES) : 'AutoModerator', look: pick(rng, LOOKS) };
   });
   let idx = 0;
   let shownAt = 0;
@@ -20,28 +95,51 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   // An impostor that has just left still counts for a moment: nobody reads a new order
   // that fast, so a wrong press in this window was aimed at the impostor.
   let armedUntil = 0;
+  let frame = '';
 
-  const wrap = h('div', 'g-automodsays');
+  // The scene: the mod office. Whoever is giving the order stands at the podium and
+  // says it in a speech bubble; the nameplate on the podium says who they claim to be.
+  const wrap = h('div', 'g-automodsays scene-office');
   const bubble = h('div', 'bubble');
-  const who = h('div', 'who');
-  const shield = h('i', 'shield');
-  const name = h('span', 'name');
-  who.append(shield, name);
   const order = h('div', 'order');
-  // Verdicts float up from just above the bubble, so they never cover the next name and shield.
+  const dots = h('span', 'which');
+  bubble.append(order, dots);
+  const stage = h('div', 'stage');
+  const speaker = sprite('automodsays-bot', { px: PX }, 'speaker');
+  const podium = h('div', 'podium');
+  const plate = h('div', 'plate');
+  const shield = sprite('shield', { tone: 'green', px: 0.16 }, 'badge');
+  const name = h('span', 'name');
+  plate.append(shield, name);
+  podium.append(plate);
+  // Verdicts float up from the speaker, clear of the next order.
   const stamp = h('i', 'stamp');
-  bubble.append(who, order, stamp);
-  const note = h('div', 'g-note');
-  wrap.append(bubble, note);
+  stage.append(speaker, podium, stamp);
+  const note = h('div', 'tally');
+  wrap.append(bubble, stage, note);
   root.append(wrap);
+
+  const look = (p: (typeof prompts)[number], t: number) =>
+    p.fake ? p.look : Math.floor(t / 140) % 2 && t - shownAt < 700 ? 'automodsays-bot-talk' : 'automodsays-bot';
+
+  function draw(t: number) {
+    const f = look(prompts[idx % prompts.length], t);
+    if (f === frame) return;
+    frame = f;
+    setSprite(speaker, f, { px: PX });
+  }
 
   function show(t: number) {
     const p = prompts[idx % prompts.length];
     shownAt = t;
-    bubble.className = `bubble ${p.fake ? 'fake' : 'real'}`;
+    wrap.classList.toggle('fake', p.fake);
     name.textContent = p.name;
     order.innerHTML = `Press <b class="t-${COLOR[p.btn]}">${COLOR_NAME[p.btn]}</b>`;
+    dots.replaceChildren(padDots(p.btn));
     pulse(bubble, 'pop-in');
+    pulse(speaker, 'bump');
+    frame = '';
+    draw(t);
     note.textContent = `${obeyed} obeyed`;
   }
   show(0);
@@ -59,6 +157,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       }
       if (p.fake) {
         wrong++;
+        pulse(speaker, 'shake');
         bad(stamp, 'IMPOSTOR!');
       } else if (b === p.btn) {
         obeyed++;
@@ -76,11 +175,14 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         fx.pop(stamp, 'IGNORED', 'green');
       }
       if (prompts[idx % prompts.length].fake && t - shownAt >= ignoreMs) {
+        // The impostor gives up and shuffles off.
+        fx.poof(speaker);
         fx.sound('whoosh');
         armedUntil = t + 200;
         idx++;
         show(t);
       }
+      draw(t);
     },
     score: () => clamp1000((1000 * (obeyed - wrong)) / par),
     hint() {

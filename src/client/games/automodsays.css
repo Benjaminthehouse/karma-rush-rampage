@@ -1,9 +1,29 @@
-.g-automodsays .bubble { position: relative; width: min(100%, 22em); border-radius: 1em; border: 0.2em solid var(--line); background: var(--panel-2); padding: 0.9em 1em; display: flex; flex-direction: column; gap: 0.6em; }
-.g-automodsays .stamp { position: absolute; left: 50%; top: -0.8em; }
-.g-automodsays .who { display: flex; align-items: center; gap: 0.5em; font-weight: 900; }
-.g-automodsays .shield { width: 1.7em; height: 1.9em; flex: none; background: var(--dim); border-radius: 50%; }
-.g-automodsays .bubble.real { border-color: var(--green); }
-.g-automodsays .bubble.real .shield { background: var(--green); border-radius: 0; clip-path: polygon(50% 0, 100% 16%, 100% 58%, 50% 100%, 0 58%, 0 16%); }
-.g-automodsays .bubble.fake .name { color: var(--dim); }
-.g-automodsays .order { font-size: 1.9em; font-weight: 900; text-align: center; }
-.g-automodsays .order b { text-decoration: underline; text-underline-offset: 0.15em; }
+/* The mod office: the order in a speech bubble up top, the speaker at the podium below it. */
+.g-automodsays { justify-content: space-evenly !important; gap: 0.4em !important; padding: 0.8em 0.8em 0.6em !important; color: #0b1020; }
+
+/* The speech bubble: white, thick outline, a tail pointing down at whoever is talking. */
+.g-automodsays .bubble { position: relative; align-self: center; width: min(100%, 17em); display: flex; align-items: center; justify-content: center; gap: 0.6em; padding: 0.6em 0.9em; background: #fff; box-shadow: 0 -0.22em 0 0 #0b1020, 0 0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, 0.4em 0.55em 0 0 #0b102055; }
+.g-automodsays .bubble::after { content: ''; position: absolute; left: 50%; top: 100%; margin: 0.18em 0 0 -0.7em; border: 0.7em solid #0000; border-top: 0.8em solid #0b1020; border-bottom: 0; }
+.g-automodsays .bubble::before { content: ''; position: absolute; left: 50%; top: 100%; z-index: 1; margin: -0.06em 0 0 -0.45em; border: 0.45em solid #0000; border-top: 0.55em solid #fff; border-bottom: 0; }
+.g-automodsays .order { font-size: 1.9em; line-height: 1.05; white-space: nowrap; }
+.g-automodsays .order b { font-weight: inherit; text-decoration: underline; text-decoration-thickness: 0.1em; text-underline-offset: 0.14em; }
+.g-automodsays .which { flex: none; font-size: 1.1em; }
+/* An impostor's bubble looks a little off: crooked and handwritten-grey. */
+.g-automodsays.fake .bubble { transform: rotate(-3deg); background: #f2ead8; }
+.g-automodsays.fake .bubble::before { border-top-color: #f2ead8; }
+
+/* The speaker stands behind the podium. */
+.g-automodsays .stage { position: relative; display: flex; flex-direction: column; align-items: center; }
+.g-automodsays .speaker { position: relative; z-index: 0; margin-bottom: -0.9em; }
+.g-automodsays .podium { position: relative; z-index: 1; width: 11em; padding: 0.5em 0.4em 1.1em; background: #8a5a2c; box-shadow: 0 -0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, inset 0 0.35em 0 0 #b0703c; display: flex; justify-content: center; }
+.g-automodsays .plate { display: flex; align-items: center; gap: 0.35em; padding: 0.15em 0.6em; background: #0b1020; color: var(--green); font-size: 0.9em; white-space: nowrap; }
+.g-automodsays .badge { flex: none; }
+.g-automodsays.fake .plate { color: #c4cbe4; }
+.g-automodsays.fake .badge { visibility: hidden; width: 0; margin-right: -0.35em; }
+.g-automodsays .stamp { position: absolute; left: 50%; top: 0; width: 0; height: 0; }
+.g-automodsays .tally { font-size: 0.85em; text-align: center; }
+/* Fill the room: the bubble near the top, the podium standing on the floor line. */
+.g-automodsays { justify-content: space-between !important; }
+.g-automodsays .bubble { margin-top: 0.6em; }
+.g-automodsays .stage { flex: 1 1 auto; justify-content: flex-end; min-height: 0; }
+.g-automodsays .podium { width: 12.5em; padding-bottom: 2.2em; }
