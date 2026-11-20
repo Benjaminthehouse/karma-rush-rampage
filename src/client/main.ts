@@ -35,13 +35,8 @@ const myName = () => init?.username ?? (offline ? 'you' : `guest-${guest}`);
 /** What the server would have said, for a build with no server behind it. */
 function offlineInit(): InitResponse {
   const day = dayKey();
-  let myRun: InitResponse['myRun'] = null;
-  try {
-    const saved = JSON.parse(localStorage.getItem(`km_run_${day}`) ?? 'null');
-    if (Array.isArray(saved) && saved.length === 5) myRun = { rounds: saved.map(Number), total: saved.reduce((a: number, b: number) => a + Number(b), 0) };
-  } catch {
-    /* no saved run */
-  }
+  // The demo never locks the daily run: it is for trying the game, so it can be replayed.
+  const myRun: InitResponse['myRun'] = null;
   return {
     username: null,
     day,
@@ -279,7 +274,7 @@ function menu() {
     : played
       ? `${fmt(init.myRun!.total)} points${init.rank ? ` · #${init.rank} of ${fmt(init.players)}` : ''}`
       : offline
-        ? 'Today’s five games. Scores stay on this device'
+        ? 'Today’s five games. Replay as often as you like'
         : init.username
           ? 'Counts for today’s leaderboard'
           : 'Log in to get on the leaderboard';
@@ -407,13 +402,7 @@ async function solo(kind: 'daily' | 'practice', lineup: Round[], rivals: Rival[]
     return;
   }
   if (offline && init) {
-    init.myRun = { rounds, total };
-    try {
-      localStorage.setItem(`km_run_${init.day}`, JSON.stringify(rounds));
-    } catch {
-      /* the run still shows for this visit */
-    }
-    final({ kind: `TODAY’S RUSH · ${prettyDay(init.day)}`, lineup, rounds, total, badges: ['Demo: scores stay on this device'], boardTitle: 'You vs the house bots', board: standings(myName(), rounds, rivals, rounds.length) });
+    final({ kind: `TODAY’S RUSH · ${prettyDay(init.day)}`, lineup, rounds, total, badges: ['Demo: play it again any time'], boardTitle: 'You vs the house bots', board: standings(myName(), rounds, rivals, rounds.length) });
     return;
   }
   let board: LbEntry[] = init?.leaderboard ?? [];
@@ -749,6 +738,6 @@ api.init().then(
     track.disable();
     init = offlineInit();
     if (screen === 'menu') menu();
-    toast('Demo mode: scores stay on this device.');
+    toast('Demo mode: nothing is saved.');
   }
 );

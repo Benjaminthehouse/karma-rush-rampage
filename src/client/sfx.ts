@@ -323,63 +323,19 @@ const HIT: Record<HitVoice, (k: number) => void> = {
 
 // iPhones mute Web Audio while the ring switch is on silent, though speech still plays.
 // Asking the audio session for the "playback" category (iOS 16.4 and later) lifts that.
-// Where that is missing, one looping clip of real silence moves the page into the media
-// category instead. It is a single reused element, tried on a few gestures at most.
+// It is asked once. The older trick, a looping silent <audio> clip, is deliberately not
+// used: both times it shipped, the page froze on the first tap on the owner's iPhone.
 let sessionAsked = false;
-let clipTries = 0;
-let clip: HTMLAudioElement | null = null;
-let clipState = 'not tried';
 /** The last thing that went wrong setting sound up, for the menu's status line. */
 let lastError = '';
-function silence(): string {
-  const n = 8000; // one second of 8-bit mono at 8 kHz
-  const bytes = new Uint8Array(44 + n).fill(128);
-  const head = new DataView(bytes.buffer);
-  const put = (at: number, text: string) => [...text].forEach((ch, i) => head.setUint8(at + i, ch.charCodeAt(0)));
-  put(0, 'RIFF');
-  head.setUint32(4, 36 + n, true);
-  put(8, 'WAVEfmt ');
-  head.setUint32(16, 16, true);
-  head.setUint16(20, 1, true);
-  head.setUint16(22, 1, true);
-  head.setUint32(24, 8000, true);
-  head.setUint32(28, 8000, true);
-  head.setUint16(32, 1, true);
-  head.setUint16(34, 8, true);
-  put(36, 'data');
-  head.setUint32(40, n, true);
-  let text = '';
-  bytes.forEach((v) => (text += String.fromCharCode(v)));
-  return `data:audio/wav;base64,${btoa(text)}`;
-}
 function unmuteIos() {
-  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  if (!ios) return;
+  if (sessionAsked) return;
+  sessionAsked = true;
   try {
-    // Both, not either: inside an embedded frame the session setting can be accepted and
-    // still ignored, and then only the silent clip gets sound past the ring switch.
     const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
-    if (session && session.type !== 'playback') {
-      try {
-        session.type = 'playback';
-      } catch (err) {
-        lastError = `session: ${String(err)}`;
-      }
-    }
-    sessionAsked = true;
-    if (clipState === 'playing' || clipTries >= 6) return;
-    clipTries++;
-    if (!clip) {
-      clip = new Audio(silence());
-      clip.loop = true;
-      clip.setAttribute('playsinline', '');
-    }
-    void clip.play().then(
-      () => (clipState = 'playing'),
-      (err) => (clipState = `refused (${String(err && (err as Error).name)})`)
-    );
-  } catch {
-    /* sound stays tied to the ring switch */
+    if (session) session.type = 'playback';
+  } catch (err) {
+    lastError = `session: ${String(err)}`;
   }
 }
 
@@ -411,7 +367,7 @@ export const sfx = {
     if (!settings.get('sound')) return 'sound off';
     const bits = [ac ? `${ac.state} ${ac.currentTime.toFixed(1)}s` : 'not started'];
     const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
-    if (sessionAsked) bits.push(`session ${session ? session.type : 'none'}`, `clip ${clipState}`);
+    if (sessionAsked) bits.push(`session ${session ? session.type : 'none'}`);
     if (lastError) bits.push(lastError.slice(0, 60));
     return bits.join(' · ');
   },
