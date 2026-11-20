@@ -73,13 +73,12 @@ function setPads(labels: [string, string, string], actions?: ((() => void) | nul
 
 const held = [false, false, false];
 /** Shown on the menu so a tester can tell which build they are looking at. */
-const BUILD = 17;
+const BUILD = 18;
 let dayLine = '';
 /** The menu's status line, with the audio state so "no sound" can be told apart by cause. */
 function paintStatus() {
-  // The audio state only shows when something is wrong with it.
-  const audio = sfx.state();
-  const text = `${dayLine} · build ${BUILD}${audio === 'suspended' || audio === 'interrupted' ? ` · audio ${audio}` : ''}`;
+  // Shown in full while sound on phones is being chased down.
+  const text = `${dayLine} · build ${BUILD} · ${sfx.debug()}`;
   const el = document.getElementById('menu-day');
   if (el && el.textContent !== text) el.textContent = text;
 }

@@ -44,7 +44,8 @@ function audio(): AudioContext | null {
     }
     if (ac.state !== 'running') void ac.resume();
     return ac;
-  } catch {
+  } catch (err) {
+    lastError = `audio: ${String(err)}`;
     return null;
   }
 }
@@ -327,6 +328,9 @@ const HIT: Record<HitVoice, (k: number) => void> = {
 let sessionAsked = false;
 let clipTries = 0;
 let clip: HTMLAudioElement | null = null;
+let clipState = 'not tried';
+/** The last thing that went wrong setting sound up, for the menu's status line. */
+let lastError = '';
 function silence(): string {
   const n = 8000; // one second of 8-bit mono at 8 kHz
   const bytes = new Uint8Array(44 + n).fill(128);
@@ -352,13 +356,18 @@ function unmuteIos() {
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   if (!ios) return;
   try {
+    // Both, not either: inside an embedded frame the session setting can be accepted and
+    // still ignored, and then only the silent clip gets sound past the ring switch.
     const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
-    if (session) {
-      if (!sessionAsked) session.type = 'playback';
-      sessionAsked = true;
-      return;
+    if (session && session.type !== 'playback') {
+      try {
+        session.type = 'playback';
+      } catch (err) {
+        lastError = `session: ${String(err)}`;
+      }
     }
-    if (clipTries >= 3) return;
+    sessionAsked = true;
+    if (clipState === 'playing' || clipTries >= 6) return;
     clipTries++;
     if (!clip) {
       clip = new Audio(silence());
@@ -366,8 +375,8 @@ function unmuteIos() {
       clip.setAttribute('playsinline', '');
     }
     void clip.play().then(
-      () => (clipTries = 3),
-      () => undefined
+      () => (clipState = 'playing'),
+      (err) => (clipState = `refused (${String(err && (err as Error).name)})`)
     );
   } catch {
     /* sound stays tied to the ring switch */
@@ -397,6 +406,15 @@ export const sfx = {
   },
   /** For the menu's status line: off, none (no audio support), or the audio clock's state. */
   state: (): string => (!settings.get('sound') ? 'off' : (ac?.state ?? 'not started')),
+  /** Everything needed to tell why a phone is silent, in one line. */
+  debug(): string {
+    if (!settings.get('sound')) return 'sound off';
+    const bits = [ac ? `${ac.state} ${ac.currentTime.toFixed(1)}s` : 'not started'];
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    if (sessionAsked) bits.push(`session ${session ? session.type : 'none'}`, `clip ${clipState}`);
+    if (lastError) bits.push(lastError.slice(0, 60));
+    return bits.join(' · ');
+  },
   /** Every pad press answers with its own note: low, middle, high for red, green, blue. */
   press(b: number) {
     // Bright and percussive so it cuts through the beat on a phone speaker: a square blip
