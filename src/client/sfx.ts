@@ -50,13 +50,18 @@ function audio(): AudioContext | null {
   }
 }
 
+/** Applied to every sound started while they are set: lets one voice be played louder, softer or a moment later. */
+let level = 1;
+let delay = 0;
+
 type Tone = { f: number; dur: number; type?: OscillatorType; vol?: number; to?: number; at?: number; attack?: number; music?: boolean };
 
 function tone({ f, dur, type = 'square', vol = 0.08, to, at = 0, attack = 0.004, music = false }: Tone) {
   const a = audio();
   const bus = music ? beat : out;
   if (!a || !bus || a.state !== 'running') return; // a suspended context would only hoard nodes
-  const t0 = a.currentTime + at;
+  const t0 = a.currentTime + at + delay;
+  vol *= level;
   const o = a.createOscillator();
   const g = a.createGain();
   o.type = type;
@@ -80,7 +85,8 @@ function noise({ dur, vol = 0.08, type = 'highpass', f = 2000, to, at = 0, attac
   const a = audio();
   const bus = music ? beat : out;
   if (!a || !bus || !noiseBuf || a.state !== 'running') return;
-  const t0 = a.currentTime + at;
+  const t0 = a.currentTime + at + delay;
+  vol *= level;
   const src = a.createBufferSource();
   src.buffer = noiseBuf;
   src.loop = true;
@@ -112,6 +118,8 @@ const semis = (n: number) => 2 ** (n / 12);
 // Major pentatonic ladder: each step of a combo climbs one rung.
 /** Semitones a streak can climb before the pitch holds. */
 const CLIMB = 30;
+/** Semitones each pad sits above the streak's note: red the root, green the third, blue the fifth. */
+const PAD_STEP = [0, 4, 7];
 
 function arp(notes: number[], step: number, o: Partial<Tone> = {}) {
   notes.forEach((n, i) => {
@@ -260,7 +268,7 @@ const HIT: Record<HitVoice, (k: number) => void> = {
   // Stamps, gavels, hammers, slabs: a thud with a crack on top.
   stamp(k) {
     const j = k ** 0.6;
-    tone({ f: 150 * j, to: 55 * j, dur: 0.17, type: 'sine', vol: 0.17, attack: 0.003 });
+    tone({ f: 150 * j, to: 55 * j, dur: 0.17, type: 'sine', vol: 0.14, attack: 0.003 });
     tone({ f: 420 * j, dur: 0.04, type: 'triangle', vol: 0.1, attack: 0.001 });
     noise({ dur: 0.05, vol: 0.09, type: 'lowpass', f: 1100 * j, attack: 0.001 });
   },
@@ -272,7 +280,7 @@ const HIT: Record<HitVoice, (k: number) => void> = {
   // Dings, chimes, doorbells, "done!".
   bell(k) {
     const f = 587.33 * k;
-    tone({ f, dur: 0.38, type: 'sine', vol: 0.095, attack: 0.002 });
+    tone({ f, dur: 0.38, type: 'sine', vol: 0.085, attack: 0.002 });
     tone({ f: f * 2, dur: 0.2, type: 'triangle', vol: 0.04, attack: 0.002 });
     tone({ f: f * 2.76, dur: 0.14, type: 'sine', vol: 0.03, attack: 0.002 });
   },
@@ -285,7 +293,7 @@ const HIT: Record<HitVoice, (k: number) => void> = {
   // A plucked string: replies, chains, zen gardens.
   pluck(k) {
     const f = 392 * k;
-    tone({ f, dur: 0.24, type: 'triangle', vol: 0.15, attack: 0.002 });
+    tone({ f, dur: 0.24, type: 'triangle', vol: 0.13, attack: 0.002 });
     tone({ f: f * 2, dur: 0.05, type: 'square', vol: 0.04, attack: 0.001 });
   },
   // Scrolling, swiping, sending: a quick rush of air upwards.
@@ -371,7 +379,7 @@ export const sfx = {
     if (lastError) bits.push(lastError.slice(0, 60));
     return bits.join(' · ');
   },
-  /** Every pad press answers with its own note: low, middle, high for red, green, blue. */
+  /** A pad pressed on a menu or between rounds: a plain blip, low, middle, high for red, green, blue. */
   press(b: number) {
     // Bright and percussive so it cuts through the beat on a phone speaker: a square blip
     // that drops into its note, with a click on the front.
@@ -385,12 +393,29 @@ export const sfx = {
    * with every hit in a row, for two and a half octaves, so a streak winds up like a
    * siren and a miss drops it back to the bottom.
    */
+  /**
+   * A pad pressed during a game: the game's own voice, so tapping sounds like the thing
+   * being done. Red, green and blue play the root, third and fifth of a chord, and the
+   * whole chord climbs a semitone with every hit of the streak (`combo` so far).
+   */
+  tap(b: number, combo: number, voice: HitVoice = 'blip') {
+    level = 1.6;
+    HIT[voice](semis(Math.min(Math.max(0, combo), CLIMB) + PAD_STEP[b]));
+    level = 1;
+  },
+  /**
+   * A hit: the same voice again an octave up, softer and a beat behind the tap, so a
+   * press that scores goes "ta-ding" and one that does not is just the tap.
+   */
   good(combo: number, voice: HitVoice = 'blip') {
     const step = Math.min(combo - 1, CLIMB);
-    const k = semis(step);
-    HIT[voice](k);
+    level = 0.6;
+    delay = 0.035;
+    HIT[voice](semis(step + 12));
+    level = 1;
+    delay = 0;
     // At the top of the climb a shimmer keeps each hit feeling like more.
-    if (combo - 1 > CLIMB) tone({ f: 1046.5 * k, dur: 0.07, type: 'triangle', vol: 0.04, at: 0.05 });
+    if (combo - 1 > CLIMB) tone({ f: 1046.5 * semis(step), dur: 0.07, type: 'triangle', vol: 0.04, at: 0.05 });
   },
   /** A miss: a two-step falling buzz that cannot be mistaken for anything good. */
   bad() {

@@ -456,7 +456,12 @@ export function runMatch(o: {
   function input(kind: 'press' | 'release', b: Btn) {
     down[b] = kind === 'press';
     const ph = phases[p];
-    if (ph?.type !== 'play' || !inst) return;
+    if (ph?.type !== 'play' || !inst) {
+      if (kind === 'press') sfx.press(b);
+      return;
+    }
+    // The tap itself sounds like the game: its voice, at this pad's note, as high as the streak.
+    if (kind === 'press') sfx.tap(b, combo, HIT_VOICE[o.lineup[ph.round].id]);
     try {
       if (kind === 'press') inst.press(b, o.clock() - ph.start);
       else inst.release?.(b, o.clock() - ph.start);
