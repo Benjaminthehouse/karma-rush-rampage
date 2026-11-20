@@ -498,3 +498,7 @@ body #final, body.ios #final { padding-bottom: 0.8rem; }
 #card.card-retry .why { margin: 0; max-width: 22rem; font-size: 0.95rem; color: var(--dim); text-align: center; }
 #card.card-retry .how { color: #fff; font-size: 1.15rem; text-align: center; }
 #card.card-retry .ready { margin-top: 0.4rem; }
+
+/* Today's Rush once played: ticked off, quieter than the thing to press next. */
+.ui .choice.done { opacity: 0.8; }
+.ui .choice.done b::after { content: ' ✓'; color: var(--green); }

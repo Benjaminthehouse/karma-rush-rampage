@@ -1,6 +1,6 @@
 import { connectRealtime, requestExpandedMode } from '@devvit/web/client';
 import { feedChannel, type FeedMessage, type InitResponse } from '../shared/api';
-import { GAME_META, MAX_TOTAL, prettyDay, roundsFromIds } from '../shared/daily';
+import { GAME_META, MAX_TOTAL, prettyDay, roundsFromIds, untilNextDay } from '../shared/daily';
 import { api, fmt } from './api';
 import { avatar } from './avatar';
 import { h } from './games/common';
@@ -36,8 +36,9 @@ function render(init: InitResponse) {
   const bits: string[] = [];
   if (init.myRun) bits.push(`You scored ${fmt(init.myRun.total)}${init.rank ? ` · #${init.rank}` : ''}`);
   if (init.streak > 0) bits.push(`${init.streak}-day streak`);
+  if (init.myRun && init.isToday) bits.push(`next Rush in ${untilNextDay(init.now)}`);
   $('s-me').textContent = bits.join(' · ');
-  $('s-play').textContent = init.myRun ? 'MY RESULT · PLAY MORE' : 'PLAY TODAY’S RUSH!';
+  $('s-play').textContent = init.myRun ? 'MY RESULT · KEEP PLAYING' : 'PLAY TODAY’S RUSH!';
 }
 
 async function load() {

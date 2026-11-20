@@ -84,6 +84,13 @@ export function dayKey(d: Date = new Date()): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** How long until the next day's Rush starts (00:00 UTC), as "5h 12m", or "12m" in the last hour. */
+export function untilNextDay(nowMs: number = Date.now()): string {
+  const mins = Math.max(1, Math.ceil((86400000 - (nowMs % 86400000)) / 60000));
+  const hours = Math.floor(mins / 60);
+  return hours ? `${hours}h ${mins % 60}m` : `${mins}m`;
+}
+
 export function prevDayKey(day: string): string {
   return dayKey(new Date(Date.parse(`${day}T00:00:00Z`) - 86400000));
 }

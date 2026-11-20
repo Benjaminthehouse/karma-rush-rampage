@@ -7,7 +7,7 @@ import {
   type PartyState,
   type Rival,
 } from '../shared/api';
-import { GAME_IDS, GAME_META, MAX_TOTAL, TIMING, botRounds, dayKey, lineupFor, prettyDay, roundsFromIds, type Round } from '../shared/daily';
+import { GAME_IDS, GAME_META, MAX_TOTAL, TIMING, botRounds, dayKey, lineupFor, prettyDay, roundsFromIds, untilNextDay, type Round } from '../shared/daily';
 import { api, fmt } from './api';
 import { avatar, shortName } from './avatar';
 import { rating, runMatch, standings, type Match } from './engine';
@@ -69,7 +69,7 @@ function setPads(labels: [string, string, string], actions?: ((() => void) | nul
 
 const held = [false, false, false];
 /** Shown on the menu so a tester can tell which build they are looking at. */
-const BUILD = 27;
+const BUILD = 28;
 let dayLine = '';
 /** The menu's status line, with the audio state so "no sound" can be told apart by cause. */
 function paintStatus() {
@@ -78,6 +78,12 @@ function paintStatus() {
   const text = `${dayLine} · build ${BUILD}${/stalled|suspended|interrupted|audio:|session:/.test(audio) ? ` · ${audio}` : ''}`;
   const el = document.getElementById('menu-day');
   if (el && el.textContent !== text) el.textContent = text;
+  // The "next Rush in…" countdown on the Rush card ticks down while the menu is open.
+  if (screen === 'menu' && onMainMenu && init?.myRun) {
+    const small = document.querySelector('.choice[data-pad="1"] small');
+    const sub = dailySub();
+    if (small && small.textContent !== sub) small.textContent = sub;
+  }
 }
 window.setInterval(() => {
   if (screen !== 'play') paintStatus();
@@ -280,23 +286,34 @@ function menu() {
     );
     $('menu-me').textContent = init.streak > 0 ? `${init.streak}-day streak · best ${fmt(init.best)}` : '';
   }
-  const dailySub = !init
-    ? 'Counts for today’s leaderboard'
-    : played
-      ? `${fmt(init.myRun!.total)} points${init.rank ? ` · #${init.rank} of ${fmt(init.players)}` : ''}`
-      : offline
-        ? 'Today’s five games. Replay as often as you like'
-        : init.username
-          ? 'Counts for today’s leaderboard'
-          : 'Log in to get on the leaderboard';
+  onMainMenu = true;
   setChoices([
-    ['PRACTICE', 'A random five or any single game. Nothing at stake'],
-    [played ? 'YOUR RESULT' : 'TODAY’S RUSH', dailySub],
+    played
+      ? ['KEEP PLAYING', 'Practice: a random five, or any game you like']
+      : ['PRACTICE', 'A random five or any single game. Nothing at stake'],
+    [played ? 'TODAY’S RUSH: DONE' : 'TODAY’S RUSH', dailySub()],
     ['LIVE PARTY', 'Race everyone on this post, in sync'],
   ]);
-  setPads(['PRACTICE', played ? 'RESULT' : 'RUSH!', 'PARTY'], [practiceMenu, daily, lobby]);
-  document.querySelector('.choice[data-pad="1"]')?.classList.toggle('primary', !played);
+  setPads(['PRACTICE', played ? 'MY RESULT' : 'RUSH!', 'PARTY'], [practiceMenu, daily, lobby]);
+  // One Rush a day: once it is played the card is ticked off and practice becomes the thing to press.
+  const rush = document.querySelector('.choice[data-pad="1"]');
+  rush?.classList.toggle('primary', !played);
+  rush?.classList.toggle('done', played);
+  document.querySelector('.choice[data-pad="0"]')?.classList.toggle('primary', played);
 }
+
+/** The line under the Rush card: what is at stake, or the score and when the next Rush starts. */
+function dailySub(): string {
+  if (!init) return 'Counts for today’s leaderboard';
+  if (init.myRun) {
+    const place = init.rank ? ` · #${init.rank} of ${fmt(init.players)}` : '';
+    const next = init.isToday ? ` · next Rush in ${untilNextDay(serverNow())}` : '';
+    return `${fmt(init.myRun.total)} points${place}${next}`;
+  }
+  if (offline) return 'Today’s five games. Replay as often as you like';
+  return init.username ? 'One run a day. Counts for today’s leaderboard' : 'Log in to get on the leaderboard';
+}
+let onMainMenu = false;
 
 /** The three menu cards mirror the pads: index 0 red, 1 green, 2 blue. */
 function setChoices(cards: [string, string][]) {
@@ -316,7 +333,8 @@ function practiceMenu() {
     ['ARCADE', `Pick any of the ${GAME_IDS.length} games and practise it`],
   ]);
   setPads(['BACK', 'RANDOM 5', 'ARCADE'], [menu, practice, arcade]);
-  document.querySelector('.choice[data-pad="1"]')?.classList.remove('primary');
+  onMainMenu = false;
+  for (const el of document.querySelectorAll('.choice')) el.classList.remove('primary', 'done');
   $('menu-count').textContent = 'Practice never touches the leaderboard';
 }
 
@@ -431,6 +449,7 @@ async function solo(kind: 'daily' | 'practice', lineup: Round[], rivals: Rival[]
     }
     if (res.rank) badges.push(`#${res.rank} of ${fmt(res.players)}`);
     if (res.streak > 0) badges.push(`${res.streak}-day streak`);
+    if (init?.isToday && res.saved) badges.push(`Next Rush in ${untilNextDay(serverNow())}`);
     if (!init?.username) badges.push('Log in to save your score');
   } catch (err) {
     console.error(err);
@@ -448,6 +467,7 @@ function daily() {
     const badges = [];
     if (init.rank) badges.push(`#${init.rank} of ${fmt(init.players)}`);
     if (init.streak > 0) badges.push(`${init.streak}-day streak`);
+    if (init.isToday) badges.push(`Next Rush in ${untilNextDay(serverNow())}`);
     final({
       kind: `TODAY’S RUSH · ${prettyDay(init.day)}`,
       lineup,
