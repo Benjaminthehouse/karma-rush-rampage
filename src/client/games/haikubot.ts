@@ -62,7 +62,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   // The comment's vote count is the syllable count: it climbs with every tap.
   const foot = h('div', 'foot');
   const votes = h('b', 'votes');
-  foot.append(arrow('up'), votes);
+  foot.append(arrow('up', '', 'orange', 0.13), votes);
   const tally = h('div', 'tally');
   sign.append(head, foot, tally);
   top.append(painter, sign);

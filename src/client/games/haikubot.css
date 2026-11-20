@@ -10,7 +10,7 @@
 .g-haikubot .head, .g-haikubot .foot { display: flex; align-items: center; gap: 0.4em; }
 .g-haikubot .name { font-weight: inherit; font-size: 0.9em; white-space: nowrap; }
 .g-haikubot .flair { padding: 0 0.35em; font-size: 0.7em; color: #fff; background: #646e9c; }
-.g-haikubot .foot .arrow { flex: none; width: 1.5em; height: 1.5em; color: #e07a1a; }
+.g-haikubot .foot .arrow { flex: none; }
 .g-haikubot .votes { font-size: 1.5em; line-height: 1; color: #c8551a; font-variant-numeric: tabular-nums; }
 .g-haikubot .tally { align-self: flex-start; padding: 0.1em 0.5em; font-size: 0.8em; white-space: nowrap; color: #fff0a8; background: #0b1020; }
 

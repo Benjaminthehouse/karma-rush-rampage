@@ -16,6 +16,8 @@ export type Btn = 0 | 1 | 2;
 export const COLOR = ['red', 'green', 'blue'] as const;
 export const COLOR_NAME = ['RED', 'GREEN', 'BLUE'] as const;
 
+import { sprite, type Tone } from '../kit/px';
+
 export type FxColor = 'red' | 'green' | 'blue' | 'gold' | 'white' | 'purple';
 export type SoundName = 'pop' | 'coin' | 'zap' | 'whoosh' | 'thud' | 'tick' | 'power' | 'laser' | 'ding' | 'boing';
 
@@ -144,12 +146,9 @@ export function padDots(b: Btn): HTMLElement {
   return el;
 }
 
-/** Vote arrow. Colour comes from CSS `color`; size from `font-size` (2.4em square by default). */
-export function arrow(dir: 'up' | 'down', cls = ''): HTMLElement {
-  const el = h('span', `arrow ${dir} ${cls}`);
-  el.innerHTML =
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2.5 12.500H8V22h8v-9.500h5.500z" fill="currentColor" stroke="#0b1020" stroke-width="1.6" stroke-linejoin="round"/></svg>';
-  return el;
+/** Vote arrow, in pixel art: green up, purple down unless a tone is given. `px` sizes it like sprite(). */
+export function arrow(dir: 'up' | 'down', cls = '', tone?: Tone, px = 0.2): HTMLElement {
+  return sprite('up', { tone: tone ?? (dir === 'up' ? 'green' : 'purple'), flipY: dir === 'down', px }, `arrow ${dir} ${cls}`.trim());
 }
 
 /** 0..1000 from a fraction, clamped and rounded. */

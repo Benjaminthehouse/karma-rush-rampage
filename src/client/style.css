@@ -164,9 +164,6 @@ main > .screen {
 .meter { width: 100%; height: 0.7em; background: var(--bg); border-radius: 99px; overflow: hidden; }
 .meter i { display: block; height: 100%; width: 0; background: var(--c, var(--green)); transition: width 0.06s linear; }
 .meter.big { height: 1.4em; max-width: 24em; border: 2px solid var(--line); }
-.arrow { display: inline-block; width: 2.4em; height: 2.4em; color: var(--c, var(--green)); }
-.arrow svg { width: 100%; height: 100%; display: block; }
-.arrow.down { transform: rotate(180deg); color: var(--purple); }
 @keyframes pop-in { from { transform: scale(0.86); opacity: 0.2; } to { transform: none; opacity: 1; } }
 .pop-in { animation: pop-in 0.14s ease-out; }
 @keyframes shake { 20% { transform: translateX(-0.5rem); } 50% { transform: translateX(0.45rem); } 80% { transform: translateX(-0.2rem); } }
