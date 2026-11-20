@@ -15,26 +15,39 @@ const SUBS = ['r/ShipIt', 'r/VibeCoders', 'r/RoastMyApp', 'r/WeekendApps', 'r/In
 /** Which drawing of the mod bear each moment shows (art/selfpromo). */
 const MOOD = { nap: 'sleep', warn: 'peep', watch: 'angry' } as const;
 const SIGN = { nap: 'zed', warn: 'quest', watch: 'bang' } as const;
-const PER_CARD = 3; // plugs of one pitch before the next card, in a new colour
+const PER_CARD = 5; // plugs of one pitch before the next card, in a new colour
 const GRACE = 300; // ms after a card changes in which presses on its old colour are forgiven
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
-  // The mod alternates between napping and watching. `warn` is the tell before they look.
-  const warn = 420 - level * 40;
+  // The mod alternates between napping and watching. `warn` is the tell before they look:
+  // one eye opens, and a player who stops then is safe.
+  const warn = 420 - level * 30;
   const spans: { from: number; to: number; watch: boolean }[] = [];
+  // Naps come in three lengths, so the mod is never predictable: a catnap that is over
+  // almost at once, an ordinary doze, and a long deep sleep to really cash in on.
+  const NAPS = [
+    [600, 850],
+    [1300, 1800],
+    [2300, 3000],
+  ];
   let at = 0;
-  let awayMs = 0;
+  let usable = 0; // ms of nap in which a player who respects the tell can actually post
+  let lastKind = -1;
   while (at < duration) {
-    const nap = (at === 0 ? 1300 : randInt(rng, 950, 1650)) - level * 70;
+    let kind = at === 0 ? 1 : [0, 1, 1, 2, 2][randInt(rng, 0, 4)];
+    if (kind === 0 && lastKind === 0) kind = 2; // never two catnaps running
+    lastKind = kind;
+    const nap = Math.round(randInt(rng, NAPS[kind][0], NAPS[kind][1]) * (1 - level * 0.05));
     spans.push({ from: at, to: at + nap, watch: false });
-    awayMs += Math.min(duration, at + nap) - at;
+    // A person takes a moment to get going again, and stops when the eye opens.
+    usable += Math.max(0, Math.min(duration, at + nap) - at - warn - 150);
     at += nap;
-    const look = randInt(rng, 650, 1000) + level * 40;
+    const look = randInt(rng, 500, 800) + level * 30;
     spans.push({ from: at, to: at + look, watch: true });
     at += look;
   }
-  // A beat is lost at every colour change, so the par rate sits a little under pure mashing.
-  const par = Math.round((awayMs / 1000) * (5.4 + level * 0.3));
+  // Par is what a steady masher who stops for the tell can post: reachable, not a bot's best.
+  const par = Math.max(8, Math.round((usable / 1000) * (5 + level * 0.25)));
   const pitch = dealer(rng, PITCHES);
   const subName = dealer(rng, SUBS);
   let prev = -1;
@@ -102,7 +115,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     press(b, t) {
       if (t < lockedUntil) return;
       if (stateAt(t) === 'watch') {
-        posts = Math.max(0, posts - 4);
+        posts = Math.max(0, posts - 3);
         lockedUntil = t + 500;
         pulse(card.el, 'shake');
         fx.poof(pile);
@@ -152,6 +165,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       if (now === 'nap') fx.sound('whoosh');
     },
     score: () => ratio(posts, par),
-    hint: (t) => (t >= lockedUntil && !spanAt(t).watch ? cur().btn : null),
+    // The test player stops when the eye opens, as a person would, not at the last instant.
+    hint: (t) => (t >= lockedUntil && stateAt(t) === 'nap' ? cur().btn : null),
   };
 };
