@@ -1,5 +1,5 @@
 import './selfpromo.css';
-import { COLOR, dealer, h, padDots, postCard, pulse, randBtn, randInt, ratio, setSprite, sprite, type Btn, type GameFactory } from './common';
+import { actor, COLOR, dealer, h, padDots, postCard, pulse, randBtn, randInt, ratio, setSprite, sprite, type Btn, type GameFactory } from './common';
 
 const PITCHES = [
   'I vibecoded this in a weekend!',
@@ -58,8 +58,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   const wrap = h('div', 'g-selfpromo scene-office');
   const desk = h('div', 'desk');
   // All three moods are stacked and only one shows, so a swap never waits on an image.
-  const mod = h('div', 'bear sleep');
-  for (const m of Object.values(MOOD)) mod.append(h('i', m));
+  const bear = actor('modbear', { mood: 'sleep', px: 0.47 });
+  const mod = bear.el;
   const sign = sprite('zed', { px: 0.3 }, 'sign');
   desk.append(mod, sign, h('span', 'plate', 'MOD DESK'));
   const pile = h('div', 'pile');
@@ -141,7 +141,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       const now = stateAt(t);
       if (now === state) return;
       state = now;
-      mod.className = `bear ${MOOD[now]}`;
+      bear.mood(MOOD[now]);
       setSprite(sign, SIGN[now], { px: 0.3 });
       wrap.classList.toggle('alarm', now === 'watch');
       wrap.classList.toggle('stir', now === 'warn');

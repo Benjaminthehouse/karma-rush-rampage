@@ -1,42 +1,8 @@
 import './automodsays.css';
-import { COLOR, COLOR_NAME, clamp1000, defineSprite, h, padDots, pick, pulse, randBtn, setSprite, sprite, type GameFactory } from './common';
+import { actor, COLOR, COLOR_NAME, clamp1000, defineSprite, h, padDots, pick, pulse, randBtn, setSprite, sprite, type GameFactory } from './common';
 
-// The cast. The real AutoModerator is a grey robot with a cyan screen face.
-defineSprite('automodsays-bot', `
-.......kk.......
-.......ky.......
-......kkkk......
-..kkkkkkkkkkkk..
-.kddddddddddddk.
-.kdkkkkkkkkkkdk.
-.kdkcckkkkcckdk.
-.kdkcckkkkcckdk.
-.kdkkkkkkkkkkdk.
-.kdkkkcccckkkdk.
-.kdkkkkkkkkkkdk.
-.kDddddddddddDk.
-..kkkkkkkkkkkk..
-..kDDDkggkDDDk..
-..kDDkggggkDDk..
-..kkkkkkkkkkkk..`);
-// Its mouth open: alternated with the frame above while it speaks.
-defineSprite('automodsays-bot-talk', `
-.......kk.......
-.......ky.......
-......kkkk......
-..kkkkkkkkkkkk..
-.kddddddddddddk.
-.kdkkkkkkkkkkdk.
-.kdkcckkkkcckdk.
-.kdkcckkkkcckdk.
-.kdkkkkkkkkkkdk.
-.kdkkcwwwwckkdk.
-.kdkkcccccckkdk.
-.kDddddddddddDk.
-..kkkkkkkkkkkk..
-..kDDDkggkDDDk..
-..kDDkggggkDDk..
-..kkkkkkkkkkkk..`);
+// The real AutoModerator is the shared cast's robot (kit/cast.ts). The impostors are
+// costumes only this game needs.
 // Impostor one: a troll in a cardboard-box AutoMod costume. The horns give it away.
 defineSprite('automodsays-troll', `
 .kk..........kk.
@@ -105,7 +71,11 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const dots = h('span', 'which');
   bubble.append(order, dots);
   const stage = h('div', 'stage');
-  const speaker = sprite('automodsays-bot', { px: PX }, 'speaker');
+  // The speaker spot holds the real robot and a costume; one of them is shown.
+  const speaker = h('div', 'speaker');
+  const bot = actor('automod', { px: PX });
+  const costume = sprite('automodsays-troll', { px: PX }, 'costume');
+  speaker.append(bot.el, costume);
   const podium = h('div', 'podium');
   const plate = h('div', 'plate');
   const shield = sprite('shield', { tone: 'green', px: 0.16 }, 'badge');
@@ -119,20 +89,24 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   wrap.append(bubble, stage, note);
   root.append(wrap);
 
+  // The robot's mouth moves for the first moments of each order.
   const look = (p: (typeof prompts)[number], t: number) =>
-    p.fake ? p.look : Math.floor(t / 140) % 2 && t - shownAt < 700 ? 'automodsays-bot-talk' : 'automodsays-bot';
+    p.fake ? p.look : Math.floor(t / 140) % 2 && t - shownAt < 700 ? 'talk' : 'idle';
 
   function draw(t: number) {
-    const f = look(prompts[idx % prompts.length], t);
+    const p = prompts[idx % prompts.length];
+    const f = look(p, t);
     if (f === frame) return;
     frame = f;
-    setSprite(speaker, f, { px: PX });
+    if (p.fake) setSprite(costume, f, { px: PX });
+    else bot.mood(f as 'talk' | 'idle');
   }
 
   function show(t: number) {
     const p = prompts[idx % prompts.length];
     shownAt = t;
     wrap.classList.toggle('fake', p.fake);
+    speaker.classList.toggle('fake', p.fake);
     name.textContent = p.name;
     order.innerHTML = `Press <b class="t-${COLOR[p.btn]}">${COLOR_NAME[p.btn]}</b>`;
     dots.replaceChildren(padDots(p.btn));

@@ -27,3 +27,5 @@
 .g-automodsays .bubble { margin-top: 0.6em; }
 .g-automodsays .stage { flex: 1 1 auto; justify-content: flex-end; min-height: 0; }
 .g-automodsays .podium { width: 12.5em; padding-bottom: 2.2em; }
+.g-automodsays .speaker > .costume, .g-automodsays .speaker.fake > .actor { display: none; }
+.g-automodsays .speaker.fake > .costume { display: block; }

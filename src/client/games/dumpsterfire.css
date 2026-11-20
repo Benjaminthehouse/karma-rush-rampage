@@ -44,10 +44,4 @@
 .g-dumpsterfire .bar i { display: block; height: 100%; width: 100%; transform: scaleX(0); transform-origin: left center; background: var(--green); box-shadow: inset 0 0.25em 0 0 #9df5bd; }
 .g-dumpsterfire .clock { background: #0b1020; color: #f4f6ff; font-size: 0.8em; letter-spacing: 0.06em; line-height: 1; padding: 0.2em 0.7em; white-space: nowrap; }
 .g-dumpsterfire .clock b { font-size: 1.4em; color: var(--gold); font-variant-numeric: tabular-nums; }
-/* The mod bear on the fire escape (shared art in ./art/modbear-*.svg). */
-.g-dumpsterfire .bear { position: relative; width: 3.4em; aspect-ratio: 614 / 575; margin-bottom: -0.2em; }
-.g-dumpsterfire .bear i { position: absolute; inset: 0; background: center / contain no-repeat; visibility: hidden; }
-.g-dumpsterfire .bear i.sleep { background-image: url('./art/modbear-sleep.svg'); }
-.g-dumpsterfire .bear i.peep { background-image: url('./art/modbear-peep.svg'); }
-.g-dumpsterfire .bear i.angry { background-image: url('./art/modbear-angry.svg'); }
-.g-dumpsterfire .bear.sleep i.sleep, .g-dumpsterfire .bear.peep i.peep, .g-dumpsterfire .bear.angry i.angry { visibility: visible; }
+.g-dumpsterfire .actor.modbear { margin-bottom: -0.2em; }

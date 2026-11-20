@@ -3,7 +3,7 @@
 .g-upvote .shaft { flex: 1; min-height: 0; position: relative; overflow: hidden; container-type: size; background: #c75e4b; }
 /* The sky: 200x300 pixel art drawn at least two shafts tall (wider on desktop), centred, bottom first.
    Climbing slides it down by up to its height less one shaft, so the top of the climb shows space. */
-.g-upvote .sky { --climb: 0; position: absolute; left: 50%; bottom: 0; height: max(200cqh, 150cqw); aspect-ratio: 2 / 3; background: url('./art/upvote-bg.png') center / 100% 100% no-repeat; image-rendering: pixelated; transform: translate(-50%, calc(var(--climb) * (100% - 100cqh))); transition: transform 0.16s cubic-bezier(0.3, 1.5, 0.5, 1); will-change: transform; }
+.g-upvote .sky { --climb: 0; position: absolute; left: 50%; bottom: 0; height: max(200cqh, 150cqw); aspect-ratio: 2 / 3; background: url('../kit/art/upvote-bg.png') center / 100% 100% no-repeat; image-rendering: pixelated; transform: translate(-50%, calc(var(--climb) * (100% - 100cqh))); transition: transform 0.16s cubic-bezier(0.3, 1.5, 0.5, 1); will-change: transform; }
 .g-upvote .sky.drop { transition-duration: 0.32s; transition-timing-function: cubic-bezier(0.5, 0, 0.3, 1); }
 /* The post rides from the bottom of the shaft (climb 0) to just under the banner (climb 1). */
 /* The rail is as tall as the shaft, so a percentage of its own height is a percentage of the climb. */

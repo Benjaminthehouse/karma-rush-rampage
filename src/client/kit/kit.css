@@ -76,3 +76,48 @@
 .scene-grass { background: linear-gradient(#4fb2ff 0 30%, #7cc8ff 30% 56%, #58c45a 56% 62%, #3fa348 62%); }
 .scene-mint { background: linear-gradient(#7af0c8 0 50%, #52d9ac 50%); }
 .scene-sun { background: linear-gradient(#ffd84a 0 40%, #ffb03a 40% 72%, #ff8a3d 72%); }
+
+/* ---- the cast (see kit/cast.ts). Mod Bear is hand-drawn: three moods stacked, one shown ---- */
+.actor.modbear { position: relative; aspect-ratio: 614 / 575; }
+.actor.modbear i { position: absolute; inset: 0; background: center / contain no-repeat; visibility: hidden; }
+.actor.modbear i.sleep { background-image: url('./art/modbear-sleep.svg'); }
+.actor.modbear i.peep { background-image: url('./art/modbear-peep.svg'); }
+.actor.modbear i.angry { background-image: url('./art/modbear-angry.svg'); }
+.actor.modbear.sleep i.sleep, .actor.modbear.peep i.peep, .actor.modbear.angry i.angry { visibility: visible; }
+
+/* ---- the sets: shared backdrops, placeholders until drawn. Text on them is dark unless noted ---- */
+/* Courtroom: wood panelling, a bench line, a gold seal. */
+.scene-court { color: #0b1020; background:
+  radial-gradient(circle at 50% 14%, #ffcf3f 0 1.4em, #c98a10 1.4em 1.7em, #0000 1.7em),
+  repeating-linear-gradient(90deg, #8a5a2c 0 3em, #7a4e25 3em 3.2em),
+  linear-gradient(#0000 0 66%, #5a3518 66% 68%, #6e3f1c 68%); background-blend-mode: normal; }
+/* Dev cave: night-blue room lit by monitors, cables on the floor. Light text. */
+.scene-devcave { color: #eef1ff; background:
+  radial-gradient(ellipse at 50% 30%, #3fe0ff22 0 30%, #0000 60%),
+  repeating-linear-gradient(0deg, #0000 0 2.4em, #1d2650 2.4em 2.55em),
+  linear-gradient(#10142e 0 72%, #1a1f40 72%); }
+/* Casino floor: red carpet, gold bulbs along the top. Light text. */
+.scene-casino { color: #fff0a8; background:
+  radial-gradient(circle, #ffcf3f 0 0.22em, #0000 0.25em) 0 0.4em / 1.4em 1.4em repeat-x,
+  repeating-linear-gradient(45deg, #7a1424 0 1em, #8e1a2c 1em 2em),
+  #7a1424; }
+/* Party stage: curtains at the sides, a spotlight, wooden boards. Light text. */
+.scene-stage { color: #fff0a8; background:
+  radial-gradient(ellipse at 50% 62%, #fff4c466 0 26%, #0000 45%),
+  linear-gradient(90deg, #a81f2e 0 9%, #0000 9% 91%, #a81f2e 91%),
+  linear-gradient(#2a1a4a 0 70%, #8a5a2c 70% 71%, #b0703c 71%); }
+/* Kitchen: tiled wall over a counter. */
+.scene-kitchen { color: #0b1020; background:
+  linear-gradient(#0000 0 64%, #6e3f1c 64% 66%, #c4cbe4 66%),
+  conic-gradient(#e6f4f1 25%, #cfe9e3 0 50%, #e6f4f1 0 75%, #cfe9e3 0) 0 0 / 2.4em 2.4em; }
+/* Feed street: a dusk skyline of post-shaped buildings with lit windows. */
+.scene-street { color: #0b1020; background:
+  linear-gradient(#0000 0 78%, #3a4370 78% 79%, #646e9c 79%),
+  linear-gradient(90deg, #2c3763 0 14%, #0000 14% 20%, #3a4370 20% 38%, #0000 38% 46%, #2c3763 46% 60%, #0000 60% 68%, #3a4370 68% 86%, #0000 86%) 0 100% / 100% 46% no-repeat,
+  linear-gradient(#ffab5a 0 40%, #ff8a7a 40% 70%, #c56aa0 70%); }
+/* Back alley: brick wall at night, wet tarmac. Light text. */
+.scene-alley { color: #eef1ff; background:
+  linear-gradient(#0000 0 74%, #1a1f40 74%),
+  linear-gradient(90deg, #0000 0 calc(100% - 0.15em), #2a1a2e 0) 0 0 / 2.4em 1.2em,
+  linear-gradient(#0000 0 calc(100% - 0.15em), #2a1a2e 0) 0 0 / 100% 1.2em,
+  #4a2a36; }

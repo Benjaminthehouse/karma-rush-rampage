@@ -77,6 +77,7 @@ export type GameFactory = (ctx: GameCtx) => GameInst;
 // The pixel-art kit: sprites, characters and forum furniture. See GAME_GUIDE.md.
 export { TONES, defineSprite, hasSprite, setSprite, sprite, type Layer, type SpriteOpts, type Tone } from '../kit/px';
 export { person, type Mood, type Person, type PersonOpts } from '../kit/people';
+export { actor, type Actor, type ActorMood, type Who } from '../kit/cast';
 export { comment, postCard, type PostCard } from '../kit/ui';
 
 export function h<K extends keyof HTMLElementTagNameMap>(

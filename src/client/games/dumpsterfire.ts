@@ -1,5 +1,5 @@
 import './dumpsterfire.css';
-import { COLOR, dealer, defineSprite, h, pulse, randBtn, randInt, ratio, setSprite, sprite, type Btn, type GameFactory } from './common';
+import { actor, COLOR, dealer, defineSprite, h, pulse, randBtn, randInt, ratio, setSprite, sprite, type Btn, type GameFactory } from './common';
 
 const TAKES = [
   'well, ACTUALLY',
@@ -94,8 +94,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   const row = h('div', 'lanes');
   // The mod bear (shared art): dozing while all is civil, furious while anything burns,
   // one eye open just after a needless spray.
-  const mod = h('div', 'bear angry');
-  for (const m of ['sleep', 'peep', 'angry']) mod.append(h('i', m));
+  const bear = actor('modbear', { mood: 'angry', px: 0.2125 });
+  const mod = bear.el;
   let mood = 'angry';
   const lanes = ([0, 1, 2] as Btn[]).map((i) => {
     const el = h('div', `lane c-${COLOR[i]}`);
@@ -247,8 +247,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       const m = t < smugUntil ? 'peep' : calm ? 'sleep' : 'angry';
       if (m !== mood) {
         mood = m;
-        mod.classList.remove('sleep', 'peep', 'angry');
-        mod.classList.add(m);
+        bear.mood(m);
       }
       const f = Math.floor(t / 110) % 2;
       if (f !== frame) {

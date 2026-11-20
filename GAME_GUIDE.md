@@ -162,6 +162,37 @@ dozes at the mod desk while your spam piles up) before you draw anything.
   alone tells the player what to press, put `padDots(b)` beside it so it also reads
   as left / middle / right.
 
+### The cast and the sets
+
+Characters come from one shared cast, so a character redrawn once changes in every
+game. Use `actor(who, { mood, px })` from `./common`; `who` is one of:
+
+| who | is | use for |
+| --- | --- | --- |
+| `modbear` | the mods (hand-drawn) | judges, bouncers, desk officers, anyone enforcing rules |
+| `automod` | grey screen-faced robot | rules, orders, bots, AI |
+| `troll` | green, horned | impostors, alts, sarcasm, rug pulls, villains |
+| `op` | the poster, a cat | anyone who posts, wants upvotes, races to comment |
+| `dev` | hoodie, dark circles | servers, deploys, laptops, vibecoding |
+| `ape` | diamond hands | stonks, coins, rockets, jackpots |
+| `npc` | identical grey people | crowds, voters, extras |
+| `lurker` | hooded, glowing eyes | watchers, detectives, the audience |
+
+Moods: idle, happy, shock, angry, sad, sleep, cool, wink, dead, talk, peep. `px` is one
+art pixel in em; every actor is 16 art pixels wide, so `px: 0.5` is 8em. Make the
+main character big (a third of the stage wide or more) and change its mood as things
+happen. Only draw your own character with `defineSprite` when the game needs one the
+cast cannot play (a costume, a prop, a creature).
+
+Backdrops are shared sets too. Put one scene class on the wrapper:
+`scene-office` (mod office), `scene-court`, `scene-devcave`, `scene-casino`,
+`scene-stage` (party stage), `scene-kitchen`, `scene-street` (feed street at dusk),
+`scene-alley` (night), `scene-sky`, `scene-night`. Dark sets (devcave, casino, stage,
+alley) set light text; the others dark. They are placeholders until drawn, so build
+the scene on top of them rather than painting your own background.
+
+Hand-drawn art lives in `src/client/kit/art/`.
+
 ### Sprites
 
 `sprite(name, { tone, flip, flipY, px })` draws pixel art from the shared sheet in
@@ -225,15 +256,15 @@ Then play it for real: `npm run mock`, open
 
 ## Drawn art
 
-Hand-made art for a game lives in `art/<id>/` (the source files) and, ready for the
-game, in `src/client/games/art/<id>-*.png`. Reference it from the game's CSS with
-`url('./art/<id>-name.png')`; every build bundles it.
+Hand-made art lives in `art/<id>/` (the source files) and, ready for the game, in
+`src/client/kit/art/`. Reference it from CSS with `url('../kit/art/<name>.png')`
+(from a game) or `url('./art/<name>.png')` (from the kit); every build bundles it.
 
 Pixel art that arrives as an SVG of squares on a grid is converted to a 1x PNG and
 scaled up crisply with `image-rendering: pixelated`:
 
 ```bash
-node tools/pixelize.cjs art/upvote/upvote-bg.svg src/client/games/art/upvote-bg.png 8
+node tools/pixelize.cjs art/upvote/upvote-bg.svg src/client/kit/art/upvote-bg.png 8
 ```
 
 The last number is the size of one art pixel in SVG units.
