@@ -442,3 +442,8 @@ body { background: var(--bg); }
   .ui .standings { gap: 0.22rem; }
   .ui .standings li { padding: 0.3rem 0.7rem; }
 }
+
+/* iPhones mute game sounds (but not speech) while the ring switch is on silent. Say so. */
+#settings { flex-wrap: wrap; }
+#mute-hint { flex: 0 0 100%; margin: 0; text-align: center; font-size: 0.8rem; color: var(--dim); }
+body.ios #menu, body.ios #lobby, body.ios #final, body.ios #arcade { padding-bottom: 4.9rem; }

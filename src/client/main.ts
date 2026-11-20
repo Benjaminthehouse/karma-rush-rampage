@@ -68,12 +68,13 @@ function setPads(labels: [string, string, string], actions?: ((() => void) | nul
 
 const held = [false, false, false];
 /** Shown on the menu so a tester can tell which build they are looking at. */
-const BUILD = 22;
+const BUILD = 23;
 let dayLine = '';
 /** The menu's status line, with the audio state so "no sound" can be told apart by cause. */
 function paintStatus() {
-  // Shown in full while sound on phones is being chased down.
-  const text = `${dayLine} · build ${BUILD} · ${sfx.debug()}`;
+  // The audio state only shows when something is wrong with it.
+  const audio = sfx.debug();
+  const text = `${dayLine} · build ${BUILD}${/stalled|suspended|interrupted|audio:|session:/.test(audio) ? ` · ${audio}` : ''}`;
   const el = document.getElementById('menu-day');
   if (el && el.textContent !== text) el.textContent = text;
 }
@@ -83,6 +84,13 @@ window.setInterval(() => {
 
 // Mobile browsers only let sound and speech start from an "activation" gesture, and a
 // finger landing is not one: a finger lifting, a click or a key press is.
+// iPhones play speech but mute game sounds while the ring switch is on silent, and a web
+// page cannot see the switch, so the settings row carries a one-line hint there.
+if (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+  document.body.classList.add('ios');
+  $('mute-hint').hidden = false;
+}
+
 function unlockSound() {
   sfx.unlock();
   // Speech is unlocked a moment after audio, not in the same instant: on iPhones the two
