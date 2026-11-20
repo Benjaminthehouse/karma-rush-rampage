@@ -1,5 +1,5 @@
 import './votemath.css';
-import { arrow, clamp1000, h, pulse, shuffled, type Btn, type GameFactory } from './common';
+import { actor, clamp1000, COLOR, h, pulse, shuffled, sprite, type Btn, type GameFactory } from './common';
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   // Closer scores take a person longer to work out, so the par drops as the level rises: 8 8 7 6 5.
@@ -25,24 +25,35 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let right = 0;
   let wrong = 0;
   let lockedUntil = 0;
+  let calmAt = 0;
 
-  const wrap = h('div', 'g-votemath');
+  // The scene: a classroom. AutoMod teaches at the chalkboard; three posts are pinned to it
+  // with coloured magnets (left, middle, right), each with its up and down tally.
+  const wrap = h('div', 'g-votemath scene-office');
+  const board = h('div', 'board');
+  const sum = h('div', 'sum');
+  sum.append(sprite('up', { tone: 'green', px: 0.1 }), h('span', '', 'minus'), sprite('up', { tone: 'purple', flipY: true, px: 0.1 }), h('span', '', '= ?'));
   const row = h('div', 'row');
-  const cards = [0, 1, 2].map(() => {
+  const cards = [0, 1, 2].map((i) => {
     const card = h('div', 'card');
-    const pin = h('i', 'pin'); // feedback floats up from the card's top edge, clear of the next numbers
+    const pin = h('i', `magnet c-${COLOR[i]}`); // feedback floats up from the magnet, clear of the next numbers
     const up = h('div', 'line up');
     const upN = h('b');
-    up.append(arrow('up'), upN);
+    up.append(sprite('up', { tone: 'green', px: 0.13 }), upN);
     const down = h('div', 'line down');
     const downN = h('b');
-    down.append(arrow('down'), downN);
+    down.append(sprite('up', { tone: 'purple', flipY: true, px: 0.13 }), downN);
     card.append(pin, up, down);
     row.append(card);
     return { card, pin, upN, downN };
   });
-  const note = h('div', 'g-note');
-  wrap.append(row, note);
+  board.append(sum, row);
+  const front = h('div', 'front');
+  const teacher = actor('automod', { mood: 'talk', px: 0.4 });
+  teacher.el.classList.add('teacher');
+  const note = h('div', 'note');
+  front.append(teacher.el, note);
+  wrap.append(board, front);
   root.append(wrap);
 
   function show() {
@@ -60,20 +71,30 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     press(b, t) {
       if (t < lockedUntil) return;
       const r = rounds[idx % rounds.length];
+      pulse(cards[b].card, 'bump');
+      calmAt = t + 400;
       if (b === r.win) {
         right++;
+        teacher.mood('happy');
         good(cards[b].pin, `+${r.posts[b].net}`);
         fx.burst(cards[b].card, 'gold', 10);
       } else {
         wrong++;
         lockedUntil = t + 500;
+        teacher.mood('angry');
+        pulse(teacher.el, 'shake');
         const net = r.posts[b].net;
         bad(cards[b].pin, `ONLY ${net > 0 ? '+' : ''}${net}`);
       }
       idx++;
       show();
     },
-    tick() {},
+    tick(t) {
+      if (calmAt && t >= calmAt) {
+        calmAt = 0;
+        teacher.mood('talk');
+      }
+    },
     score: () => clamp1000((1000 * (right - wrong)) / par),
     hint: (t) => (t >= lockedUntil ? rounds[idx % rounds.length].win : null),
   };

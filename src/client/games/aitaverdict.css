@@ -1,31 +1,48 @@
-.g-aitaverdict .case { flex: 1; min-height: 0; max-height: 20em; width: 100%; max-width: 25em; display: flex; flex-direction: column; gap: 0.5em; position: relative; background: var(--panel-2); border: 0.16em solid var(--line); border-radius: 1em; padding: 0.7em; }
-.g-aitaverdict .title { flex: none; min-height: 2.4em; display: flex; align-items: center; justify-content: center; text-align: center; text-wrap: balance; font-weight: 800; line-height: 1.2; }
-.g-aitaverdict .title b { font-weight: 900; color: var(--gold); }
-.g-aitaverdict .dock { flex: 1; min-height: 0; display: flex; gap: 0.6em; }
+/* The courtroom: the judge at the bench up top, the case on the docket sheet, the dock below. */
+.g-aitaverdict { justify-content: space-between !important; gap: 0.3em !important; padding: 0.5em 0.6em 0.4em !important; color: #0b1020; }
+
+/* The bench: the judge looms behind a tall wooden desk with a gavel on it. */
+.g-aitaverdict .top { flex: none; position: relative; display: flex; flex-direction: column; align-items: center; }
+.g-aitaverdict .judge { position: relative; z-index: 0; margin-bottom: -1.7em; }
+.g-aitaverdict .bench { position: relative; z-index: 1; width: 15em; max-width: 100%; display: flex; justify-content: center; padding: 0.45em 0.4em 0.5em; background: #6e3f1c; box-shadow: 0 -0.22em 0 0 #0b1020, 0 0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, inset 0 0.35em 0 0 #b0703c, 0.35em 0.4em 0 0 #0b102066; }
+.g-aitaverdict .plate { background: #0b1020; color: var(--gold); font-size: 0.85em; letter-spacing: 0.08em; padding: 0.05em 0.6em; white-space: nowrap; }
+.g-aitaverdict .gavel { position: absolute; right: 0.6em; bottom: 100%; margin-bottom: -0.3em; transform-origin: 60% 95%; transform: rotate(-30deg); }
+.g-aitaverdict .gavel.slam { animation: g-aitaverdict-slam 0.22s ease-out; }
+@keyframes g-aitaverdict-slam { 0% { transform: rotate(-70deg); } 40% { transform: rotate(18deg); } 100% { transform: rotate(-30deg); } }
+
+/* The docket sheet: the case, read out to the court. */
+.g-aitaverdict .sheet { position: relative; flex: none; align-self: center; width: min(100%, 17em); min-height: 2.6em; display: flex; align-items: center; justify-content: center; text-align: center; text-wrap: balance; line-height: 1.05; font-size: 1.05em; padding: 0.3em 0.6em; background: #fff8e2; box-shadow: 0 -0.2em 0 0 #0b1020, 0 0.2em 0 0 #0b1020, -0.2em 0 0 0 #0b1020, 0.2em 0 0 0 #0b1020, 0.3em 0.35em 0 0 #0b102066; }
+.g-aitaverdict .sheet b { font-weight: inherit; color: #a81f2e; }
+
+/* The dock: OP and THEM stand behind a rail, horns or halos over their heads. */
+.g-aitaverdict .court { flex: 1 1 auto; min-height: 0; position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+.g-aitaverdict .dock { display: flex; justify-content: center; gap: 2.2em; margin-bottom: -1.2em; }
 .g-aitaverdict .dock.swap { flex-direction: row-reverse; }
-.g-aitaverdict .seat { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; background: var(--bg); border: 0.16em solid var(--cd); border-radius: 0.8em; padding: 0.5em 0.3em 0; overflow: hidden; }
-.g-aitaverdict .seat svg { flex: 1; min-height: 0; width: 100%; }
-/* A name tag stuck on the chest. */
-.g-aitaverdict .badge { flex: none; position: relative; margin: -2em 0 0.5em; font-weight: 900; letter-spacing: 0.08em; line-height: 1.3; color: #071022; background: var(--ink); border-radius: 0.35em; padding: 0 0.6em; }
+.g-aitaverdict .seat > .actor { position: relative; z-index: 0; }
+.g-aitaverdict .seat { display: flex; flex-direction: column; align-items: center; }
+.g-aitaverdict .crown { position: relative; width: 5.44em; height: 2.2em; margin-bottom: -0.5em; z-index: 1; }
+.g-aitaverdict .crown > * { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); }
+.g-aitaverdict .seat:not(.guilty) .horns, .g-aitaverdict .guilty .halo { visibility: hidden; }
+.g-aitaverdict .halo { bottom: 0.4em; }
+.g-aitaverdict .tag { position: relative; z-index: 2; display: flex; align-items: center; gap: 0.35em; margin-top: -0.25em; padding: 0.05em 0.45em; background: var(--c); color: #0b1020; font-size: 0.9em; letter-spacing: 0.06em; box-shadow: 0 0 0 0.16em #0b1020; }
+.g-aitaverdict .tag .pad-dots { font-size: 0.85em; }
+.g-aitaverdict .rail { position: relative; z-index: 1; width: 15.5em; max-width: 100%; height: 2em; background: #8a5a2c; box-shadow: 0 -0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, 0 0.22em 0 0 #0b1020, inset 0 0.3em 0 0 #b0703c; }
 
-/* The bust: horns in the seat's colour, a gold halo for the innocent. */
-.g-aitaverdict .torso, .g-aitaverdict .horns { fill: var(--c); }
-.g-aitaverdict .horns { stroke: var(--bg); stroke-width: 2.5; stroke-linejoin: round; }
-.g-aitaverdict .halo { fill: none; stroke: var(--gold); stroke-width: 6; }
-.g-aitaverdict .head { fill: var(--ink); }
-.g-aitaverdict .eye { fill: var(--bg); }
-.g-aitaverdict .brows, .g-aitaverdict .grin { fill: none; stroke: var(--bg); stroke-width: 4; stroke-linecap: round; }
-.g-aitaverdict .seat:not(.guilty) .horns, .g-aitaverdict .seat:not(.guilty) .brows, .g-aitaverdict .guilty .halo { display: none; }
-
-/* The ruling: the verdict thuds down across their chests and the horns fly off. */
-.g-aitaverdict .stamp { position: absolute; left: 50%; top: 73%; visibility: hidden; font-size: 3.6em; font-weight: 900; font-style: italic; line-height: 1; letter-spacing: 0.04em; color: var(--c); background: #0b1020e6; border: 0.1em solid var(--c); border-radius: 0.18em; padding: 0.08em 0.3em; transform: translate(-50%, -50%) rotate(-9deg); }
+/* The ruling: the verdict is stamped on the docket sheet and the horns fly off. */
+.g-aitaverdict .stamp { position: absolute; z-index: 3; left: 50%; top: 50%; visibility: hidden; font-size: 2.4em; line-height: 1; letter-spacing: 0.04em; color: #0b1020; background: var(--c); padding: 0.06em 0.3em; box-shadow: 0 0 0 0.08em #0b1020, 0.1em 0.12em 0 0.08em #0b102066; transform: translate(-50%, -50%) rotate(-9deg); }
 .g-aitaverdict .ruled .stamp, .g-aitaverdict .overruled .stamp { visibility: visible; animation: g-aitaverdict-thud 0.1s ease-in; }
-.g-aitaverdict .ruled .horns { transform-origin: 60% 15%; animation: g-aitaverdict-off 0.26s ease-out forwards; }
-/* Overruled: the right verdict stays in its button's colour, and the horns you missed throb where they are. */
-.g-aitaverdict .overruled .stamp { border-style: dashed; filter: saturate(0.55) brightness(0.9); }
-.g-aitaverdict .overruled .guilty { border-color: var(--c); }
-.g-aitaverdict .overruled .horns { transform-origin: 60% 15%; animation: g-aitaverdict-throb 0.22s ease-in-out 2; }
+.g-aitaverdict .ruled .guilty .horns { animation: g-aitaverdict-off 0.26s ease-out forwards; }
+.g-aitaverdict .ruled .seat:not(.guilty) .halo { animation: g-aitaverdict-glow 0.26s ease-out; }
+/* Overruled: the right verdict shows in its button's colour, faded, and the horns you missed throb. */
+.g-aitaverdict .overruled .stamp { opacity: 0.75; transform: translate(-50%, -50%) rotate(-4deg); }
+.g-aitaverdict .overruled .guilty .horns { animation: g-aitaverdict-throb 0.22s ease-in-out 2; }
 @keyframes g-aitaverdict-thud { from { transform: translate(-50%, -50%) rotate(-9deg) scale(1.5); opacity: 0; } }
-@keyframes g-aitaverdict-off { to { transform: translateY(-9%) scale(1.15); opacity: 0; } }
-@keyframes g-aitaverdict-throb { 50% { transform: scale(1.22); } }
-.g-aitaverdict .meter i { background: var(--gold); }
+@keyframes g-aitaverdict-off { to { transform: translate(-50%, -80%) rotate(12deg) scale(1.2); opacity: 0; } }
+@keyframes g-aitaverdict-throb { 50% { transform: translateX(-50%) scale(1.25); } }
+@keyframes g-aitaverdict-glow { 50% { transform: translate(-50%, -0.3em) scale(1.2); } }
+
+/* The record: a bar that fills with good verdicts, and the count on a plaque. */
+.g-aitaverdict .foot { flex: none; width: min(100%, 17em); align-self: center; display: flex; align-items: center; gap: 0.5em; }
+.g-aitaverdict .bar { flex: 1; height: 0.9em; background: #3a2210; box-shadow: 0 0 0 0.16em #0b1020; overflow: hidden; }
+.g-aitaverdict .bar i { display: block; height: 100%; background: var(--gold); transform: scaleX(0); transform-origin: 0 50%; transition: transform 0.1s linear; }
+.g-aitaverdict .note { flex: none; background: #0b1020; color: var(--gold); font-size: 0.8em; padding: 0.05em 0.5em; white-space: nowrap; }

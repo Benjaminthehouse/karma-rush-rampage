@@ -1,20 +1,28 @@
-.g-banevasion .wanted { display: flex; align-items: center; gap: 0.6em; font-weight: 900; letter-spacing: 0.08em; color: var(--red); background: var(--bg); border: 0.14em solid var(--red); border-radius: 0.8em; padding: 0.3em 0.8em; }
-/* Shrunk by font-size so the poster face is an exact copy of the heads below (the eyes are spaced in em). */
-.g-banevasion .wanted .head { font-size: 0.62em; }
-.g-banevasion .row { display: flex; gap: 0.5em; width: 100%; }
-.g-banevasion .hole { flex: 1; min-width: 0; height: 9em; border-radius: 0.8em; background: var(--bg); border: 0.14em solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 0.3em; padding-bottom: 0.5em; overflow: hidden; }
-.g-banevasion .hole .head, .g-banevasion .hole .tag { transform: translateY(1.5em) scale(0.3); opacity: 0; transition: transform 0.09s ease-out, opacity 0.05s; }
-.g-banevasion .hole.up .head, .g-banevasion .hole.up .tag { transform: none; opacity: 1; }
-.g-banevasion .tag { font-size: 0.68em; font-weight: 800; color: var(--dim); white-space: nowrap; }
-.g-banevasion .head { display: block; position: relative; width: 4.2em; height: 4.2em; border-radius: 50%; background: var(--tint); border: 0.14em solid var(--bg); flex: none; }
-.g-banevasion .gold { --tint: var(--gold); }
-.g-banevasion .pink { --tint: #ff7ac8; }
-.g-banevasion .teal { --tint: #2fd6c4; }
-.g-banevasion .ink { --tint: var(--ink); }
-/* Eyes, then a mouth; each face changes one or both. */
-.g-banevasion .head::before { content: ''; position: absolute; left: 24%; top: 30%; width: 14%; height: 18%; border-radius: 50%; background: var(--bg); box-shadow: 2.6em 0 0 var(--bg); font-size: 0.5em; }
-.g-banevasion .head::after { content: ''; position: absolute; left: 28%; right: 28%; bottom: 20%; height: 18%; border-radius: 0 0 2em 2em; background: var(--bg); }
-.g-banevasion .frown::after { border-radius: 2em 2em 0 0; }
-.g-banevasion .gasp::after { left: 38%; right: 38%; height: 26%; border-radius: 50%; }
-.g-banevasion .wink::before { box-shadow: none; }
-.g-banevasion .shades::before { left: 14%; top: 28%; width: 72%; height: 20%; border-radius: 0.3em; box-shadow: none; }
+/* A club door in a back alley: the bouncer, the door and the BANNED poster up top, the queue below. */
+.g-banevasion { justify-content: flex-end !important; gap: 0.5em !important; padding: 0.6em 0.5em 0.4em !important; }
+
+.g-banevasion .club { flex: none; display: flex; align-items: flex-end; justify-content: center; gap: 0.4em; }
+.g-banevasion .bouncer { flex: none; transform-origin: 50% 90%; }
+.g-banevasion .door { position: relative; flex: none; width: 5em; height: 7.4em; margin-top: 1.4em; background: #2a1a4a; box-shadow: 0 -0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, inset 0 0 0 0.35em #3d2a66, inset 0 0 0 0.5em #0b1020; }
+.g-banevasion .neon { position: absolute; left: 50%; bottom: 100%; margin-bottom: 0.4em; transform: translateX(-50%); white-space: nowrap; font-size: 0.95em; letter-spacing: 0.08em; color: #ff7ac8; background: #0b1020; padding: 0 0.4em; box-shadow: 0 0 0 0.12em #ff7ac8; }
+.g-banevasion .knob { position: absolute; right: 0.8em; top: 52%; width: 0.5em; height: 0.5em; background: var(--gold); box-shadow: 0 0 0 0.12em #0b1020; }
+/* The wanted-style poster: the troll as it was banned, horns and all. */
+.g-banevasion .poster { flex: none; display: flex; flex-direction: column; align-items: center; gap: 0.15em; margin-bottom: 1.6em; padding: 0.25em 0.35em 0.35em; background: #fff0c8; color: #a81f2e; transform: rotate(4deg); box-shadow: 0 0 0 0.16em #0b1020, 0.25em 0.3em 0 0.16em #0b102088; }
+.g-banevasion .poster b { font-weight: inherit; font-size: 0.85em; letter-spacing: 0.08em; line-height: 1; }
+
+/* The queue: three coloured mats on the pavement, one per button. */
+.g-banevasion .queue { flex: none; display: flex; justify-content: center; gap: 0.7em; width: 100%; }
+.g-banevasion .spot { position: relative; flex: none; width: 5.2em; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 0.15em; }
+.g-banevasion .who { position: relative; width: 4.8em; height: 4.8em; transform-origin: 50% 100%; opacity: 0; transform: translateY(1.2em) scale(0.4); transition: transform 0.09s ease-out, opacity 0.05s; }
+.g-banevasion .who > * { position: absolute; left: 0; top: 0; }
+.g-banevasion .tag { font-size: 0.7em; line-height: 1.1; white-space: nowrap; color: #eef1ff; background: #0b1020; padding: 0 0.3em; opacity: 0; }
+.g-banevasion .mat { display: block; width: 100%; height: 0.8em; background: var(--c); box-shadow: 0 0 0 0.16em #0b1020, 0.2em 0.25em 0 0.16em #0b102088; }
+.g-banevasion .spot.up .who { opacity: 1; transform: none; }
+.g-banevasion .spot.up .tag { opacity: 1; }
+/* Banned: booted up and off the line, spinning. Spared: walks on in through the door. */
+.g-banevasion .spot.boot .who { animation: g-banevasion-boot 0.35s ease-out forwards; }
+.g-banevasion .spot.walk .who { animation: g-banevasion-walk 0.3s ease-in forwards; }
+@keyframes g-banevasion-boot { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-3.5em) rotate(200deg) scale(0.5); } }
+@keyframes g-banevasion-walk { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-2.5em) scale(0.55); } }
+
+.g-banevasion .note { flex: none; font-size: 0.85em; color: var(--gold); background: #0b1020; padding: 0 0.5em; }

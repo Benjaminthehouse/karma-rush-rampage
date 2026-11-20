@@ -1,5 +1,5 @@
 import './controversial.css';
-import { h, pick, pulse, randInt, ratio, type GameFactory } from './common';
+import { actor, defineSprite, h, pick, pulse, randInt, ratio, sprite, type Actor, type GameFactory } from './common';
 
 const TAKES = [
   'Pineapple belongs on pizza',
@@ -11,6 +11,21 @@ const TAKES = [
   'Water is not wet',
   'GIF has a hard G',
 ];
+
+// The flag tied to the middle of the rope.
+defineSprite('controversial-flag', `
+.kkkkkkkkk..
+.kyyyyyyyyk.
+.kyYyyyyyyyk
+.kyyyyyyyyyk
+.kyyyyyyyyk.
+.kkkkkkkkk..
+.kn.........
+.kn.........
+.kn.........
+.kn.........
+.kn.........
+.kk.........`);
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   const half = 0.1 - level * 0.0075; // half-width of the gold zone
@@ -38,23 +53,51 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let streak = 0;
   let lastBad = -1000;
 
-  const wrap = h('div', 'g-controversial');
+  // The scene: a tug of war in court. Mod Bear presides; the downvote crowd hauls the rope
+  // left, the upvote crowd hauls it right, and the flag must stay over the gold zone.
+  const wrap = h('div', 'g-controversial scene-court');
+  const top = h('div', 'top');
+  const judge = actor('modbear', { mood: 'peep', px: 0.3 });
   const take = h('div', 'take', `“${pick(rng, TAKES)}”`);
-  const bar = h('div', 'bar');
+  top.append(judge.el, take);
+
+  const field = h('div', 'field');
   const zone = h('i', 'zone');
   zone.style.left = `${(0.5 - half) * 100}%`;
   zone.style.width = `${half * 200}%`;
-  const dagger = h('b', 'dagger');
-  // Pop-ups float up from above the bar, so they never hide the dagger or the zone.
+  const rail = h('div', 'rail');
+  rail.append(zone, h('i', 'rope'));
+  const flag = h('div', 'flag');
+  flag.append(sprite('controversial-flag', { px: 0.26 }), h('i', 'ice'));
+  // Pop-ups float up from above the rope, so they never hide the flag or the zone.
   const stamp = h('i', 'stamp');
-  bar.append(zone, dagger, stamp);
+  rail.append(flag, stamp);
+  const team = (side: 'down' | 'up') => {
+    const el = h('div', `team ${side}`);
+    const back = actor('npc', { mood: 'angry', px: 0.26 });
+    back.el.classList.add('back');
+    const front = actor('npc', { mood: 'angry', px: 0.34 });
+    front.el.classList.add('front');
+    const sign = sprite('up', { tone: side === 'up' ? 'blue' : 'red', flipY: side === 'down', px: 0.2 }, 'sign');
+    el.append(back.el, front.el, sign);
+    return { el, crew: [back, front] as Actor[] };
+  };
+  const downs = team('down');
+  const ups = team('up');
+  field.append(rail, downs.el, ups.el);
+
   const ends = h('div', 'ends');
   // Lit while FREEZE is ready, dim while it recharges.
-  const ice = h('span', 'ice', 'freeze');
-  ends.append(h('span', 't-red', 'downvoted'), ice, h('span', 't-blue', 'upvoted'));
-  const note = h('div', 'g-note');
-  wrap.append(take, bar, ends, note);
+  const ice = h('span', 'chip', 'freeze');
+  ends.append(h('span', 'side t-red', 'downvoted'), ice, h('span', 'side t-blue', 'upvoted'));
+  const note = h('div', 'note');
+  wrap.append(top, field, ends, note);
   root.append(wrap);
+
+  // What is on screen, so tick only touches the DOM when something changes.
+  let shownPos = '';
+  let shownPct = -1;
+  let shownState = '';
 
   return {
     press(b, t) {
@@ -72,6 +115,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         return;
       }
       pos = Math.max(0, Math.min(1, pos + (b === 2 ? nudge : -nudge)));
+      // Your tug: that crowd heaves and the flag jumps their way.
+      pulse((b === 2 ? ups : downs).el, 'heave');
       fx.sound('pop');
     },
     tick(t) {
@@ -101,11 +146,32 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         bad(stamp, pos > 0.5 ? 'TOO POPULAR' : 'BURIED');
       }
       wasIn = inside;
-      dagger.style.left = `${pos * 100}%`;
-      bar.classList.toggle('out', !inside);
-      bar.classList.toggle('frozen', t < frozenUntil);
-      ice.classList.toggle('off', t < freezeReadyAt);
-      note.textContent = `${Math.round(pos * 100)}% upvoted`;
+      const p = pos.toFixed(3);
+      if (p !== shownPos) {
+        shownPos = p;
+        flag.style.setProperty('--p', p);
+      }
+      const frozen = t < frozenUntil;
+      const spent = t < freezeReadyAt;
+      const state = `${inside} ${pos > 0.5} ${frozen} ${spent} ${dir}`;
+      if (state !== shownState) {
+        shownState = state;
+        wrap.classList.toggle('in', inside);
+        wrap.classList.toggle('frozen', frozen);
+        wrap.classList.toggle('spent', spent);
+        wrap.classList.toggle('pull-up', dir > 0);
+        wrap.classList.toggle('pull-down', dir < 0);
+        // Whoever is winning cheers; the losing crowd strains; ice shocks everyone.
+        const face = (mine: boolean) => (frozen ? 'shock' : inside ? 'angry' : mine ? 'happy' : 'sad');
+        for (const a of downs.crew) a.mood(face(!inside && pos < 0.5));
+        for (const a of ups.crew) a.mood(face(!inside && pos > 0.5));
+        judge.mood(inside ? 'peep' : 'angry');
+      }
+      const pct = Math.round(pos * 100);
+      if (pct !== shownPct) {
+        shownPct = pct;
+        note.textContent = `${pct}% upvoted`;
+      }
     },
     score: () => ratio(inZone, duration * 0.88),
     hint() {

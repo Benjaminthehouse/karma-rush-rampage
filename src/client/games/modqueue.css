@@ -1,11 +1,34 @@
-.g-modqueue .report { position: relative; width: min(100%, 26em); min-height: 6.5em; background: var(--panel-2); border: 3px solid var(--line); border-radius: 1em; padding: 0.9em; display: flex; flex-direction: column; gap: 0.5em; align-items: flex-start; }
-.g-modqueue .stamp { position: absolute; left: 50%; top: -0.8em; }
-.g-modqueue .tag { font-size: 0.72em; font-weight: 900; letter-spacing: 0.1em; padding: 0.15em 0.55em; border-radius: 0.35em; color: #071022; }
-.g-modqueue .report.t-0 { border-color: var(--red); }
-.g-modqueue .report.t-1 { border-color: var(--green); }
-.g-modqueue .report.t-2 { border-color: var(--blue); }
-.g-modqueue .report.t-0 .tag { background: var(--red); }
-.g-modqueue .report.t-1 .tag { background: var(--green); }
-.g-modqueue .report.t-2 .tag { background: var(--blue); }
-.g-modqueue .tag:empty { display: none; }
-.g-modqueue .text { font-size: 1.3em; font-weight: 800; line-height: 1.2; }
+/* The mod office: Mod Bear at the desk with three stamps up top, the conveyor belt below. */
+.g-modqueue { justify-content: space-between !important; gap: 0.4em !important; padding: 0.6em 0.6em 0.4em !important; color: #0b1020; }
+
+.g-modqueue .top { flex: none; display: flex; flex-direction: column; align-items: center; }
+.g-modqueue .mod { position: relative; z-index: 0; margin-bottom: -1.4em; transform-origin: 50% 90%; }
+.g-modqueue .desk { position: relative; z-index: 1; width: 16em; max-width: 100%; display: flex; justify-content: space-around; align-items: flex-end; padding: 0.3em 0.4em 0.4em; background: #8a5a2c; box-shadow: 0 -0.22em 0 0 #0b1020, 0 0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, inset 0 0.35em 0 0 #b0703c, 0.35em 0.4em 0 0 #0b102066; }
+.g-modqueue .tool { display: flex; flex-direction: column; align-items: center; gap: 0.15em; }
+.g-modqueue .tool .px { transform-origin: 50% 100%; }
+.g-modqueue .tool.slam .px { animation: g-modqueue-slam 0.18s ease-out; }
+@keyframes g-modqueue-slam { 40% { transform: translateY(0.9em) scale(1.1, 0.85); } }
+
+/* The belt: the post rides on it; rollers turn on every press. */
+.g-modqueue .line { flex: 1 1 auto; min-height: 0; position: relative; width: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+.g-modqueue .slot { position: relative; z-index: 1; width: min(100% - 0.6em, 18em); margin-bottom: -0.3em; }
+.g-modqueue .slot.g-modqueue-in { animation: g-modqueue-in 0.14s ease-out; }
+@keyframes g-modqueue-in { from { transform: translateX(0.25em) scale(0.9); opacity: 0; } }
+.g-modqueue .rx-post { position: relative; width: 100%; min-height: 5.6em; box-shadow: 0 0 0 0.2em #0b1020, 0.35em 0.4em 0 0.2em #0b102055; }
+.g-modqueue .rx-post .rx-title { font-size: 1.15em; }
+.g-modqueue .sticker { position: absolute; right: 0.3em; top: -0.8em; display: flex; align-items: center; gap: 0.3em; padding: 0.05em 0.4em; background: var(--c); color: #0b1020; font-size: 0.85em; letter-spacing: 0.08em; transform: rotate(5deg); box-shadow: 0 0 0 0.16em #0b1020; }
+.g-modqueue .sticker:empty { display: none; }
+.g-modqueue .sticker .pad-dots { font-size: 0.8em; }
+.g-modqueue .ink { position: absolute; left: 50%; top: 50%; visibility: hidden; font-size: 1.7em; letter-spacing: 0.06em; line-height: 1; color: var(--c); padding: 0.02em 0.25em; box-shadow: inset 0 0 0 0.12em var(--c); transform: translate(-50%, -50%) rotate(-10deg); background: #ffffffcc; }
+.g-modqueue .ink.botched { opacity: 0.6; }
+/* The stamped copy drops off the belt into the bottom-left corner. */
+.g-modqueue .gone { position: absolute; z-index: 2; bottom: 1.3em; left: 0; right: 0; margin: 0 auto; width: min(100% - 0.6em, 18em); pointer-events: none; transform-origin: 0 100%; animation: g-modqueue-out 0.24s ease-in forwards; }
+.g-modqueue .gone .ink { visibility: visible; }
+@keyframes g-modqueue-out { 0%, 15% { transform: none; opacity: 1; } 100% { transform: translateY(-0.6em) scale(0.3); opacity: 0; } }
+.g-modqueue .belt { position: relative; z-index: 0; width: 100%; height: 1.5em; overflow: hidden; background: #3a4370; box-shadow: inset 0 0.2em 0 0 #0b1020, inset 0 -0.2em 0 0 #0b1020; }
+.g-modqueue .rollers { position: absolute; left: 0; top: 0.2em; bottom: 0.2em; width: calc(100% + 2em); background: repeating-linear-gradient(90deg, #646e9c 0 1.4em, #0b1020 1.4em 1.6em, #7c86b0 1.6em 2em); }
+.g-modqueue .rollers.spin { animation: g-modqueue-roll 0.16s linear; }
+@keyframes g-modqueue-roll { from { transform: translateX(-2em); } }
+.g-modqueue .stamp { position: absolute; left: 50%; top: 0; width: 0; height: 0; }
+
+.g-modqueue .note { flex: none; font-size: 0.85em; color: var(--gold); background: #0b1020; padding: 0 0.5em; }

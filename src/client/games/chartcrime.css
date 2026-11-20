@@ -1,5 +1,25 @@
-.g-chartcrime .title { font-weight: 800; color: var(--dim); text-align: center; }
-.g-chartcrime .chart { display: flex; gap: 0.6em; width: 100%; height: 11em; align-items: stretch; border-bottom: 0.18em solid var(--ink); padding: 0 0.4em; }
-.g-chartcrime .col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 0.2em; }
-.g-chartcrime .col b { font-size: 1.5em; font-weight: 900; font-variant-numeric: tabular-nums; }
-.g-chartcrime .col i { display: block; width: 78%; background: var(--c); border-radius: 0.4em 0.4em 0 0; min-height: 0.3em; }
+/* A boardroom: the flip chart on its easel fills the wall, the presenter stands in front of it. */
+.g-chartcrime { justify-content: space-between !important; gap: 0 !important; padding: 0.5em 0.6em 0.3em !important; color: #0b1020; }
+
+.g-chartcrime .board { flex: 1 1 auto; min-height: 0; width: min(100%, 19em); display: flex; flex-direction: column; align-items: center; }
+.g-chartcrime .sheet { flex: 1 1 auto; min-height: 0; width: 100%; display: flex; flex-direction: column; gap: 0.3em; padding: 0.4em 0.6em 0.5em; background: #fff; box-shadow: 0 0 0 0.22em #0b1020, 0.35em 0.4em 0 0.22em #0b102055, inset 0 0.9em 0 0 #e6e9f5; }
+.g-chartcrime .title { flex: none; text-align: center; font-size: 1.05em; line-height: 1; white-space: nowrap; }
+.g-chartcrime .chart { flex: 1 1 auto; min-height: 7em; max-height: 12em; display: flex; gap: 0.5em; align-items: stretch; padding: 0 0.3em; box-shadow: inset 0.16em -0.16em 0 0 #0b1020; }
+.g-chartcrime .col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 0.15em; transform-origin: 50% 100%; }
+.g-chartcrime .col b { font-weight: inherit; font-size: 1.6em; line-height: 1; white-space: nowrap; }
+.g-chartcrime .bar { display: block; width: 80%; min-height: 0.3em; background: var(--c); box-shadow: 0 0 0 0.16em #0b1020, inset 0.3em 0 0 0 #ffffff55; }
+.g-chartcrime .col.slam { animation: g-chartcrime-slam 0.16s ease-out; }
+@keyframes g-chartcrime-slam { 40% { transform: scale(1.12, 0.86); } }
+/* Easel legs under the pad. */
+.g-chartcrime .legs { flex: none; width: 70%; height: 1em; background: linear-gradient(90deg, #6e3f1c 0 0.4em, #0000 0.4em calc(50% - 0.2em), #6e3f1c calc(50% - 0.2em) calc(50% + 0.2em), #0000 calc(50% + 0.2em) calc(100% - 0.4em), #6e3f1c calc(100% - 0.4em)); }
+
+/* The presenter: stick raised at the chart, sweating. */
+.g-chartcrime .floor { flex: none; width: min(100%, 19em); display: flex; align-items: flex-end; justify-content: space-between; margin-top: -1.8em; }
+.g-chartcrime .presenter { position: relative; flex: none; transform-origin: 50% 100%; }
+.g-chartcrime .pointer { position: absolute; left: 82%; bottom: 60%; transform-origin: 0 100%; }
+.g-chartcrime .pointer.bump { animation: g-chartcrime-poke 0.14s ease-out; }
+@keyframes g-chartcrime-poke { 50% { transform: translate(0.4em, -0.4em); } }
+.g-chartcrime .sweat { position: absolute; left: 8%; top: 22%; }
+.g-chartcrime .sweat.drip { animation: g-chartcrime-drip 0.4s ease-in; }
+@keyframes g-chartcrime-drip { to { transform: translateY(1.2em); opacity: 0; } }
+.g-chartcrime .note { flex: none; margin-bottom: 0.3em; background: #0b1020; color: var(--gold); font-size: 0.85em; padding: 0 0.5em; }

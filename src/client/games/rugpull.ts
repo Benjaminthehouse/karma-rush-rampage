@@ -1,7 +1,28 @@
 import './rugpull.css';
-import { COLOR, clamp1000, h, shuffled, type Btn, type GameFactory } from './common';
+import { actor, COLOR, clamp1000, defineSprite, h, pulse, shuffled, sprite, type Btn, type GameFactory } from './common';
 
 const COINS = ['$MOON', '$DOGGO', '$RUGGY', '$HODL', '$PUMP', '$YOLO', '$KARMA', '$BEANS', '$CATNIP'];
+
+// A meme coin in its column's colour, and the Troll's hand on the rug.
+defineSprite('rugpull-coin', `
+...kkkk...
+..kLLAAk..
+.kLAkkkak.
+kLAkAAAAak
+kAAAkkAAak
+kAAAAAkAak
+kAAkkkAAak
+.kAAAAAak.
+..kaaaak..
+...kkkk...`);
+defineSprite('rugpull-hand', `
+.kk.kk.kk.
+kgGkgGkgGk
+kgGkgGkgGk
+kggggggggk
+kggggggGGk
+.kgggggGk.
+..kkkkkk..`);
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   const tell = 520 - level * 55; // ms of warning shake before the rug goes
@@ -26,22 +47,46 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let sales = 0;
   const par = 7.3 + level * 0.4; // about nine sales, each deep into the shake
 
-  const wrap = h('div', 'g-rugpull');
+  // The scene: a casino floor. Three coins climb their charts on a rug; the Troll stands at
+  // the end of it, hand on the corner, ready to yank.
+  const wrap = h('div', 'g-rugpull scene-casino');
+  const note = h('div', 'note', '0 sold');
+  const lot = h('div', 'lot');
   const cols = [0, 1, 2].map((i) => {
     const col = h('div', `col c-${COLOR[i]}`);
     const name = h('span', 'name');
-    const chart = h('div', 'chart');
-    const bar = h('i');
-    chart.append(bar);
-    const value = h('b');
-    col.append(name, chart, value);
-    wrap.append(col);
-    return { col, name, bar, value };
+    const track = h('div', 'track');
+    const stem = h('i', 'stem');
+    const token = h('div', 'token');
+    token.append(sprite('rugpull-coin', { tone: COLOR[i], px: 0.26 }));
+    track.append(stem, token);
+    const value = h('b', 'value');
+    col.append(name, track, value);
+    lot.append(col);
+    return { col, name, track, stem, token, value, shown: { cls: '', p: '', v: '', name: '' } };
   });
-  const note = h('div', 'g-note');
-  wrap.append(note);
+  const troll = actor('troll', { mood: 'wink', px: 0.32 });
+  troll.el.classList.add('troll');
+  const hand = sprite('rugpull-hand', { px: 0.26 }, 'hand');
+  const rug = h('div', 'rug');
+  rug.append(hand);
+  const floor = h('div', 'floor');
+  floor.append(lot, troll.el);
+  wrap.append(note, floor, rug);
   root.append(wrap);
-  cols.forEach((el, i) => (el.name.textContent = coins[i].name));
+  cols.forEach((el, i) => {
+    el.shown.name = coins[i].name;
+    el.name.textContent = coins[i].name;
+  });
+
+  let shownSales = 0;
+  let trollMood = '';
+  const setTroll = (m: 'wink' | 'happy' | 'angry') => {
+    if (m === trollMood) return;
+    trollMood = m;
+    troll.mood(m);
+  };
+  let moodUntil = 0;
 
   return {
     press(b: Btn, t) {
@@ -55,38 +100,73 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         c.state = 'paper';
         bad(cols[b].col, 'PAPER HANDS');
         cols[b].value.textContent = 'too soon';
+        cols[b].shown.v = 'too soon';
         return;
       }
       const w = worth(p);
       banked += w;
       sales++;
-      good(cols[b].col, `+${Math.round(w * 100)}`);
+      good(cols[b].token, `+${Math.round(w * 100)}`);
       if (p > 0.85) {
-        fx.burst(cols[b].col, 'gold', 16);
+        // Got out right under the Troll's nose.
+        setTroll('angry');
+        moodUntil = t + 400;
+        fx.burst(cols[b].token, 'gold', 16);
         fx.sound('coin');
       }
-      cols[b].value.textContent = `sold at ${Math.round(w * 100)}`;
+      cols[b].value.textContent = `sold ${Math.round(w * 100)}`;
+      cols[b].shown.v = cols[b].value.textContent;
     },
     tick(t) {
+      let shaky = false;
       coins.forEach((c, i) => {
         const el = cols[i];
         if (c.state === 'up' && t >= c.crashAt) {
           c.state = 'rugged';
           relistAt[i] = t + 500;
           bad(el.col, 'RUGGED');
+          // The Troll yanks the rug out from under it.
+          pulse(rug, 'yank');
+          fx.poof(el.token);
+          setTroll('happy');
+          moodUntil = t + 450;
           el.value.textContent = 'rugged';
+          el.shown.v = 'rugged';
         }
         if (c.state !== 'up' && t >= relistAt[i]) coins[i] = fresh(i, t);
         const now = coins[i];
-        el.col.className = `col c-${COLOR[i]} ${now.state}${now.state === 'up' && now.crashAt - t <= tell ? ' shaky' : ''}`;
-        el.name.textContent = now.name;
+        const shake = now.state === 'up' && now.crashAt - t <= tell;
+        if (shake) shaky = true;
+        const cls = `col c-${COLOR[i]} ${now.state}${shake ? ' shaky' : ''}`;
+        if (cls !== el.shown.cls) {
+          el.shown.cls = cls;
+          el.col.className = cls;
+        }
+        if (now.name !== el.shown.name) {
+          el.shown.name = now.name;
+          el.name.textContent = now.name;
+        }
         if (now.state === 'up') {
           const p = t < now.from ? 0 : price(now, t);
-          el.bar.style.height = `${8 + p * 92}%`;
-          el.value.textContent = String(Math.round(worth(p) * 100));
-        } else if (now.state === 'rugged') el.bar.style.height = '4%';
+          const ps = p.toFixed(3);
+          if (ps !== el.shown.p) {
+            el.shown.p = ps;
+            el.col.style.setProperty('--p', ps);
+          }
+          const v = String(Math.round(worth(p) * 100));
+          if (v !== el.shown.v) {
+            el.shown.v = v;
+            el.value.textContent = v;
+          }
+        }
       });
-      note.textContent = `${sales} sold`;
+      // The Troll grins while a coin wobbles, and grips the rug.
+      if (t >= moodUntil) setTroll(shaky ? 'happy' : 'wink');
+      hand.classList.toggle('grip', shaky);
+      if (sales !== shownSales) {
+        shownSales = sales;
+        note.textContent = `${sales} sold`;
+      }
     },
     score: () => clamp1000((1000 * banked) / par),
     hint(t) {

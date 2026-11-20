@@ -1,8 +1,20 @@
-.g-votemath .row { display: flex; gap: 0.5em; width: 100%; }
-.g-votemath .card { flex: 1; min-width: 0; background: var(--panel-2); border: 0.16em solid var(--line); border-radius: 0.8em; padding: 0.8em 0.2em; display: flex; flex-direction: column; align-items: center; gap: 0.5em; position: relative; }
-.g-votemath .pin { position: absolute; top: 0; left: 50%; }
-.g-votemath .line { display: flex; align-items: center; gap: 0.25em; font-size: 1.7em; font-weight: 900; font-variant-numeric: tabular-nums; }
-.g-votemath .line .arrow { width: 0.9em; height: 0.9em; }
-.g-votemath .line.up { color: var(--green); }
-.g-votemath .line.down { color: var(--purple); }
-.g-votemath .line.up .arrow { color: var(--green); }
+/* A classroom: the chalkboard fills the wall, AutoMod teaches in front of it. */
+.g-votemath { justify-content: space-between !important; gap: 0 !important; padding: 0.5em 0.5em 0.3em !important; color: #0b1020; }
+
+/* The chalkboard: dark green slate in a wooden frame, the sum chalked along the top. */
+.g-votemath .board { flex: 1 1 auto; min-height: 0; max-height: 20em; margin-top: 0.4em; width: min(100% - 1.2em, 22em); display: flex; flex-direction: column; justify-content: center; gap: 0.6em; padding: 0.5em 0.6em 1.4em; background: #1f5a3c; box-shadow: 0 0 0 0.35em #8a5a2c, 0 0 0 0.55em #0b1020, 0.45em 0.55em 0 0.55em #0b102055, inset 0 0 0 0.15em #17462e; }
+.g-votemath .sum { flex: none; display: flex; align-items: center; justify-content: center; gap: 0.4em; color: #e8f4ec; font-size: 1.1em; letter-spacing: 0.06em; }
+.g-votemath .row { flex: none; display: flex; gap: 0.5em; width: 100%; }
+/* A post pinned up: white card, a magnet in its button's colour on top. */
+.g-votemath .card { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.25em; padding: 0.7em 0.2em 0.45em; background: #fff8e2; box-shadow: 0 0 0 0.18em #0b1020, 0.25em 0.3em 0 0.18em #0b102066; }
+.g-votemath .magnet { position: absolute; left: 50%; top: -0.55em; width: 1.4em; height: 0.9em; margin-left: -0.7em; background: var(--c); box-shadow: 0 0 0 0.14em #0b1020, inset 0 -0.2em 0 0 #0b102044; }
+.g-votemath .line { display: flex; align-items: center; gap: 0.25em; font-size: 1.8em; line-height: 1; }
+.g-votemath .line b { font-weight: inherit; min-width: 1.2em; text-align: right; }
+.g-votemath .line .px { font-size: 0.6em; }
+.g-votemath .line.up { color: #128a41; }
+.g-votemath .line.down { color: #6a22b0; }
+
+/* AutoMod in front of the board; the tally on a plaque. */
+.g-votemath .front { flex: none; width: min(100%, 20em); display: flex; align-items: flex-end; justify-content: space-between; margin-top: -1.2em; }
+.g-votemath .teacher { position: relative; transform-origin: 50% 100%; }
+.g-votemath .note { flex: none; margin-bottom: 0.4em; background: #0b1020; color: var(--gold); font-size: 0.85em; padding: 0 0.5em; }

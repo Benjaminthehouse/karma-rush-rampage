@@ -1,8 +1,49 @@
 import './jackpot.css';
-import { COLOR, clamp1000, h, pulse, type Btn, type GameFactory } from './common';
+import { actor, COLOR, clamp1000, defineSprite, h, pulse, setSprite, sprite, type Btn, type GameFactory, type Layer, type SpriteOpts } from './common';
 
 // 0 is the gold award; the rest are duds.
 const SYMBOLS = ['gold', 'silver', 'down', 'spam'];
+
+// A silver coin: worth nothing here.
+defineSprite('jackpot-silver', `
+...kkkk...
+..kwwwwk..
+.kwWWwwdk.
+kwWwwwwwdk
+kwWwwdwwdk
+kwwwwdwwdk
+kwwwwwwwdk
+.kwwwwddk.
+..kddddk..
+...kkkk...`);
+// The lever: a red knob on a steel arm.
+defineSprite('jackpot-lever', `
+.kkkk.
+krrrrk
+kRrrRk
+kRRRRk
+.kkkk.
+..kk..
+..kd..
+..kd..
+..kd..
+..kd..
+..kd..
+..kd..
+..kd..
+..kd..
+.kkkk.
+kddddk
+kkkkkk`);
+
+const ART: { name: Layer; opts: SpriteOpts }[] = [
+  { name: 'star', opts: {} },
+  { name: 'jackpot-silver', opts: {} },
+  { name: 'up', opts: { tone: 'purple', flipY: true } },
+  { name: 'bomb', opts: {} },
+];
+const NOW = 0.27; // px of the symbol on the payline
+const NEXT = 0.14; // px of the one coming next
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const par = 14 + level * 2;
@@ -24,22 +65,35 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let misses = 0;
   let spins = 0;
 
-  const wrap = h('div', 'g-jackpot');
+  // The scene: a casino floor. A big slot machine with three reels and a lever;
+  // the Ape stands at it and goes wild when the gold comes in.
+  const wrap = h('div', 'g-jackpot scene-casino');
+  const cabinet = h('div', 'cabinet');
+  const marquee = h('div', 'marquee', 'KARMA JACKPOT');
   const machine = h('div', 'machine');
   const reels = [0, 1, 2].map((i) => {
     const reel = h('div', `reel c-${COLOR[i]}`);
-    const next = h('i', 'sym next');
-    const now = h('i', 'sym now');
-    reel.append(next, now);
+    const next = sprite('star', { px: NEXT }, 'sym next');
+    const now = sprite('star', { px: NOW }, 'sym now');
+    reel.append(next, now, h('i', 'stripe'));
     machine.append(reel);
     return { reel, next, now, shown: -1 };
   });
-  const note = h('div', 'g-note');
-  wrap.append(machine, note);
+  const tray = h('div', 'tray');
+  const lever = sprite('jackpot-lever', { px: 0.3 }, 'lever');
+  cabinet.append(marquee, machine, tray, lever);
+
+  const floor = h('div', 'floor');
+  const ape = actor('ape', { mood: 'cool', px: 0.4 });
+  ape.el.classList.add('ape');
+  const note = h('div', 'note', '0 gold');
+  floor.append(note, ape.el);
+  wrap.append(cabinet, floor);
   root.append(wrap);
 
   const pos = (i: number, t: number) => Math.max(0, Math.floor((t - spinFrom + offset[i]) / period[i]));
   const symAt = (i: number, t: number) => strips[i][(spins * 17 + pos(i, t)) % strips[i].length];
+  const draw = (el: HTMLElement, sym: number, px: number) => setSprite(el, ART[sym].name, { ...ART[sym].opts, px });
 
   function paint(t: number) {
     reels.forEach((r, i) => {
@@ -47,15 +101,18 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       if (p === r.shown) return;
       r.shown = p;
       if (stopped[i] === null) {
-        r.now.className = `sym now ${SYMBOLS[symAt(i, t)]}`;
-        r.next.className = `sym next ${SYMBOLS[strips[i][(spins * 17 + pos(i, t) + 1) % strips[i].length]]}`;
+        draw(r.now, symAt(i, t), NOW);
+        draw(r.next, strips[i][(spins * 17 + pos(i, t) + 1) % strips[i].length], NEXT);
         // The symbol visibly drops from the preview slot, so the small one reads as "coming next".
         pulse(r.now, 'drop');
       }
     });
-    note.textContent = `${points} gold`;
   }
   paint(0);
+
+  function tally() {
+    note.textContent = `${points} gold`;
+  }
 
   return {
     press(b: Btn, t) {
@@ -63,30 +120,48 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       const sym = symAt(b, t);
       stopped[b] = sym;
       reels[b].reel.classList.add('stopped');
-      reels[b].now.className = `sym now ${SYMBOLS[sym]}`;
-      reels[b].next.className = 'sym next';
+      draw(reels[b].now, sym, NOW);
+      reels[b].next.classList.add('gone');
+      pulse(reels[b].now, 'bump');
       if (sym === 0) {
         points++;
+        ape.mood('happy');
+        // A coin drops into the tray for every gold.
+        if (tray.childElementCount < 18) tray.append(sprite('coin', { px: 0.12 }, 'coin'));
         good(reels[b].now);
       } else {
         misses++;
+        ape.mood('sad');
         bad(reels[b].now, 'DUD');
       }
-      if (stopped.includes(null)) return;
+      if (stopped.includes(null)) {
+        tally();
+        return;
+      }
       if (stopped.every((s) => s === 0)) {
         points += 2;
+        ape.mood('cool');
+        pulse(ape.el, 'g-jackpot-wild');
+        pulse(marquee, 'g-jackpot-lit');
         fx.pop(machine, 'JACKPOT!', 'gold');
         fx.burst(machine, 'gold', 26);
         fx.flash('gold');
         fx.sound('coin');
       }
+      tally();
       spins++;
       spinFrom = t + 380;
     },
     tick(t) {
       if (!stopped.includes(null) && t >= spinFrom) {
         stopped.forEach((_, i) => (stopped[i] = null));
-        reels.forEach((r) => r.reel.classList.remove('stopped'));
+        reels.forEach((r) => {
+          r.reel.classList.remove('stopped');
+          r.next.classList.remove('gone');
+        });
+        // The Ape hauls the lever and the reels spin again.
+        pulse(lever, 'pull');
+        pulse(ape.el, 'bump');
       }
       paint(t);
     },

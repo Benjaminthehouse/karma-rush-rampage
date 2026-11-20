@@ -1,5 +1,5 @@
 import './aitaverdict.css';
-import { COLOR, h, pulse, ratio, shuffled, type Btn, type GameFactory } from './common';
+import { actor, COLOR, defineSprite, h, padDots, pulse, ratio, shuffled, sprite, type Btn, type GameFactory } from './common';
 
 // Indexed by who has the horns, which is also the button: 0 OP, 1 both, 2 them.
 const VERDICT = ['YTA', 'ESH', 'NTA'];
@@ -33,17 +33,35 @@ const CASES = [
   ],
 ];
 
-// A bust with both a halo and horns; the .guilty class on its seat picks which one shows.
-const BUST =
-  '<svg viewBox="8 0 84 136" preserveAspectRatio="xMidYMax meet" aria-hidden="true">' +
-  '<path class="torso" d="M10 136V100Q10 78 50 78Q90 78 90 100V136Z"/>' +
-  '<g class="horns"><path d="M31 38Q13 24 21 3Q29 20 45 27Z"/><path d="M69 38Q87 24 79 3Q71 20 55 27Z"/></g>' +
-  '<ellipse class="halo" cx="50" cy="12" rx="25" ry="7"/>' +
-  '<circle class="head" cx="50" cy="52" r="27"/>' +
-  '<path class="brows" d="M32 40l14 6M68 40l-14 6"/>' +
-  '<circle class="eye" cx="40" cy="53" r="3.4"/><circle class="eye" cx="60" cy="53" r="3.4"/>' +
-  '<path class="grin" d="M39 63Q50 72 61 63"/>' +
-  '</svg>';
+// Horns sprout on the guilty, in their side's colour; the innocent get a halo.
+defineSprite('aitaverdict-horns', `
+k..............k
+kk............kk
+kAk..........kAk
+kAAk........kAAk
+.kAAk......kAAk.
+.kLAAk....kAALk.
+..kkkk....kkkk..`);
+defineSprite('aitaverdict-halo', `
+...kkkkkkkkkk...
+..kyyyyyyyyyyk..
+.kyYkkkkkkkkyyk.
+..kyyyyyyyyyyk..
+...kkkkkkkkkk...`);
+// The judge's wooden gavel.
+defineSprite('aitaverdict-gavel', `
+..kkkkkkkkkk..
+.knnnnnnnnnnk.
+.kyyyyyyyyyyk.
+.knnnnnnnnnnk.
+.kNNNNNNNNNNk.
+..kkkkkkkkkk..
+.....knNk.....
+.....knNk.....
+.....knNk.....
+.....knNk.....
+.....knNk.....
+.....kkkk.....`);
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const par = 11 + level * 0.75;
@@ -51,7 +69,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const piles = CASES.map((pile) => shuffled(rng, pile));
   const heard = [0, 0, 0];
   // Dealt in shuffled sixes, two of each verdict, so no single button is ever a lucky guess.
-  const docket =Array.from({ length: 7 }, () => shuffled<Btn>(rng, [0, 0, 1, 1, 2, 2]))
+  const docket = Array.from({ length: 7 }, () => shuffled<Btn>(rng, [0, 0, 1, 1, 2, 2]))
     .flat()
     // Later rounds seat OP on the right, so the colour counts and the side does not.
     .map((verdict) => ({ verdict, text: piles[verdict][heard[verdict]++ % piles[verdict].length], swap: rng() < level * 0.12 }));
@@ -61,39 +79,68 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let nextAt = -1; // while a ruling is on screen: when the next case is called
   let adjourned = false;
 
-  const wrap = h('div', 'g-aitaverdict');
-  const card = h('div', 'case');
-  const title = h('div', 'title');
+  // The scene: the courtroom. Judge Mod Bear sits high behind the bench with a gavel;
+  // the case is read from the docket sheet; OP and THEM stand in the dock below.
+  const wrap = h('div', 'g-aitaverdict scene-court');
+  const top = h('div', 'top');
+  const judge = actor('modbear', { mood: 'peep', px: 0.46 });
+  judge.el.classList.add('judge');
+  const bench = h('div', 'bench');
+  const gavel = sprite('aitaverdict-gavel', { px: 0.22 }, 'gavel');
+  const plate = h('div', 'plate', 'HON. MOD BEAR');
+  bench.append(gavel, plate);
+  top.append(judge.el, bench);
+
+  const sheet = h('div', 'sheet');
   const ask = h('span');
-  title.append(ask);
+  sheet.append(ask);
+
+  const court = h('div', 'court');
   const dock = h('div', 'dock');
   const seats = (['OP', 'THEM'] as const).map((name, i) => {
     const seat = h('div', `seat c-${i ? 'blue' : 'red'}`);
-    seat.innerHTML = BUST;
-    seat.append(h('span', 'badge', name));
+    const crown = h('div', 'crown');
+    const horns = sprite('aitaverdict-horns', { tone: i ? 'blue' : 'red', px: 0.32 }, 'horns');
+    const halo = sprite('aitaverdict-halo', { px: 0.27 }, 'halo');
+    crown.append(horns, halo);
+    const who = actor(i ? 'npc' : 'op', { px: 0.34 });
+    const tag = h('div', 'tag');
+    tag.append(h('span', '', name), padDots(i ? 2 : 0));
+    seat.append(crown, who.el, tag);
     dock.append(seat);
-    return seat;
+    return { el: seat, who };
   });
+  const rail = h('div', 'rail');
   const stamp = h('div', 'stamp');
-  card.append(title, dock, stamp);
-  const meter = h('div', 'meter big');
+  court.append(dock, rail);
+  sheet.append(stamp);
+
+  const foot = h('div', 'foot');
+  const bar = h('div', 'bar');
   const fill = h('i');
-  meter.append(fill);
-  const note = h('div', 'g-note');
-  wrap.append(card, meter, note);
+  bar.append(fill);
+  const note = h('div', 'note');
+  foot.append(bar, note);
+  wrap.append(top, sheet, court, foot);
   root.append(wrap);
 
   const score = () => ratio(right - wrong / 2, par);
 
   function show() {
     const c = docket[idx % docket.length];
-    card.className = 'case';
+    court.className = 'court';
+    judge.mood('peep');
     dock.classList.toggle('swap', c.swap);
-    seats[0].classList.toggle('guilty', c.verdict <= 1);
-    seats[1].classList.toggle('guilty', c.verdict >= 1);
+    const guilty = [c.verdict <= 1, c.verdict >= 1];
+    seats.forEach((s, i) => {
+      s.el.classList.toggle('guilty', guilty[i]);
+      // The guilty look smug; the innocent just stand there.
+      s.who.mood(guilty[i] ? 'wink' : 'idle');
+    });
     ask.replaceChildren(h('b', '', 'AITA'), ` ${c.text}`);
     stamp.textContent = '';
-    pulse(card, 'pop-in');
+    pulse(sheet, 'pop-in');
+    for (const s of seats) pulse(s.who.el, 'pop-in');
   }
   show();
 
@@ -105,7 +152,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   }
 
   function progress() {
-    fill.style.width = `${score() / 10}%`;
+    fill.style.transform = `scaleX(${score() / 1000})`;
     note.textContent = right ? `VERDICTS x${right}` : 'Court is in session';
   }
   progress();
@@ -117,29 +164,37 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       const c = docket[idx % docket.length];
       stamp.textContent = VERDICT[c.verdict];
       stamp.className = `stamp c-${COLOR[c.verdict]}`;
+      // Every ruling brings the gavel down.
+      pulse(gavel, 'slam');
       if (b === c.verdict) {
         right++;
         nextAt = t + 260;
-        card.classList.add('ruled');
+        court.classList.add('ruled');
+        judge.mood('angry');
+        seats.forEach((s) => s.who.mood(s.el.classList.contains('guilty') ? 'shock' : 'happy'));
         good(stamp);
         fx.burst(stamp, COLOR[b], 10);
+        fx.poof(gavel);
         fx.sound('thud');
         if (right % 5 === 0) {
-          fx.burst(card, 'gold', 18);
+          fx.burst(top, 'gold', 18);
           fx.sound('coin');
         }
       } else {
         wrong++;
         nextAt = t + 450;
-        card.classList.add('overruled');
-        pulse(card, 'shake');
-        bad(title, 'OVERRULED!');
+        court.classList.add('overruled');
+        judge.mood('shock');
+        // The guilty get away with it, and love it.
+        seats.forEach((s) => s.who.mood(s.el.classList.contains('guilty') ? 'happy' : 'sad'));
+        pulse(bench, 'shake');
+        bad(sheet, 'OVERRULED!');
       }
       progress();
       if (!adjourned && score() === 1000) {
         adjourned = true;
         fx.flash('gold');
-        fx.pop(title, 'INFO: NONE NEEDED', 'gold');
+        fx.pop(sheet, 'INFO: NONE NEEDED', 'gold');
         fx.sound('power');
       }
     },
