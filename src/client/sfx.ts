@@ -19,9 +19,23 @@ function audio(): AudioContext | null {
       const comp = ac.createDynamicsCompressor();
       comp.threshold.value = -16;
       comp.ratio.value = 6;
+      comp.attack.value = 0.001; // fast enough to catch clicks and snaps before they clip
       out = ac.createGain();
       out.gain.value = FX_GAIN;
-      out.connect(comp).connect(ac.destination);
+// A soft clipper after the compressor: untouched below 70% of full scale, rounded off
+      // above it, so a sharp click can never hard-clip the speaker.
+      const limit = ac.createWaveShaper();
+      const curve = new Float32Array(1025);
+      for (let i = 0; i < curve.length; i++) {
+        const x = (i / 512 - 1) * 2; // the input range covered is -2..2
+        const m = Math.abs(x);
+        curve[i] = Math.sign(x) * (m < 0.7 ? m : 0.7 + 0.3 * Math.tanh((m - 0.7) / 0.3));
+      }
+      limit.curve = curve;
+      const pre = ac.createGain();
+      pre.gain.value = 0.5; // the shaper maps -1..1, so halve going in and use the -2..2 curve
+      comp.connect(pre).connect(limit).connect(ac.destination);
+      out.connect(comp);
       beat = ac.createGain();
       beat.gain.value = MUSIC_GAIN;
       beat.connect(comp);
@@ -169,26 +183,136 @@ export const music = {
 
 // -------------------------------------------------------------------- sfx
 
-const NAMED: Record<string, () => void> = {
-  pop: () => tone({ f: 420, to: 980, dur: 0.07, type: 'sine', vol: 0.14 }),
-  coin: () => {
-    tone({ f: 988, dur: 0.07, vol: 0.07 });
-    tone({ f: 1319, dur: 0.22, vol: 0.07, at: 0.07 });
+// One-off sounds a game asks for by name. `k` is a pitch multiplier: they climb with the
+// streak too, at half the rate of the hit sound, so a hot run sounds hot everywhere.
+const NAMED: Record<string, (k: number) => void> = {
+  pop: (k) => tone({ f: 420 * k, to: 980 * k, dur: 0.07, type: 'sine', vol: 0.14 }),
+  coin: (k) => {
+    tone({ f: 988 * k, dur: 0.07, vol: 0.07 });
+    tone({ f: 1319 * k, dur: 0.22, vol: 0.07, at: 0.07 });
   },
-  zap: () => tone({ f: 1400, to: 180, dur: 0.14, type: 'sawtooth', vol: 0.07 }),
-  whoosh: () => noise({ dur: 0.26, vol: 0.09, type: 'bandpass', f: 400, to: 4200, attack: 0.08 }),
-  thud: () => {
-    tone({ f: 110, to: 38, dur: 0.22, type: 'sine', vol: 0.22 });
-    noise({ dur: 0.08, vol: 0.06, type: 'lowpass', f: 500 });
+  zap: (k) => tone({ f: 1400 * k, to: 180 * k, dur: 0.14, type: 'sawtooth', vol: 0.07 }),
+  whoosh: (k) => noise({ dur: 0.26, vol: 0.09, type: 'bandpass', f: 400 * k, to: 4200 * k, attack: 0.08 }),
+  thud: (k) => {
+    tone({ f: 110 * k, to: 38 * k, dur: 0.22, type: 'sine', vol: 0.22 });
+    noise({ dur: 0.08, vol: 0.06, type: 'lowpass', f: 500 * k });
   },
-  tick: () => tone({ f: 1250, dur: 0.025, vol: 0.04 }),
-  power: () => tone({ f: 180, to: 1500, dur: 0.38, type: 'sawtooth', vol: 0.06 }),
-  laser: () => tone({ f: 1900, to: 320, dur: 0.18, type: 'square', vol: 0.05 }),
-  ding: () => {
-    tone({ f: 1568, dur: 0.5, type: 'sine', vol: 0.12 });
-    tone({ f: 3136, dur: 0.3, type: 'sine', vol: 0.04 });
+  tick: (k) => tone({ f: 1250 * k, dur: 0.025, vol: 0.04 }),
+  power: (k) => tone({ f: 180 * k, to: 1500 * k, dur: 0.38, type: 'sawtooth', vol: 0.06 }),
+  laser: (k) => tone({ f: 1900 * k, to: 320 * k, dur: 0.18, type: 'square', vol: 0.05 }),
+  ding: (k) => {
+    tone({ f: 1568 * k, dur: 0.5, type: 'sine', vol: 0.12 });
+    tone({ f: 3136 * k, dur: 0.3, type: 'sine', vol: 0.04 });
   },
-  boing: () => tone({ f: 180, to: 520, dur: 0.2, type: 'triangle', vol: 0.14 }),
+  boing: (k) => tone({ f: 180 * k, to: 520 * k, dur: 0.2, type: 'triangle', vol: 0.14 }),
+};
+
+/**
+ * The sound of a hit, chosen per game so it matches what the player is doing (see
+ * hits.ts). Every voice takes `k`, the streak's pitch multiplier (1 at the start of a
+ * streak, a semitone higher per hit), so whatever the action, a streak climbs.
+ * Low, thumpy voices climb by a gentler power of `k` so they stay thumps.
+ */
+export type HitVoice =
+  | 'blip' | 'vote' | 'coin' | 'water' | 'key' | 'stamp' | 'pop' | 'bell'
+  | 'zap' | 'pluck' | 'swipe' | 'step' | 'sizzle' | 'snap' | 'horn';
+
+const HIT: Record<HitVoice, (k: number) => void> = {
+  // A game-console blip: the default, and anything robotic.
+  blip(k) {
+    const f = 349.23 * k;
+    tone({ f, to: f * 1.04, dur: 0.13, type: 'square', vol: 0.1 });
+    tone({ f: f * 2, dur: 0.09, type: 'triangle', vol: 0.085, at: 0.025 });
+    noise({ dur: 0.04, vol: 0.02, f: 7500 });
+  },
+  // An upvote: a chirp that slides up an octave.
+  vote(k) {
+    const f = 294 * k;
+    tone({ f, to: f * 2, dur: 0.11, type: 'triangle', vol: 0.17 });
+    tone({ f: f * 2, to: f * 4, dur: 0.09, type: 'square', vol: 0.035, at: 0.02 });
+  },
+  // Money: two bright notes, a fifth apart.
+  coin(k) {
+    const f = 523.25 * k;
+    tone({ f, dur: 0.06, type: 'square', vol: 0.075 });
+    tone({ f: f * 1.5, dur: 0.2, type: 'square', vol: 0.075, at: 0.055 });
+    tone({ f: f * 3, dur: 0.12, type: 'sine', vol: 0.03, at: 0.055 });
+  },
+  // Water and paint: a splash that falls, over a bloop.
+  water(k) {
+    const j = k ** 0.7;
+    noise({ dur: 0.15, vol: 0.13, type: 'bandpass', f: 1500 * j, to: 500 * j, q: 1.4, attack: 0.004 });
+    tone({ f: 520 * j, to: 240 * j, dur: 0.1, type: 'sine', vol: 0.13 });
+  },
+  // Typing: a key clack.
+  key(k) {
+    const j = k ** 0.8;
+    noise({ dur: 0.022, vol: 0.16, f: 2600 * j, attack: 0.001 });
+    tone({ f: 260 * j, dur: 0.035, type: 'square', vol: 0.12, attack: 0.002 });
+    tone({ f: 520 * j, dur: 0.05, type: 'triangle', vol: 0.14, at: 0.012, attack: 0.002 });
+  },
+  // Stamps, gavels, hammers, slabs: a thud with a crack on top.
+  stamp(k) {
+    const j = k ** 0.6;
+    tone({ f: 150 * j, to: 55 * j, dur: 0.17, type: 'sine', vol: 0.17, attack: 0.003 });
+    tone({ f: 420 * j, dur: 0.04, type: 'triangle', vol: 0.1, attack: 0.001 });
+    noise({ dur: 0.05, vol: 0.09, type: 'lowpass', f: 1100 * j, attack: 0.001 });
+  },
+  // Closing, bursting, bubble-wrap: a pop.
+  pop(k) {
+    tone({ f: 380 * k, to: 900 * k, dur: 0.065, type: 'sine', vol: 0.15, attack: 0.004 });
+    noise({ dur: 0.02, vol: 0.035, f: 4000, attack: 0.002 });
+  },
+  // Dings, chimes, doorbells, "done!".
+  bell(k) {
+    const f = 587.33 * k;
+    tone({ f, dur: 0.38, type: 'sine', vol: 0.095, attack: 0.002 });
+    tone({ f: f * 2, dur: 0.2, type: 'triangle', vol: 0.04, attack: 0.002 });
+    tone({ f: f * 2.76, dur: 0.14, type: 'sine', vol: 0.03, attack: 0.002 });
+  },
+  // Electricity and lasers: a zap that falls.
+  zap(k) {
+    const j = k ** 0.8;
+    tone({ f: 1100 * j, to: 240 * j, dur: 0.1, type: 'sawtooth', vol: 0.15 });
+    tone({ f: 330 * j, dur: 0.06, type: 'square', vol: 0.08 });
+  },
+  // A plucked string: replies, chains, zen gardens.
+  pluck(k) {
+    const f = 392 * k;
+    tone({ f, dur: 0.24, type: 'triangle', vol: 0.15, attack: 0.002 });
+    tone({ f: f * 2, dur: 0.05, type: 'square', vol: 0.04, attack: 0.001 });
+  },
+  // Scrolling, swiping, sending: a quick rush of air upwards.
+  swipe(k) {
+    const j = k ** 0.7;
+    noise({ dur: 0.12, vol: 0.24, type: 'bandpass', f: 700 * j, to: 3600 * j, q: 1.6, attack: 0.02 });
+    tone({ f: 300 * j, to: 620 * j, dur: 0.09, type: 'sine', vol: 0.11 });
+  },
+  // Footsteps and dance steps.
+  step(k) {
+    const j = k ** 0.7;
+    tone({ f: 210 * j, to: 110 * j, dur: 0.07, type: 'triangle', vol: 0.2, attack: 0.002 });
+    noise({ dur: 0.03, vol: 0.07, type: 'lowpass', f: 1400 * j, attack: 0.001 });
+  },
+  // Frying.
+  sizzle(k) {
+    const j = k ** 0.7;
+    noise({ dur: 0.13, vol: 0.13, f: 3200 * j, attack: 0.01 });
+    tone({ f: 220 * j, to: 300 * j, dur: 0.09, type: 'sawtooth', vol: 0.08 });
+  },
+  // A camera shutter or a finger snap: spotting, catching, tagging.
+  snap(k) {
+    const j = k ** 0.8;
+    noise({ dur: 0.016, vol: 0.16, f: 4200, attack: 0.002 });
+    noise({ dur: 0.022, vol: 0.16, f: 3000, at: 0.05, attack: 0.001 });
+    tone({ f: 880 * j, dur: 0.05, type: 'sine', vol: 0.13, at: 0.05, attack: 0.002 });
+  },
+  // A megaphone honk.
+  horn(k) {
+    const j = k ** 0.8;
+    tone({ f: 233 * j, dur: 0.12, type: 'sawtooth', vol: 0.13, attack: 0.008 });
+    tone({ f: 349.6 * j, dur: 0.12, type: 'square', vol: 0.06, attack: 0.008 });
+  },
 };
 
 // iPhones mute Web Audio while the ring switch is on silent, though speech still plays.
@@ -282,14 +406,12 @@ export const sfx = {
    * with every hit in a row, for two and a half octaves, so a streak winds up like a
    * siren and a miss drops it back to the bottom.
    */
-  good(combo: number) {
+  good(combo: number, voice: HitVoice = 'blip') {
     const step = Math.min(combo - 1, CLIMB);
-    const f = 349.23 * semis(step);
-    tone({ f, to: f * 1.04, dur: 0.13, type: 'square', vol: 0.1 });
-    tone({ f: f * 2, dur: 0.09, type: 'triangle', vol: 0.085, at: 0.025 });
+    const k = semis(step);
+    HIT[voice](k);
     // At the top of the climb a shimmer keeps each hit feeling like more.
-    if (combo - 1 > CLIMB) tone({ f: f * 3, dur: 0.07, type: 'triangle', vol: 0.04, at: 0.05 });
-    noise({ dur: 0.04, vol: 0.02, f: 7500 });
+    if (combo - 1 > CLIMB) tone({ f: 1046.5 * k, dur: 0.07, type: 'triangle', vol: 0.04, at: 0.05 });
   },
   /** A miss: a two-step falling buzz that cannot be mistaken for anything good. */
   bad() {
@@ -308,7 +430,7 @@ export const sfx = {
     noise({ dur: 0.07, vol: 0.06, f: 1500 });
     tone({ f: 261.63 * semis([0, 4, 7, 12, 14, 16][i % 6]), dur: 0.16, type: 'sawtooth', vol: 0.11 });
   },
-  whoosh: () => NAMED.whoosh(),
+  whoosh: () => NAMED.whoosh(1),
   count(n: number) {
     tone({ f: n > 0 ? 660 : 1320, dur: 0.14, vol: 0.11 });
     kick(0, 0.14);
@@ -318,7 +440,7 @@ export const sfx = {
     noise({ dur: 0.35, vol: 0.05, f: 3000, attack: 0.01 });
     kick(0, 0.2);
   },
-  tick: () => NAMED.tick(),
+  tick: () => NAMED.tick(1),
   roundEnd() {
     noise({ dur: 0.7, vol: 0.06, f: 5000, attack: 0.005 });
     kick(0, 0.18);
@@ -340,7 +462,8 @@ export const sfx = {
     arp([0, 0, 0, 4, 7, 12, 7, 12, 16, 19, 24], 0.1, { dur: 0.2 });
     cheer(0.5, 1.8);
   },
-  named(name: string) {
-    NAMED[name]?.();
+  /** A named one-off. Pass the current streak and it is pitched up to match, to an octave at most. */
+  named(name: string, combo = 0) {
+    NAMED[name]?.(semis(Math.min(Math.max(0, combo), 24) / 2));
   },
 };

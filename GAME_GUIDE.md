@@ -81,6 +81,12 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   `fx.shake()`, `fx.sound(name)` for bigger moments. Colours: red, green, blue, gold,
   white, purple. Sounds: pop, coin, zap, whoosh, thud, tick, power, laser, ding, boing.
 
+Every `good()` plays the game's hit sound, a semitone higher for each hit in a streak.
+Which sound that is comes from one table, `src/client/hits.ts`: pick the voice that
+matches what the player is doing (`vote`, `coin`, `water`, `key`, `stamp`, `pop`,
+`bell`, `zap`, `pluck`, `swipe`, `step`, `sizzle`, `snap`, `horn`, or the default
+`blip`) and add a line for your game. `fx.sound(name)` one-offs climb with the streak too.
+
 `hint(t)` drives the automated play-tester (and never scoring). Return `null` to
 wait, a button to tap it now, an array to tap a chord, or `{ hold: [...] }` for the
 exact set of buttons that should be held down at this moment.

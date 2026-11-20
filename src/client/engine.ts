@@ -10,6 +10,7 @@ import { createBot } from './bot';
 import { createFx } from './fx';
 import { COLOR, clamp1000, h, type Btn, type FxColor, type GameInst } from './games/common';
 import { GAMES } from './games/registry.gen';
+import { HIT_VOICE } from './hits';
 import { music, sfx } from './sfx';
 import { voice } from './voice';
 
@@ -268,7 +269,7 @@ export function runMatch(o: {
         down,
         good(at, text) {
           setCombo(combo + 1);
-          sfx.good(combo);
+          sfx.good(combo, HIT_VOICE[round.id]);
           fx.burst(at ?? null, 'gold', 3);
           fx.lights('green');
           if (text) fx.pop(at ?? null, text, 'gold');
@@ -292,7 +293,7 @@ export function runMatch(o: {
           poof: fx.poof,
           flash: fx.flash,
           shake: fx.shake,
-          sound: (name) => sfx.named(name),
+          sound: (name) => sfx.named(name, combo),
         },
       });
     } catch (err) {
