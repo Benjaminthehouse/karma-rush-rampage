@@ -11,43 +11,42 @@ let noiseBuf: AudioBuffer | null = null;
 const FX_GAIN = 1.9;
 const MUSIC_GAIN = 0.55;
 
-function audio(): AudioContext | null {
-  if (!settings.get('sound')) return null;
+/** Builds the audio graph. Only ever called from inside a tap, click or key press (see unlock). */
+function build() {
+  // Built in full before anything is kept, so a failure can never leave a half-wired
+  // graph that plays into nothing.
+  const ctx = new AudioContext();
+  const fx = ctx.createGain();
+  fx.gain.value = FX_GAIN;
+  const tune = ctx.createGain();
+  tune.gain.value = MUSIC_GAIN;
   try {
-    if (!ac) {
-      // Built in full before anything is kept, so a failure can never leave a half-wired
-      // graph that plays into nothing.
-      const ctx = new AudioContext();
-      const fx = ctx.createGain();
-      fx.gain.value = FX_GAIN;
-      const tune = ctx.createGain();
-      tune.gain.value = MUSIC_GAIN;
-      try {
-        const comp = ctx.createDynamicsCompressor();
-        comp.threshold.value = -16;
-        comp.ratio.value = 6;
-        comp.connect(ctx.destination);
-        fx.connect(comp);
-        tune.connect(comp);
-      } catch {
-        // No compressor on this device: straight to the speaker is better than silence.
-        fx.connect(ctx.destination);
-        tune.connect(ctx.destination);
-      }
-      const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
-      const data = buf.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-      ac = ctx;
-      out = fx;
-      beat = tune;
-      noiseBuf = buf;
-    }
-    if (ac.state !== 'running') void ac.resume();
-    return ac;
-  } catch (err) {
-    lastError = `audio: ${String(err)}`;
-    return null;
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -16;
+    comp.ratio.value = 6;
+    comp.connect(ctx.destination);
+    fx.connect(comp);
+    tune.connect(comp);
+  } catch {
+    // No compressor on this device: straight to the speaker is better than silence.
+    fx.connect(ctx.destination);
+    tune.connect(ctx.destination);
   }
+  const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  ac = ctx;
+  out = fx;
+  beat = tune;
+  noiseBuf = buf;
+}
+
+/** The audio context, if a gesture has started one. Sounds asked for before that are skipped. */
+function audio(): AudioContext | null {
+  if (!settings.get('sound') || !ac) return null;
+  // Phones pause audio for calls, other apps and speech. Asking again is free and often enough.
+  if (ac.state !== 'running') void ac.resume().catch(() => undefined);
+  return ac;
 }
 
 /** Applied to every sound started while they are set: lets one voice be played louder, softer or a moment later. */
@@ -348,12 +347,48 @@ function unmuteIos() {
 }
 
 let primed = false;
+// Watchdog state: a phone can leave the context "running" with its clock frozen (after
+// speech, a call, another app), or refuse to resume it. Either way the fix is a new context,
+// and only a gesture may make one.
+let lastClock = -1;
+let stalls = 0;
+let refusals = 0;
+let lastRefusal = 0;
+let rebuilds = 0;
 
 export const sfx = {
-  /** Call from a user gesture so the audio context may start. */
+  /**
+   * Call from a real user gesture (finger up, click, key down), never from a timer or a
+   * finger landing: phones only let sound start from one. Starts audio the first time,
+   * and replaces an audio context that has died.
+   */
   unlock: () => {
     if (!settings.get('sound')) return;
     unmuteIos();
+    try {
+      // One tap fires several gesture events, so a refusal is counted once per tap.
+      const now = performance.now();
+      if (ac && ac.state === 'running') refusals = 0;
+      else if (ac && now - lastRefusal > 400) {
+        refusals++;
+        lastRefusal = now;
+      }
+      if (ac && (stalls >= 2 || refusals >= 3)) {
+        // Dead or stuck: throw it away and start a fresh one, here inside the gesture.
+        const old = ac;
+        ac = out = beat = noiseBuf = null;
+        primed = false;
+        stalls = refusals = 0;
+        lastClock = -1;
+        musicNext = 0;
+        rebuilds++;
+        void old.close().catch(() => undefined);
+      }
+      if (!ac) build();
+    } catch (err) {
+      lastError = `audio: ${String(err)}`;
+      return;
+    }
     const a = audio();
     if (!a || primed) return;
     // Phones only start the audio clock once a sound is played from inside a gesture, so a
@@ -368,6 +403,16 @@ export const sfx = {
     }
     if (a.state === 'running') primed = true;
   },
+  /** Resolves once the audio clock is running (at once if it already is); null with no audio. */
+  ready: (): Promise<void> | null => (ac ? (ac.state === 'running' ? Promise.resolve() : ac.resume()) : null),
+  /** Call a couple of times a second: notices an audio clock that has stopped advancing. */
+  watch() {
+    if (!ac) return;
+    if (ac.state === 'running' && ac.currentTime === lastClock) {
+      if (++stalls === 2) void ac.resume().catch(() => undefined);
+    } else stalls = 0;
+    lastClock = ac.currentTime;
+  },
   /** For the menu's status line: off, none (no audio support), or the audio clock's state. */
   state: (): string => (!settings.get('sound') ? 'off' : (ac?.state ?? 'not started')),
   /** Everything needed to tell why a phone is silent, in one line. */
@@ -376,6 +421,8 @@ export const sfx = {
     const bits = [ac ? `${ac.state} ${ac.currentTime.toFixed(1)}s` : 'not started'];
     const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
     if (sessionAsked) bits.push(`session ${session ? session.type : 'none'}`);
+    if (stalls >= 2) bits.push('stalled');
+    if (rebuilds) bits.push(`restarted ${rebuilds}x`);
     if (lastError) bits.push(lastError.slice(0, 60));
     return bits.join(' · ');
   },

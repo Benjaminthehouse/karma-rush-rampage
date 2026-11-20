@@ -26,9 +26,9 @@ export const voice = {
   available: () => !!synth,
   /** Call from a user gesture once; mobile browsers refuse speech before that. */
   unlock() {
-    // Tried twice at most: a web view that never starts the utterance must not have one
+    // Tried a few times at most: a web view that never starts the utterance must not have one
     // queued on every tap, which jams the speech engine and freezes the page.
-    if (!synth || unlocked || tries >= 2 || !settings.get('voice') || !settings.get('sound')) return;
+    if (!synth || unlocked || tries >= 6 || !settings.get('voice') || !settings.get('sound')) return;
     tries++;
     try {
       const u = new SpeechSynthesisUtterance(' ');

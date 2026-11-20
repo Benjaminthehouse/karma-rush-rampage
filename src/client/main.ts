@@ -68,7 +68,7 @@ function setPads(labels: [string, string, string], actions?: ((() => void) | nul
 
 const held = [false, false, false];
 /** Shown on the menu so a tester can tell which build they are looking at. */
-const BUILD = 21;
+const BUILD = 22;
 let dayLine = '';
 /** The menu's status line, with the audio state so "no sound" can be told apart by cause. */
 function paintStatus() {
@@ -83,16 +83,19 @@ window.setInterval(() => {
 
 // Mobile browsers only let sound and speech start from an "activation" gesture, and a
 // finger landing is not one: a finger lifting, a click or a key press is.
-for (const type of ['pointerup', 'touchend', 'click', 'keydown'] as const) {
-  document.addEventListener(
-    type,
-    () => {
-      sfx.unlock();
-      voice.unlock();
-    },
-    { passive: true }
-  );
+function unlockSound() {
+  sfx.unlock();
+  // Speech is unlocked a moment after audio, not in the same instant: on iPhones the two
+  // compete for the audio device, and starting both at once can leave the game silent.
+  if (sfx.state() === 'running') voice.unlock();
+  else void sfx.ready()?.then(() => voice.unlock(), () => undefined);
 }
+for (const type of ['pointerup', 'touchend', 'click', 'keydown'] as const) {
+  document.addEventListener(type, unlockSound, { passive: true });
+}
+// A mouse button going down counts as a gesture too (a finger landing does not).
+document.addEventListener('pointerdown', (e) => e.pointerType === 'mouse' && unlockSound(), { passive: true });
+window.setInterval(() => sfx.watch(), 500);
 
 /** A short buzz on phones that support it. */
 function buzz(ms: number) {
@@ -105,7 +108,6 @@ function buzz(ms: number) {
 }
 
 function press(b: Btn) {
-  sfx.unlock();
   if (held[b]) return;
   held[b] = true;
   const el = padEls[b];
