@@ -14,17 +14,20 @@ kcccccbk
 
 const STEPS = ['INSTALL', 'BUILD', 'DEPLOY'];
 const THINGS = ['left-pad', 'node_modules', 'the vibes', 'prod', 'a fix', 'v2-final', 'dark mode', 'the hotfix', 'everything'];
-const OVER = 1.05; // a bar this far past 100 crashes on its own; any stop before that still counts
+const NEAR = 0.85; // the gold zone on every track starts here (15% wide in the CSS): stop in it to ship
+const CLOSE = 0.7; // a stop just short of gold still earns half
+const OVER = 1.07; // a bar this far past 100 crashes on its own; a stop a hair late still ships
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
-  const par = 10 + Math.floor(level * 0.75);
-  // The gold zone drawn on every track (7% wide in the CSS): stop inside it, or on 100, for full marks.
-  // It stays the same size at every level so the picture never lies; faster bars make later rounds harder.
-  const near = 0.93;
+  // Three sets fit in a round: nine bars and a bonus for each clean set. Par asks for most of them.
+  const par = 9 + Math.floor(level * 0.5);
+  // The zone is the same size at every level so the picture never lies; faster bars make
+  // later rounds harder. Even then the window to stop a bar is about a fifth of a second.
+  const near = NEAR;
   const sets = Array.from({ length: 14 }, () => {
     // Finish times are spread out so two bars never need stopping in the same instant.
-    const gap = () => 330 - level * 18 + rng() * 240;
-    const first = 820 - level * 60 + rng() * 300;
+    const gap = () => 360 - level * 15 + rng() * 200;
+    const first = 1100 - level * 50 + rng() * 250;
     const second = first + gap();
     return shuffled(rng, [first, second, second + gap()]);
   });
@@ -32,7 +35,6 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let startAt = 250;
   const stopped: (number | null)[] = [null, null, null];
   let points = 0;
-  let fails = 0;
 
   // The scene: the Dev's cave. Three monitors on the wall run an install, a build and a
   // deploy; the Dev sits at the desk below and sweats as each bar closes in on 100.
@@ -99,7 +101,6 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     b.rowEl.classList.add('stopped');
     setFill(b, v); // freeze the bar exactly where it was stopped
     if (v >= OVER) {
-      fails++;
       b.rowEl.classList.add('crashed');
       setPct(b, 'CRASH');
       react('dead', now);
@@ -109,8 +110,14 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       setPct(b, `${Math.min(100, Math.round(v * 100))}%`);
       react('happy', now);
       good(b.rowEl, v >= 0.995 ? 'EXACTLY 100' : 'SHIPPED');
+    } else if (v >= CLOSE) {
+      // Just short of gold: half marks, and no buzzer, so a near miss still feels like progress.
+      points += 0.5;
+      setPct(b, `${Math.round(v * 100)}%`);
+      react('idle', now);
+      fx.pop(b.rowEl, 'CLOSE! +½', 'white');
+      fx.sound('tick');
     } else {
-      fails += 0.5;
       setPct(b, `${Math.round(v * 100)}%`);
       react('sad', now);
       bad(b.rowEl, 'TOO EARLY');
@@ -127,7 +134,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       fx.sound('coin');
     }
     set++;
-    startAt = t + 380;
+    startAt = t + 300;
     resting = true;
   }
 
@@ -161,10 +168,11 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       finishSet(t);
       look(t < reactUntil ? reaction : top >= 0.78 ? 'shock' : 'idle');
     },
-    score: () => clamp1000((1000 * (points - fails)) / par),
+    // Mistakes cost the bar, never points already earned.
+    score: () => clamp1000((1000 * points) / par),
     hint(t) {
       if (resting || t < startAt) return null;
-      for (const i of [0, 1, 2] as Btn[]) if (stopped[i] === null && value(i, t) >= 0.965) return i;
+      for (const i of [0, 1, 2] as Btn[]) if (stopped[i] === null && value(i, t) >= 0.95) return i;
       return null;
     },
   };

@@ -7,9 +7,9 @@
 .g-ninetynine .screen { flex: 1 1 auto; align-self: stretch; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 0.3em; padding: 0.35em 0.35em 0.3em; background: #10142e; color: #c4cbe4; box-shadow: 0 0 0 0.3em var(--c), 0 0 0 0.5em #0b1020, 0.3em 0.35em 0 0.5em #0b1020; }
 .g-ninetynine .step { font-size: 0.85em; line-height: 1; color: var(--c); text-align: center; }
 .g-ninetynine .thing { font-size: 0.68em; line-height: 1.1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.g-ninetynine .track { position: relative; flex: 1 1 1.3em; min-height: 1.3em; max-height: 3em; background: #0b1020; box-shadow: inset 0 0 0 0.12em #646e9c; overflow: hidden; }
+.g-ninetynine .track { position: relative; flex: 1 1 2.6em; min-height: 1.6em; max-height: 4.5em; background: #0b1020; box-shadow: inset 0 0 0 0.12em #646e9c; overflow: hidden; }
 .g-ninetynine .track i { position: absolute; left: 0.12em; right: 0.12em; top: 0.12em; bottom: 0.12em; background: var(--c); transform: scaleX(0); transform-origin: left; }
-.g-ninetynine .track b { position: absolute; right: 0; top: 0; bottom: 0; width: 7%; background: repeating-linear-gradient(135deg, #ffcf3f 0 0.25em, #0b1020 0.25em 0.5em); }
+.g-ninetynine .track b { position: absolute; right: 0; top: 0; bottom: 0; width: 15%; background: #ffcf3f; box-shadow: inset 0.14em 0 0 0 #0b1020, inset 0 0.14em 0 0 #fff0a8; }
 .g-ninetynine .pct { font-size: 1.5em; line-height: 1; text-align: center; font-variant-numeric: tabular-nums; color: #eef1ff; }
 .g-ninetynine .stand { width: 1.2em; height: 0.9em; margin-top: 0.5em; background: #3a4370; box-shadow: 0 0 0 0.16em #0b1020; }
 .g-ninetynine .mon.stopped .pct { color: #8cf28e; }
