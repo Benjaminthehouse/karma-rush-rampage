@@ -3,33 +3,18 @@
 .g-repostradar .rule { padding: 0.15em 0.7em; background: #fff0a8; font-size: 1.2em; white-space: nowrap; box-shadow: 0 0 0 0.18em #0b1020, 0.25em 0.3em 0 0.18em #0b1020; transform: rotate(-1.5deg); }
 
 /* The evidence board: cork in a wooden frame, three posts pinned on it as polaroids, red string between them. */
-.g-repostradar .board { position: relative; flex: none; display: flex; align-items: center; width: min(100%, 26em); padding: 0.9em 0.5em 0.6em; background: #c98a4a; background-image: radial-gradient(#a8703a 18%, #0000 22%); background-size: 0.7em 0.7em; box-shadow: 0 0 0 0.3em #6e3f1c, 0 0 0 0.5em #0b1020, 0.35em 0.4em 0 0.5em #0b102066; }
-.g-repostradar .string { position: absolute; left: 16%; right: 16%; top: 1.15em; height: 0.18em; background: #c8323c; transform: rotate(-2deg); }
+.g-repostradar .board { position: relative; flex: none; display: flex; align-items: center; width: min(100%, 26em); padding: 0.9em 0.5em 0.6em; background: conic-gradient(at 25% 25%, #0000 75%, #a8703a 0) 0 0 / 0.7em 0.7em, conic-gradient(at 25% 25%, #0000 75%, #a8703a 0) 0.35em 0.35em / 0.7em 0.7em, #c98a4a; box-shadow: 0 0 0 0.3em #6e3f1c, 0 0 0 0.5em #0b1020, 0.35em 0.4em 0 0.5em #0b102066; }
+.g-repostradar .string { position: absolute; left: 16%; right: 16%; top: 1.15em; height: 0.2em; background: #c8323c; }
 .g-repostradar .row { position: relative; display: flex; gap: 0.5em; width: 100%; }
 .g-repostradar .stamp { position: absolute; left: 50%; top: -0.8em; }
-.g-repostradar .tile { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 0.25em; padding: 0.35em 0.35em 0.3em; background: #fff; box-shadow: 0 0 0 0.16em #0b1020, 0.2em 0.25em 0 0.16em #0b102088; transform: rotate(-2deg); }
-.g-repostradar .tile:nth-child(2) { transform: rotate(1.5deg); }
-.g-repostradar .tile:nth-child(3) { transform: rotate(-1deg); }
+.g-repostradar .tile { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 0.25em; padding: 0.35em 0.35em 0.3em; background: #fff; box-shadow: 0 0 0 0.16em #0b1020, 0.2em 0.25em 0 0.16em #0b102088; }
+/* Pinned a little unevenly; offsets rather than tilts keep the pixels square. */
+.g-repostradar .tile:nth-child(2) { transform: translateY(0.2em); }
+.g-repostradar .tile:nth-child(3) { transform: translateY(-0.1em); }
 .g-repostradar .row.locked .tile { box-shadow: 0 0 0 0.16em #0b1020, 0 0 0 0.36em #ff4b55; }
 .g-repostradar .pin { position: absolute; z-index: 1; left: 50%; top: -0.55em; margin-left: -0.5em; }
 .g-repostradar .photo { aspect-ratio: 1; max-height: 5.8em; display: flex; align-items: center; justify-content: center; background: #1a1f40; }
 .g-repostradar .tile span { font-size: 0.8em; line-height: 1.1; text-align: center; white-space: nowrap; }
-.g-repostradar .photo i { display: block; width: 3.4em; height: 3.4em; background: var(--tint); }
-.g-repostradar .gold { --tint: var(--gold); }
-.g-repostradar .purple { --tint: var(--purple); }
-.g-repostradar .ink { --tint: var(--ink); }
-.g-repostradar .teal { --tint: #2fd6c4; }
-.g-repostradar .pink { --tint: #ff7ac8; }
-.g-repostradar .disc { border-radius: 50%; }
-.g-repostradar .box { border-radius: 0; }
-.g-repostradar .tri { clip-path: polygon(50% 4%, 100% 96%, 0 96%); }
-.g-repostradar .star { clip-path: polygon(50% 0, 62% 35%, 100% 38%, 70% 60%, 80% 100%, 50% 76%, 20% 100%, 30% 60%, 0 38%, 38% 35%); }
-.g-repostradar .gem { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
-.g-repostradar .drop { border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%; clip-path: polygon(50% 0, 100% 62%, 100% 100%, 0 100%, 0 62%); }
-.g-repostradar .cross { clip-path: polygon(34% 0, 66% 0, 66% 34%, 100% 34%, 100% 66%, 66% 66%, 66% 100%, 34% 100%, 34% 66%, 0 66%, 0 34%, 34% 34%); }
-.g-repostradar .bolt { clip-path: polygon(62% 0, 8% 56%, 44% 56%, 32% 100%, 92% 40%, 56% 40%); }
-.g-repostradar .moon { border-radius: 50%; -webkit-mask: radial-gradient(circle at 78% 32%, #0000 49%, #000 50%); mask: radial-gradient(circle at 78% 32%, #0000 49%, #000 50%); }
-.g-repostradar .ring { border-radius: 50%; -webkit-mask: radial-gradient(circle, #0000 32%, #000 33%); mask: radial-gradient(circle, #0000 32%, #000 33%); }
 
 /* The desk: the Lurker behind it, the magnifying glass swinging to your pick, the case files piling up. */
 .g-repostradar .desk { position: relative; flex: none; width: min(100%, 26em); height: 8em; }
@@ -38,7 +23,6 @@
 .g-repostradar .glassway { position: absolute; z-index: 2; left: 33.333%; width: 33.334%; top: -0.6em; display: flex; justify-content: center; transition: transform 0.1s ease-out; }
 .g-repostradar .glassway.at-0 { transform: translateX(-100%); }
 .g-repostradar .glassway.at-2 { transform: translateX(100%); }
-.g-repostradar .glass { transform: rotate(-80deg); }
 .g-repostradar .files { position: absolute; z-index: 2; right: 0.3em; bottom: 0.35em; display: flex; align-items: flex-end; gap: 0.12em; }
 .g-repostradar .case { width: 0.9em; height: 1.2em; background: #ffcf3f; box-shadow: 0 0 0 0.12em #0b1020, inset 0 -0.3em 0 0 #ff4b55; }
 .g-repostradar .count { margin-left: 0.3em; padding: 0 0.35em; background: #fff; font-size: 0.85em; white-space: nowrap; box-shadow: 0 0 0 0.14em #0b1020; }

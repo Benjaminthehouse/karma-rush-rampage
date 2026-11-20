@@ -23,7 +23,7 @@
 
 /* The bed: pillow, scroller, quilt pulled up to the chin, a nightstand with the alarm clock. */
 .g-doomscroll .bed { position: relative; flex: none; align-self: stretch; height: 8.2em; }
-.g-doomscroll .glow { position: absolute; z-index: 1; left: 3em; bottom: 4.5em; width: 9em; height: 4em; background: #3fe0ff; opacity: 0.18; clip-path: polygon(55% 0, 100% 0, 40% 100%, 0 100%); }
+.g-doomscroll .glow { position: absolute; z-index: 1; left: 3em; bottom: 4.5em; opacity: 0.22; }
 .g-doomscroll .sleeper { position: absolute; left: 0.3em; bottom: 1.2em; width: 9.24em; height: 6.72em; }
 .g-doomscroll .pillow { position: absolute; left: 0; bottom: 0; }
 .g-doomscroll .sleeper > .actor, .g-doomscroll .sleeper > .red { position: absolute; left: 1.4em; bottom: 0.5em; }

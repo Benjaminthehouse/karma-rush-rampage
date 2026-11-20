@@ -1,5 +1,5 @@
 import './hypeballoon.css';
-import { actor, COLOR, defineSprite, h, padDots, pulse, randBtn, ratio, shuffled, sprite, type ActorMood, type GameFactory } from './common';
+import { actor, COLOR, defineSprite, h, padDots, pulse, randBtn, ratio, setSprite, shuffled, sprite, type ActorMood, type GameFactory } from './common';
 
 // The Dev's foot pump: a pedal on a bellows. Its top half squashes while pumping.
 defineSprite('hypeballoon-pump', `
@@ -14,6 +14,47 @@ defineSprite('hypeballoon-pump', `
 ..kkkkkkkkkkkk..
 .kxxxxxxxxxxxdk.
 kkkkkkkkkkkkkkkk`);
+
+// The balloon at full size (40 art pixels across, a knot below), lit from the top left, and
+// the dashed pop line it must not touch. Both are scaled to the sky box; pumping only scales.
+const R = 20;
+const inside = (x: number, y: number) => (x - R + 0.5) ** 2 + (y - R + 0.5) ** 2 <= R * R;
+defineSprite(
+  'hypeballoon-balloon',
+  Array.from({ length: 2 * R + 4 }, (_, y) => {
+    let row = '';
+    for (let x = 0; x < 2 * R; x++) {
+      const dx = x - R + 0.5;
+      const dy = y - R + 0.5;
+      if (y >= 2 * R - 1) {
+        // The knot.
+        const k = Math.abs(dx);
+        row += y === 2 * R + 3 ? (k < 3 ? 'k' : '.') : k < y - 2 * R + 1.5 ? 'a' : k < y - 2 * R + 2.5 ? 'k' : inside(x, y) ? 'k' : '.';
+        continue;
+      }
+      if (!inside(x, y)) row += '.';
+      else if (!inside(x - 1, y) || !inside(x + 1, y) || !inside(x, y - 1) || !inside(x, y + 1)) row += 'k';
+      else {
+        const hl = (dx + 7) ** 2 + (dy + 8) ** 2;
+        row += hl < 5 ? 'W' : hl < 16 ? 'L' : (dx + 4) ** 2 + (dy + 5) ** 2 > 19 * 19 ? 'a' : 'A';
+      }
+    }
+    return row;
+  }),
+);
+defineSprite(
+  'hypeballoon-line',
+  Array.from({ length: 64 }, (_, y) => {
+    let row = '';
+    for (let x = 0; x < 64; x++) {
+      const d = Math.hypot(x - 31.5, y - 31.5);
+      const ring = d <= 32 && d > 30.9;
+      const dash = Math.floor(((Math.atan2(y - 31.5, x - 31.5) + Math.PI) / (2 * Math.PI)) * 40) % 2 === 0;
+      row += ring && dash ? 'k' : '.';
+    }
+    return row;
+  }),
+);
 
 const APPS = [
   'To-do list, but AI',
@@ -80,9 +121,9 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
   const party = h('div', 'party');
   const sky = h('div', 'sky');
   const line = h('div', 'line');
-  line.append(h('span', '', 'POP LINE'));
+  line.append(sprite('hypeballoon-line', {}, 'ring'), h('span', '', 'POP LINE'));
   const balloon = h('div', 'balloon');
-  const skin = h('div', 'skin'); // the rubber: scaled, never resized, so pumping costs no layout
+  const skin = sprite('hypeballoon-balloon', { tone: 'red' }, 'skin'); // the rubber: scaled, never resized, so pumping costs no layout
   const text = h('div', 'text');
   const count = h('b');
   const which = h('i', 'which'); // which pad this colour is, for anyone who cannot tell the colours apart
@@ -175,6 +216,7 @@ export const create: GameFactory = ({ root, rng, level, down, good, bad, fx }) =
     buzz = -1;
     sky.className = 'sky';
     balloon.className = `balloon c-${COLOR[cur().col]}`;
+    setSprite(skin, 'hypeballoon-balloon', { tone: COLOR[cur().col] });
     wasTense = wasStuck = false;
     shownStep = -1;
     which.replaceChildren(padDots(cur().col));

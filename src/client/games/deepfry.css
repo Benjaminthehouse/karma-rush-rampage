@@ -33,8 +33,8 @@
 .g-deepfry .flare { position: absolute; top: 53%; width: 0; height: 0; }
 .g-deepfry .flare.l { left: 31.25%; }
 .g-deepfry .flare.r { left: 68.75%; }
-.g-deepfry .flare::before { content: ''; position: absolute; left: -1.7em; top: -1.7em; width: 3.4em; height: 3.4em; background: radial-gradient(circle, #fff 0 15%, #ff2a1f 15% 36%, #ff2a1f77 36% 60%, #0000 60%); transform: scale(var(--glow)); }
-.g-deepfry .flare::after { content: ''; position: absolute; left: -3.3em; top: -0.15em; width: 6.6em; height: 0.3em; background: #fff; transform: rotate(-16deg) scaleX(var(--glow)); }
+.g-deepfry .flare .glare { position: absolute; left: -1.7em; top: -1.7em; transform: scale(var(--glow)); }
+.g-deepfry .flare .streak { position: absolute; left: -3.3em; top: -1.1em; transform: scaleX(var(--glow)); }
 
 /* A finished meme goes nuclear, takes its stamp and fades off the fresh one underneath. */
 .g-deepfry .ghost { z-index: 4; filter: saturate(6) hue-rotate(-24deg) contrast(2.2) brightness(1.25); animation: g-deepfry-crisp 0.55s ease-in forwards; }
@@ -53,11 +53,10 @@
 @keyframes g-deepfry-ding { from { background: var(--gold); color: #0b1020; } }
 .g-deepfry .dials { display: flex; gap: 0.5em; }
 .g-deepfry .dial { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.4em; padding: 0.45em 0 0.35em; background: #fff; box-shadow: 0 0 0 0.14em #0b1020; }
-.g-deepfry .knob { --p: 0; --n: 8; position: relative; width: 3.8em; height: 3.8em; border-radius: 50%; background: conic-gradient(var(--c) calc(var(--p) * 1turn), #c4cbe4 0); box-shadow: 0 0 0 0.16em #0b1020; }
-.g-deepfry .knob::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: repeating-conic-gradient(from -2.5deg, #0b1020 0 5deg, #0000 0 calc(360deg / var(--n))); }
-.g-deepfry .knob::after { content: ''; position: absolute; inset: 21%; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 0.16em #0b1020, inset -0.26em -0.26em 0 0 var(--cd), inset 0.22em 0.22em 0 0 #ffffff77; }
-.g-deepfry .knob i { position: absolute; inset: 21%; z-index: 1; transform: rotate(calc(var(--p) * 1turn)); transition: transform 0.06s linear; }
-.g-deepfry .knob i::after { content: ''; position: absolute; left: 50%; top: 6%; width: 0.34em; height: 40%; margin-left: -0.17em; background: #0b1020; }
+.g-deepfry .knob { position: relative; width: 4.2em; height: 4.2em; }
+.g-deepfry .knob .ring { position: absolute; inset: 0; }
+.g-deepfry .knob .notch { position: absolute; }
+.g-deepfry .knob .turn { position: absolute; left: 0.8em; top: 0.8em; }
 .g-deepfry .knob.crank { animation: g-deepfry-crank 0.1s steps(2); }
 @keyframes g-deepfry-crank { 50% { transform: scale(1.14); } }
 .g-deepfry .name { font-size: 0.74em; letter-spacing: 0.05em; line-height: 1.2; padding: 0 0.45em 0.08em; background: var(--c); color: #0b1020; box-shadow: 0 0 0 0.14em #0b1020; }

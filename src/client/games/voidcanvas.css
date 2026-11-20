@@ -1,18 +1,27 @@
-/* The paint queue: the big blinking swatch is the colour to press now. */
-.g-voidcanvas .queue { display: flex; align-items: center; gap: 0.45em; }
-.g-voidcanvas .queue i { width: 1.8em; height: 1.8em; border-radius: 0.35em; background: var(--c); box-shadow: inset 0 -0.22em 0 var(--cd); opacity: 0.4; }
-.g-voidcanvas .queue i:first-child { width: 5.6em; height: 3em; margin-right: 0.35em; opacity: 1; display: grid; place-items: center; font-style: normal; font-weight: 900; letter-spacing: 0.06em; color: #071022; outline: 0.2em solid var(--ink); outline-offset: 0.14em; animation: g-voidcanvas-blink 0.3s steps(1) infinite; }
-.g-voidcanvas .queue i:nth-child(2) { opacity: 0.95; }
-.g-voidcanvas .queue i:nth-child(3) { opacity: 0.75; }
-.g-voidcanvas .queue i:nth-child(4) { opacity: 0.55; }
-@keyframes g-voidcanvas-blink { 50% { filter: brightness(1.4); } }
-/* Every new prompt punches in, so the same colour twice in a row still reads as a fresh one. */
-.g-voidcanvas .queue i:first-child.next { animation: g-voidcanvas-next 0.13s ease-out, g-voidcanvas-blink 0.3s steps(1) infinite; }
-@keyframes g-voidcanvas-next { from { transform: scale(0.76); } }
+/* A rooftop at night: the paint queue up top, the canvas in the middle, the painters' scaffold below. */
+.g-voidcanvas { justify-content: space-between !important; gap: 0.3em !important; padding: 0.6em 0.6em 0.5em !important; color: #eef1ff; }
 
-/* The canvas: art underneath, the void clipped over its right-hand side. */
-.g-voidcanvas .canvas { position: relative; width: min(100%, 17em); aspect-ratio: 20 / 14; background: #eef1ff; box-shadow: 0 0 0 0.22em var(--line); }
-.g-voidcanvas .canvas svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* The paint queue: buckets in the colours to press, the big one first is now. */
+.g-voidcanvas .queue { display: flex; align-items: flex-end; gap: 0.25em; }
+.g-voidcanvas .now { position: relative; display: flex; align-items: flex-end; gap: 0.3em; margin-right: 0.3em; }
+.g-voidcanvas .now.next { animation: g-voidcanvas-next 0.13s ease-out; }
+@keyframes g-voidcanvas-next { from { transform: scale(0.8); } }
+.g-voidcanvas .label { position: relative; display: flex; align-items: center; gap: 0.3em; margin-bottom: 0.3em; padding: 0.2em 0.4em; background: #f4f6ff; color: var(--cd); font-size: 1.1em; letter-spacing: 0.04em; box-shadow: 0 0 0 0.16em #0b1020, 0.22em 0.26em 0 0.16em #0b1020; }
+/* A blinking frame on the label: only opacity animates. */
+.g-voidcanvas .label::after { content: ''; position: absolute; inset: -0.38em; box-shadow: 0 0 0 0.14em var(--c); animation: g-voidcanvas-blink 0.3s steps(1) infinite; }
+@keyframes g-voidcanvas-blink { 50% { opacity: 0; } }
+.g-voidcanvas .label .pad-dots i { background: #c4cbe4; }
+.g-voidcanvas .label .pad-dots i.on { background: var(--c); }
+.g-voidcanvas .later { margin-bottom: 0.1em; }
+.g-voidcanvas .l1 { opacity: 0.95; }
+.g-voidcanvas .l2 { opacity: 0.75; }
+.g-voidcanvas .l3 { opacity: 0.55; }
+.g-voidcanvas .l4 { opacity: 0.4; }
+
+/* The canvas: 20 by 14 pixels, 0.65em each. The art underneath, the void sliding over it. */
+.g-voidcanvas .canvas { position: relative; flex: none; width: 13em; height: 9.1em; box-shadow: 0 0 0 0.22em #0b1020, 0 0 0 0.44em #8a5a2c, 0 0 0 0.62em #0b1020, 0.5em 0.6em 0 0.62em #0b102099; }
+.g-voidcanvas .art { position: absolute; inset: 0; overflow: hidden; background: #eef1ff; }
+.g-voidcanvas .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .g-voidcanvas .p-r { fill: var(--red); }
 .g-voidcanvas .p-o { fill: #ff9a3d; }
 .g-voidcanvas .p-y { fill: var(--gold); }
@@ -21,42 +30,60 @@
 .g-voidcanvas .p-p { fill: var(--purple); }
 .g-voidcanvas .p-n { fill: #ff7ac8; }
 .g-voidcanvas .p-k { fill: var(--bg); }
-.g-voidcanvas .canvas::after { content: ''; position: absolute; inset: 0; background-image: linear-gradient(90deg, #0b10201f 0.07em, #0000 0), linear-gradient(#0b10201f 0.07em, #0000 0); background-size: 5% 7.1429%; }
-.g-voidcanvas .void { position: absolute; inset: 0; background-color: #05060f; background-image: linear-gradient(90deg, #b14bff24 50%, #0000 0), linear-gradient(#3f8cff1a 50%, #0000 0); background-size: 10% 100%, 100% 14.2857%; clip-path: inset(0 0 0 calc(var(--held) * 5%)); animation: g-voidcanvas-creep 0.9s linear infinite; }
-/* The stripes crawl one tile to the left, forever: the void never stops coming. */
-@keyframes g-voidcanvas-creep { to { background-position: -11.1111% 0, 0 0; } }
-.g-voidcanvas .front, .g-voidcanvas .splat { position: absolute; z-index: 1; top: -0.45em; bottom: -0.45em; width: 5%; background: var(--c); border-radius: 0.12em; }
-.g-voidcanvas .front { left: calc(var(--held) * 5%); box-shadow: 0 0 0 0.14em var(--ink), 0 0 1.1em 0.25em var(--c); animation: g-voidcanvas-blink 0.3s steps(1) infinite; }
-.g-voidcanvas .splat { opacity: 0; }
-.g-voidcanvas .bite { position: absolute; top: 0; bottom: 0; background: var(--purple); opacity: 0; }
+.g-voidcanvas .art::after { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; background-image: linear-gradient(90deg, #0b10201f 0.07em, #0000 0), linear-gradient(#0b10201f 0.07em, #0000 0); background-size: 5% 7.1429%; }
+
+/* The void: a purple-black mass whose ragged edge creeps a half-pixel back and forth. */
+.g-voidcanvas .void { position: absolute; inset: 0; z-index: 1; background: #0b1020; transition: translate 0.12s steps(2); }
+.g-voidcanvas .edge { position: absolute; right: 100%; top: 0; margin-right: -0.02em; animation: g-voidcanvas-creep 0.5s steps(1) infinite; }
+@keyframes g-voidcanvas-creep { 50% { transform: translateX(-0.325em); } }
+.g-voidcanvas.brace .void { background: #2b0d4d; }
+/* The troll lurks just inside the void, grinning when it bites. */
+.g-voidcanvas .troll { position: absolute; left: 0.5em; top: 50%; margin-top: -1.36em; transition: opacity 0.15s; }
+.g-voidcanvas .troll.gone { opacity: 0; }
+
+/* One-column bars: slid with translate, stretched with scale (set from the game). */
+.g-voidcanvas .bite, .g-voidcanvas .omen { position: absolute; z-index: 2; left: 0; top: 0; bottom: 0; width: 5%; transform-origin: 0 50%; opacity: 0; }
+.g-voidcanvas .bite { background: var(--purple); }
 .g-voidcanvas .bite.go { animation: g-voidcanvas-bite 0.22s ease-out; }
 @keyframes g-voidcanvas-bite { from { opacity: 0.85; } to { opacity: 0; } }
+.g-voidcanvas .omen { background: #b14bff; }
+.g-voidcanvas.brace .omen { animation: g-voidcanvas-omen 0.24s steps(1) infinite; }
+@keyframes g-voidcanvas-omen { 0% { opacity: 0.85; } 50% { opacity: 0.35; } }
+
+/* The front line: the next column to paint, in the colour to press. */
+.g-voidcanvas .front, .g-voidcanvas .splat { position: absolute; z-index: 3; left: 0; top: -0.45em; bottom: -0.45em; width: 5%; background: var(--c); }
+.g-voidcanvas .front { box-shadow: 0 0 0 0.14em #0b1020; animation: g-voidcanvas-blink 0.3s steps(1) infinite; }
+.g-voidcanvas .splat { opacity: 0; }
 .g-voidcanvas .splat.go { animation: g-voidcanvas-splat 0.2s ease-out; }
 @keyframes g-voidcanvas-splat { from { opacity: 0.9; transform: scale(1.7, 1.08); } to { opacity: 0; transform: none; } }
-
-/* A raid is coming: the void swells and the columns it will take flash a warning. */
-.g-voidcanvas .omen { position: absolute; top: 0; bottom: 0; left: max(0%, calc((var(--held) - var(--raid)) * 5%)); width: calc(min(var(--raid), var(--held)) * 5%); background: repeating-linear-gradient(135deg, #b14bffe6 0 0.4em, #b14bff59 0.4em 0.8em); opacity: 0; }
-.g-voidcanvas .brace .omen { animation: g-voidcanvas-omen 0.24s steps(1) infinite; }
-@keyframes g-voidcanvas-omen { 0% { opacity: 0.9; } 50% { opacity: 0.4; } }
-.g-voidcanvas .brace .void { background-color: #2b0d4d; }
-.g-voidcanvas .g-note.alarm { color: var(--purple); }
 /* Where the big words rise from: mid-canvas, clear of the queue above. */
-.g-voidcanvas .shout { position: absolute; left: 50%; top: 62%; }
+.g-voidcanvas .shout { position: absolute; z-index: 4; left: 50%; top: 62%; }
+.g-voidcanvas .g-note { color: #c4cbe4; }
+.g-voidcanvas .g-note.alarm { color: #dcabff; }
 
-/* Void pushed off the edge: keep matching colours to keep it out. */
-.g-voidcanvas.full .canvas { animation: g-voidcanvas-held 0.6s linear infinite; }
-.g-voidcanvas.full .front { display: none; }
-@keyframes g-voidcanvas-held {
-  0%, 100% { box-shadow: 0 0 0 0.22em var(--gold), 0 0 1.6em var(--gold); }
-  33% { box-shadow: 0 0 0 0.22em var(--green), 0 0 1.6em var(--green); }
-  66% { box-shadow: 0 0 0 0.22em var(--blue), 0 0 1.6em var(--blue); }
-}
+/* Void pushed off the edge: a gold frame, and the front line rests. */
+.g-voidcanvas.full .canvas { box-shadow: 0 0 0 0.22em #0b1020, 0 0 0 0.44em var(--gold), 0 0 0 0.62em #0b1020, 0.5em 0.6em 0 0.62em #0b102099; }
+.g-voidcanvas.full .front, .g-voidcanvas.full .void { visibility: hidden; }
 
-/* Wrong colour: the cooldown greys the paint out. */
-.g-voidcanvas.locked .queue i:first-child, .g-voidcanvas.locked .front { animation: none; filter: grayscale(1) brightness(0.55); }
+/* Wrong colour: the cooldown dims the paint. */
+.g-voidcanvas.locked .now, .g-voidcanvas.locked .front { animation: none; opacity: 0.35; }
+.g-voidcanvas.locked .label::after { animation: none; opacity: 0; }
 
-.g-voidcanvas .tally { width: min(100%, 17em); display: flex; justify-content: space-between; align-items: baseline; font-weight: 900; color: var(--dim); }
-.g-voidcanvas .tally span { font-size: 0.8em; letter-spacing: 0.08em; }
-.g-voidcanvas .tally b { font-size: 2.1em; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+/* The scaffold: painters standing on a plank that doubles as the score board. */
+.g-voidcanvas .scaffold { position: relative; z-index: 5; flex: none; display: flex; flex-direction: column; align-items: center; margin-top: -1.1em; }
+.g-voidcanvas .crew { display: flex; align-items: flex-end; gap: 0.6em; margin-bottom: -0.2em; }
+.g-voidcanvas .mate { position: relative; display: flex; align-items: flex-end; }
+.g-voidcanvas .pail { margin-left: -0.4em; }
+.g-voidcanvas .brush { position: absolute; right: -0.9em; top: -0.6em; transform: rotate(20deg); }
+.g-voidcanvas .plank { position: relative; width: 15.5em; display: flex; justify-content: space-between; align-items: baseline; padding: 0.1em 0.6em 0.15em; background: #b0703c; color: #fff0a8; box-shadow: 0 0 0 0.18em #0b1020, inset 0 0.25em 0 #dba678, inset 0 -0.25em 0 #6e3f1c, 0.35em 0.4em 0 0.18em #0b102099; }
+/* Scaffold poles under the plank. */
+.g-voidcanvas .plank::before, .g-voidcanvas .plank::after { content: ''; position: absolute; top: 100%; width: 0.5em; height: 0.45em; background: #7c86b0; box-shadow: 0 0 0 0.14em #0b1020; }
+.g-voidcanvas .plank::before { left: 1.2em; }
+.g-voidcanvas .plank::after { right: 1.2em; }
+.g-voidcanvas .plank span { font-size: 0.7em; letter-spacing: 0.08em; color: #0b1020; }
+.g-voidcanvas .plank b { font-size: 2em; letter-spacing: 0; font-variant-numeric: tabular-nums; text-shadow: 0.08em 0.08em 0 #0b1020; }
 .g-voidcanvas .ours { color: var(--gold); }
-.g-voidcanvas .theirs { color: var(--purple); }
+.g-voidcanvas .theirs { color: #dcabff; }
+
+/* Tall phone stages have room to spare: everything a size up. */
+@container (max-aspect-ratio: 4/5) { .g-voidcanvas { font-size: 1.08em; } }

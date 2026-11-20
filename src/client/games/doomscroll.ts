@@ -20,6 +20,14 @@ defineSprite('doomscroll-redeyes', `
 ................
 ................`);
 // A pillow, a little wider than the head that sinks into it.
+// The phone's light falling on the scroller's face: a stepped beam.
+defineSprite(
+  'doomscroll-glow',
+  Array.from({ length: 12 }, (_, y) => {
+    const v = (y + 0.5) / 12;
+    return Array.from({ length: 27 }, (_, x) => ((x + 0.5) / 27 > 0.55 * (1 - v) && (x + 0.5) / 27 < 1 - 0.6 * v ? 'c' : '.')).join('');
+  }),
+);
 defineSprite('doomscroll-pillow', `
 .kkkkkkkkkkkkkkkkkkkk.
 kwwwwwwwwwwwwwwwwwwwwk
@@ -90,7 +98,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   sleeper.append(sprite('doomscroll-pillow', { px: 0.42 }, 'pillow'), who.el, red);
   const stand = h('div', 'stand');
   stand.append(clock);
-  bed.append(h('div', 'glow'), sleeper, h('div', 'blanket'), stand);
+  bed.append(sprite('doomscroll-glow', { px: 1 / 3 }, 'glow'), sleeper, h('div', 'blanket'), stand);
   room.append(phone, bed);
   wrap.append(top, room);
   root.append(wrap);

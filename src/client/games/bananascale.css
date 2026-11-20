@@ -24,9 +24,10 @@
 .g-bananascale .pair.done { border-top-color: #c98a10; }
 .g-bananascale .stack { flex: none; display: flex; flex-direction: column-reverse; }
 .g-bananascale .thing { flex: none; position: relative; }
-.g-bananascale .thing svg { display: block; height: var(--h); width: calc(var(--h) * var(--ar)); }
+.g-bananascale .thing .art { display: block; height: var(--h); width: calc(var(--h) * var(--ar)); }
+/* Pixel sprites sized here; --nar is the banana's width / height. */
 .g-bananascale .nana { display: block; }
-.g-bananascale .stack .nana { height: calc(var(--h) / var(--k)); width: calc(var(--h) / var(--k) * 0.44); opacity: 0; }
+.g-bananascale .stack .nana { height: calc(var(--h) / var(--k)); width: calc(var(--h) / var(--k) * var(--nar)); opacity: 0; }
 .g-bananascale .stack .nana:first-child { opacity: 1; }
 .g-bananascale .stack .nana.on { opacity: 1; animation: g-bananascale-drop 0.12s ease-out; }
 .g-bananascale .pair.spin .nana:last-child { animation: g-bananascale-spin 0.3s ease-out; }
@@ -39,7 +40,7 @@
 .g-bananascale .picks { flex: none; display: flex; gap: 0.6em; width: min(100%, 26em); }
 .g-bananascale .pick { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.2em; padding: 0.25em 0 0.35em; background: var(--c); color: #0b1020; box-shadow: 0 0 0 0.18em #0b1020, inset 0 -0.25em 0 var(--cd), 0.25em 0.3em 0 0.18em #0b102055; transition: opacity 0.1s; }
 .g-bananascale .pick b { font-size: 2.2em; font-weight: inherit; line-height: 1; font-variant-numeric: tabular-nums; }
-.g-bananascale .pick .nana { height: 1.8em; width: 0.8em; transform: rotate(16deg); }
+.g-bananascale .pick .nana { height: 1.8em; width: calc(1.8em * var(--nar)); }
 .g-bananascale .pick.no { opacity: 0.3; }
 .g-bananascale .pick.yes { box-shadow: 0 0 0 0.18em #0b1020, 0 0 0 0.4em #fff, inset 0 -0.25em 0 var(--cd); }
 

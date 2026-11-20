@@ -1,5 +1,5 @@
 import './bananascale.css';
-import { actor, COLOR, clamp1000, defineSprite, h, pick, pulse, randInt, shuffled, sprite, type Btn, type GameFactory } from './common';
+import { actor, COLOR, clamp1000, defineSprite, h, pick, pulse, randInt, setSprite, shuffled, sprite, type Btn, type GameFactory, type Tone } from './common';
 
 // A studio softbox on a stand, lighting the shoot.
 defineSprite('bananascale-lamp', `
@@ -17,62 +17,372 @@ kkkkkkkkkk
 ..kk..kk..
 .kk....kk.`);
 
-const OUTLINE = '<g stroke="#0b1020" stroke-width="2" stroke-linejoin="round">';
+// Every sprite is ROWS pixels tall and its art touches the top and bottom rows, so the
+// code can size each by its height in bananas and the heights compare exactly.
+const ROWS = 32;
 
-// Every drawing touches the top and the bottom of its viewBox, so heights compare exactly.
-const BANANA =
-  `<svg class="nana" viewBox="7 0 44 100" aria-hidden="true">${OUTLINE}<path d="M14 12 17 1h7l1 8z" fill="#8a6a1c"/>` +
-  '<path d="M15 12 24 8C56 26 54 84 18 99L11 94C32 76 30 36 15 12Z" fill="#ffd23f"/></g>' +
-  '<path d="M32 24c9 17 9 40 0 56" fill="none" stroke="#fff6c2" stroke-width="3" stroke-linecap="round"/></svg>';
+// The unit of measure.
+defineSprite('bananascale-banana', `
+..kkk.........
+..kNk.........
+..kNk.........
+..kNNk........
+..kLAk........
+..kLAAk.......
+...kLAak......
+...kLAAak.....
+....kLAak.....
+....kLAAak....
+....kLLAAak...
+.....kLAAak...
+.....kLAAAak..
+.....kLLAAak..
+......kLAAAAak
+......kLAAAAak
+......kLAAAAak
+......kLAAAAak
+......kLAAAAak
+.....kLAAAAAak
+.....kLAAAAAak
+.....kLAAAAak.
+....kLAAAAAak.
+....kLAAAAak..
+...kLAAAAAak..
+..kLAAAAAak...
+.kLAAAAAak....
+kLAAAAAak.....
+kAAAAAak......
+kaaaakk.......
+kNNkk.........
+.kk...........`);
 
-// `w` is the drawing's width when its height is 100.
-const THINGS = [
-  {
-    w: 70,
-    caps: ['Roommate came home with this', 'Found a cone. It is mine now.'],
-    art: '<path d="M28 1h14l16 85H12z" fill="#ff8a2a"/><path d="M22.7 30h24.6l3.1 16H19.6zM17 60h36l2.3 12H14.7z" fill="#fff"/><rect x="2" y="86" width="66" height="13" rx="3" fill="#e2670f"/>',
-  },
-  {
-    w: 54,
-    caps: ['New fridge day!', 'My fridge, magnets included'],
-    art: '<rect x="2" y="1" width="50" height="93" rx="5" fill="#e3e9f7"/><path d="M2 34h50" fill="none"/><path d="M41 12h4v14h-4zM41 42h4v22h-4zM7 94h8v5H7zM39 94h8v5h-8z" fill="#8d97b8"/><rect x="9" y="44" width="13" height="11" fill="#ffcf3f"/><circle cx="24" cy="64" r="4" fill="#b14bff"/>',
-  },
-  {
-    w: 96,
-    caps: ['Suspiciously large rock', 'Is this a good rock?'],
-    art: '<path d="M5 99 2 68 14 36 36 10 60 1 82 12 94 44 91 99z" fill="#8a93ad"/><path d="M36 10 60 1 82 12 66 32 44 34z" fill="#aab3cc"/><circle cx="40" cy="58" r="7" fill="#fff"/><circle cx="64" cy="58" r="7" fill="#fff"/><circle cx="37" cy="59" r="3" fill="#0b1020"/><circle cx="61" cy="59" r="3" fill="#0b1020"/>',
-  },
-  {
-    w: 68,
-    caps: ['He just sits like this', 'Orange cat, one brain cell'],
-    art: '<path d="M52 93c14 0 12-22 4-29" fill="none" stroke="#f0a13c" stroke-width="7" stroke-linecap="round"/><path d="M12 99C4 70 14 46 32 46s28 24 20 53zM11 24 13 1 30 14zM53 24 51 1 34 14z" fill="#f0a13c"/><ellipse cx="32" cy="30" rx="23" ry="19" fill="#f0a13c"/><circle cx="23" cy="29" r="3.2" fill="#0b1020"/><circle cx="41" cy="29" r="3.2" fill="#0b1020"/><path d="M29 36h6l-3 3z" fill="#0b1020"/><path d="M24 99V80M40 99V80" fill="none"/>',
-  },
-  {
-    w: 50,
-    caps: ['First build! Rate my rig', 'It runs hot. Very hot.'],
-    art: '<rect x="2" y="1" width="46" height="94" rx="4" fill="#e3e9f7"/><rect x="8" y="10" width="34" height="64" rx="2" fill="#0b1020"/><g fill="none" stroke-width="3"><circle cx="25" cy="22" r="7.5" stroke="#b14bff"/><circle cx="25" cy="42" r="7.5" stroke="#ffcf3f"/><circle cx="25" cy="62" r="7.5" stroke="#7ee7ff"/></g><circle cx="25" cy="84" r="3" fill="#7ee7ff"/><path d="M6 95h9v4H6zM35 95h9v4h-9z" fill="#8d97b8"/>',
-  },
-  {
-    w: 60,
-    caps: ["The mod's gaming chair", 'Have not left it since 2019'],
-    art: '<path d="M18 1h24a7 7 0 0 1 7 7v48H11V8a7 7 0 0 1 7-7z" fill="#8d5cf0"/><path d="M23 1v55M37 1v55" fill="none"/><rect x="5" y="54" width="50" height="13" rx="5" fill="#8d5cf0"/><path d="M2 40h7v15H2zM51 40h7v15h-7z" fill="#3b4470"/><rect x="27" y="67" width="6" height="17" fill="#8d97b8"/><path d="M8 93 30 84l22 9" fill="none" stroke="#8d97b8" stroke-width="5" stroke-linecap="round"/><circle cx="8" cy="95.5" r="3.5" fill="#e3e9f7"/><circle cx="30" cy="95.5" r="3.5" fill="#e3e9f7"/><circle cx="52" cy="95.5" r="3.5" fill="#e3e9f7"/>',
-  },
-  {
-    w: 84,
-    caps: ['Dinner for one', 'Leftovers, day nine'],
-    art: '<path d="M6 1h72v16H6zM2 17h72v16H2zM9 33h72v17H9zM4 50h72v16H4zM8 66h72v16H8zM3 82h72v17H3z" fill="#d8b47c"/><path d="M6 6h72M2 22h72M9 38h72M4 55h72M8 71h72M3 87h72" fill="none"/>',
-  },
-  {
-    w: 50,
-    caps: ['Thrifted this lamp for $3', 'Lamp. Moths love it.'],
-    art: '<path d="M14 1h22l10 31H4z" fill="#ffcf3f"/><rect x="23" y="32" width="4" height="61" fill="#8d97b8"/><ellipse cx="25" cy="95" rx="17" ry="4" fill="#8d97b8"/>',
-  },
-  {
-    w: 100,
-    caps: ['Free chair from the kerb', "Grandpa's haunted armchair"],
-    art: '<rect x="16" y="1" width="68" height="65" rx="12" fill="#b9825a"/><rect x="22" y="52" width="56" height="26" rx="5" fill="#d29c72"/><rect x="2" y="34" width="22" height="56" rx="9" fill="#b9825a"/><rect x="76" y="34" width="22" height="56" rx="9" fill="#b9825a"/><path d="M24 78h52v12H24z" fill="#a06d48"/><path d="M8 90h8v9H8zM84 90h8v9h-8z" fill="#5b4030"/>',
-  },
+const NANA_W = 14; // the banana's width in pixels
+
+defineSprite('bananascale-cone', `
+.........kkkk.........
+........kLLLLk........
+........kLAAak........
+........kLAAak........
+........kLAAak........
+........kLAAak........
+.......kLAAAALk.......
+.......kLAAAAak.......
+.......kLAAAAak.......
+.......kLWWWWak.......
+......kLwwwwwwLk......
+......kLwwwwwwak......
+......kLwwwwwwak......
+......kLAAAAAAak......
+......kLAAAAAAak......
+.....kLAAAAAAAALk.....
+.....kLAAAAAAAAak.....
+.....kLAAAAAAAAak.....
+.....kLWWWWWWWWak.....
+.....kLwwwwwwwwak.....
+....kLwwwwwwwwwwLk....
+....kLwwwwwwwwwwak....
+....kLAAAAAAAAAAak....
+....kLAAAAAAAAAAak....
+....kLAAAAAAAAAAak....
+...kLAAAAAAAAAAAALk...
+.kkkLaaaaaaaaaaaaakkk.
+kAAAAAAAAAAAAAAAAAAAAk
+kAaaaaaaaaaaaaaaaaaaak
+kAaaaaaaaaaaaaaaaaaaak
+kAaaaaaaaaaaaaaaaaaaak
+.kkkkkkkkkkkkkkkkkkkk.`);
+
+defineSprite('bananascale-fridge', `
+.kkkkkkkkkkkkkkk.
+kWWWWWWWWWWWWWWWk
+kWwwwwwwwwwwwwwdk
+kWwwwwwwwwwwDDwdk
+kWwwwwwwwwwwDDwdk
+kWwwwwwwwwwwDDwdk
+kWwwwwwwwwwwDDwdk
+kWwwwwwwwwwwDDwdk
+kWwwwwwwwwwwwwwdk
+kWwwwwwwwwwwwwwdk
+kkkkkkkkkkkkkkkkk
+kWwwwwwwwwwwwwwdk
+kWwwwwwwwwwwwwwdk
+kWwwwwwwwwwwDDwdk
+kWwYYYYwwwwwDDwdk
+kWwyyyywwwwwDDwdk
+kWwyyyywwwwwDDwdk
+kWwwwwwwwwwwDDwdk
+kWwwwwwwwwwwDDwdk
+kWwwwwwmpwwwDDwdk
+kWwwwwwppwwwwwwdk
+kWwwwwwwwwwwwwwdk
+kWwwwwwwwwwwwwwdk
+kWwwwwwwwwwwwwwdk
+kWwwwwwwwwwwwwwdk
+kWwwwwwwwwwwwwwdk
+kWwwwwwwwwwwwwwdk
+kWwwwwwwwwwwwwwdk
+kWddddddddddddddk
+.kdddkkkkkkkdddk.
+.kdxxk.....kdxxk.
+..kkk.......kkk..`);
+
+defineSprite('bananascale-rock', `
+..................kk...........
+..............kkkkLLkkk........
+...........kkkLLLLLLLLLkkk.....
+..........kLLLLLLLLLLLLLLLk....
+..........kLLLLLLLLLLLLLLLLk...
+.........kLALLLLLLLLLLLLLAak...
+........kLAAALLLLLLLLLLLAAak...
+.......kLAAAALLLLLLLLLLLAAALk..
+......kLAAAAALLLLLLLLLLAAAAak..
+.....kLAAAAAAALLLLLLLLAAAAAak..
+....kLAAAAAAAALLLLAAAAAAAAAALk.
+....kLAAAAAAAAAAAAAAAAAAAAAAak.
+...kLAAAAAAAAAAAAAAAAAAAAAAAak.
+...kLAAAAAAAAAAAAAAAAAAAAAAAak.
+...kLAAAAAAAAAAAAAAAAAAAAAAAALk
+..kLAAAAAAAAAAAAAAAAAAAAAaAAAak
+..kLAAAAAAkkkkAAAkkkkAAAAAAAAak
+..kLAAAAAAWWWWAAAWWWWAAAAAAAAak
+.kLAAAAAAkWWWWkAkWWWWkAAAAAAAak
+.kLAAAAAAkkkWWkAkkkWWkAAAAAAAak
+.kLAAAAAAAkkWWAAAkkWWAAAAAAAAak
+kLAAAAAAAAkkkkAAAkkkkAAAAAAAAak
+kLAAAAAAAAAAAAAAAAAAAAAAAAAAak.
+kLAAAAAAAAAAAAAAAAAAAAAAAAAAak.
+kLAAAAAAaAAAAAAAAAAAAAAAAAAAak.
+kLAAAAAAAAAAAAAAAAAAAAAAAAAAak.
+kLAAAAAAAAAAAAAAAAAAAAAAAAAAak.
+kLAAAAAAAAAAAAAAAAAAAAaAAAAAak.
+.kLAAAaAAAAAAAAAAAAAAAAAAAAAak.
+.kLAAAAAAAAAAAAAAAAAAAAAAAAAak.
+.kLaaaaaaaaaaaaaaaaaaaaaaaaaak.
+..kkkkkkkkkkkkkkkkkkkkkkkkkkk..`);
+
+defineSprite('bananascale-cat', `
+..k...............k...
+.kLk.............kLk..
+.kLLkk..kkkkk..kkLak..
+.kLALLkkLLLLLkkLLAak..
+.kLAmALLAAaAaLLAAmak..
+.kLAmmAAAAaAaAAAmmak..
+kLAAAAAAAAaAaAAAAAALk.
+kLAAAAAAAAAAAAAAAAAak.
+kLAAAAAAAAAAAAAAAAAak.
+kLAAAAkkAAAAAkkAAAAak.
+kLAAAAkkAAAAAkkAAAAak.
+kLAAAAAAAAAAAAAAAAAak.
+.kLAAAAAAAmmAAAAAAak..
+.kLAAAAAAkAAkAAAAAak..
+..kLaAAAAAkkAAAAaak...
+...kkLaAAAAAAaaakk....
+.....kkLAAAAakkk.kkk..
+....kLLAAAAAALLkkLLLk.
+...kLAAAAAAAAAALkLaak.
+..kLAAAAssssssAALkkLLk
+..kLAAAAssssssAAakkLak
+.kLAAAAAssssssAAALkLak
+.kLAAAAAssssssAAAakLak
+.kLAAAAAssssssAAAakLak
+kLAAAAAAAssssAAAAALAak
+kLAAAAAAAssssAAAAAAAak
+kLAAAAkAAssssAAkAAAAak
+kLAAAAkAAAkkAAAkAAAAak
+kLAAAAkAAAkkAAAkAAAAak
+kLAAAAkWWdkkdWWkAAAaak
+kLaaaakWWWkkWWWkaaakk.
+.kkkkkkkkkkkkkkkkkk...`);
+
+defineSprite('bananascale-pc', `
+.kkkkkkkkkkkkkk.
+kWWWWWWWWWWWWWWk
+kWwwwwwwwwwwwwdk
+kWwkkkkkkkkkkwdk
+kWwkxxxxxxxxkwdk
+kWwkxxppppxxkwdk
+kWwkxpxxxxpxkwdk
+kWwkxpxDDxpxkwdk
+kWwkxpxxxxpxkwdk
+kWwkxxppppxxkwdk
+kWwkxxxxxxxxkwdk
+kWwkxxyyyyxxkwdk
+kWwkxyxxxxyxkwdk
+kWwkxyxDDxyxkwdk
+kWwkxyxxxxyxkwdk
+kWwkxxyyyyxxkwdk
+kWwkxxxxxxxxkwdk
+kWwkxxccccxxkwdk
+kWwkxcxxxxcxkwdk
+kWwkxcxDDxcxkwdk
+kWwkxcxxxxcxkwdk
+kWwkxxccccxxkwdk
+kWwkxxxxxxxxkwdk
+kWwkkkkkkkkkkwdk
+kWwwwwwwwwwwwwdk
+kWwwwwwwwwwwwwdk
+kWwwwwwWcwwwwwdk
+kWwwwwwccwwwwwdk
+kWwwwwwwwwwwwwdk
+kWdddddddddddddk
+.kdddkkkkkkdddk.
+..kkk......kkk..`);
+
+defineSprite('bananascale-chair', `
+.....kkkkkkkkk.....
+....kLLLLLLLLLk....
+...kLAAAAAAAAALk...
+...kLAAkDxxkAAak...
+...kLAAkWWWkAAak...
+...kLAAkWWWkAAak...
+...kLAAkDxxkAAak...
+...kLAAkDxxkAAak...
+...kLAAkDxxkAAak...
+...kLAAkDxxkAAak...
+...kLAAkDxxkAAak...
+.kkkLAAkDxxkAAakkk.
+kDDkLAAkDxxkAAakDDk
+kDxkLAAkDxxkAAakDxk
+kDxkLAAkDxxkAAakDxk
+kDxkLAAkDxxkAAakDxk
+kDxkLAAkDxxkAAakDxk
+.kLkkkkkkkkkkkkkLk.
+.kLAAAAAAAAAAAAAak.
+.kLAAAAAAAAAAAAAak.
+.kLaaaaaaaaaaaaaak.
+..kkkkkkdddkkkkkk..
+.......kdDxk.......
+.......kdDxk.......
+.......kdDxk.......
+..kkkkkkdDxkkkkkk..
+.kddddddDDDddddddk.
+.kdxxxxxxxxxxxxxxk.
+kWWWkkkkWWWkkkkWWWk
+kWwdk..kWwdk..kWwdk
+kWddk..kWddk..kWddk
+.kkk....kkk....kkk.`);
+
+defineSprite('bananascale-boxes', `
+...kkkkkkkkkkkkkkkkkkkkkk..
+..kssssssssssssssssssssssk.
+..kAALAAAAAAAAAAAAAAAAAAAk.
+..ksLLLLLLLLLLLLLLLLLLLLAk.
+..ksAAAAAAAAAAAAAAAAAAAAAk.
+.kkkkkkkkkkkkkkkkkkkkkkkk..
+kssssssssssssssssssssssk...
+kAALAAAAAAAAAAAAAAAAAAAk...
+ksLLLLLLLLLLLLLLLLLLLLAk...
+ksAAAAAAAAAAAAAAAAAAAAAk...
+.kkkkkkkkkkkkkkkkkkkkkkkkk.
+...kssssssssssssssssssssssk
+...kAALAAAAAAAAAAAAAAAAAAAk
+...ksLLLLLLLLLLyyyyLLLLLLAk
+...ksAAAAAAAAAAyyyyAAAAAAAk
+..kkkkkkkkkkkkkkkkkkkkkkkk.
+.kssssssssssssssssssssssk..
+.kAALAAAAAAAAAAAAAAAAAAAk..
+.ksLLLLLLLLLLLLLLLLLLLLAk..
+.ksAAAAAAAAAAAAAAAAAAAAAk..
+..kkkkkkkkkkkkkkkkkkkkkkk..
+..kssssssssssssssssssssssk.
+..kAALAAAAAAAAAAAAAAAAAAAk.
+..ksLLLLAALLLLLLLLLLLLLLAk.
+..ksAAAAAAAAAAAAAAAAAAAAAk.
+.kkkkkkkkkkkkkkkkkkkkkkkk..
+kssssssssssssssssssssssk...
+kAALAAAAAAAAAAAAAAAAAAAk...
+ksLLLLLLLLLLLLLLLLLLLLAk...
+ksLLLLLLLLLLLLLLLLLLLLAk...
+ksAAAAAAAAAAAAAAAAAAAAAk...
+.kkkkkkkkkkkkkkkkkkkkkk....`);
+
+defineSprite('bananascale-floorlamp', `
+....kkkkkkkk....
+...kYYYYYYYYk...
+...kYyyyyyyok...
+...kYyyyyyyok...
+..kYyyyyyyyyYk..
+..kYyyyyyyyyok..
+..kYyyyyyyyyok..
+.kYyyyyyyyyyyYk.
+.kYyyyyyyyyyyok.
+.kYyyyyyyyyyyok.
+kYooooooooooooYk
+.kkkkkkddkkkkkk.
+......kdDk......
+......kdDk......
+......kdDk......
+......kdDk......
+......kdDk......
+......kdDk......
+......kdDk......
+......kdDk......
+......kdDk......
+......kdDk......
+......kdDk......
+......kdDk......
+......kdDk......
+......kdDk......
+......kdDk......
+....kkkdDkkk....
+...kdddDDdddk...
+..kdDDDDDDDDdk..
+..kdxxxxxxxxxk..
+...kkkkkkkkkk...`);
+
+defineSprite('bananascale-armchair', `
+.......kkkkkkkkkkkkkkkkkk.......
+......kLLLLLLLLLLLLLLLLLLk......
+.....kLAAAAAAAAAAAAAAAAAALk.....
+.....kLAAAAAAAAAAAAAAAAAAak.....
+.....kLAAAAAAAAAAAAAAAAAAak.....
+.....kLAAAAAAAAAAAAAAAAAAak.....
+.....kLAAAAAAAAAAAAAAAAAAak.....
+.....kLAAAAaAAAAaAAAAaAAAak.....
+.....kLAAAAAAAAAAAAAAAAAAak.....
+.....kLAAAAAAAAAAAAAAAAAAak.....
+..kkkkLAAAAAAAAAAAAAAAAAAakkkk..
+.kLLLLAAAAAAAaAAAAAaAAAAAALLLLk.
+kLAAAAAAkAAAAAAAAAAAAAAkAAAAAALk
+kLAAAAAAkAAAAAAAAAAAAAAkAAAAAAak
+kLAAAAAAkAAAAAAAAAAAAAAkAAAAAAak
+kLAAAAAAkAAAAAAAAAAAAAAkAAAAAAak
+kLAAAAAAkkkkkkkkkkkkkkkkAAAAAAak
+kLAAAAAAkssssssAssssssskAAAAAAak
+kLAAAAAAkLLLLLLALLLLLLLkAAAAAAak
+kLAAAAAAkLLLLLLALLLLLLLkAAAAAAak
+kLAAAAAAkLLLLLLALLLLLLLkAAAAAAak
+kLAAAAAAkkkkkkkkkkkkkkkkAAAAAAak
+kLAAAAAAkAAAAAAAAAAAAAAkAAAAAAak
+kLAAAAAAkAAAAAAAAAAAAAAkAAAAAAak
+kLAAAAAAkAAAAAAAAAAAAAAkAAAAAAak
+kLAAAAAAkAAAAAAAAAAAAAAkAAAAAAak
+kLAAAAAAkAAAAAAAAAAAAAAkAAAAAAak
+kLaaaaaakaaaaaaaaaaaaaakaaaaaaak
+.kknnnkkkkkkkkkkkkkkkkkkkknnnkk.
+..knNNk..................knNNk..
+..knNNk..................knNNk..
+...kkk....................kkk...`);
+
+// `w` is the sprite's width in pixels (it is ROWS tall); `tone` colours its A/a/L pixels.
+const THINGS: { art: string; w: number; tone?: Tone; caps: string[] }[] = [
+  { art: 'bananascale-cone', w: 22, tone: 'orange', caps: ['Roommate came home with this', 'Found a cone. It is mine now.'] },
+  { art: 'bananascale-fridge', w: 17, caps: ['New fridge day!', 'My fridge, magnets included'] },
+  { art: 'bananascale-rock', w: 31, tone: 'grey', caps: ['Suspiciously large rock', 'Is this a good rock?'] },
+  { art: 'bananascale-cat', w: 22, tone: 'orange', caps: ['He just sits like this', 'Orange cat, one brain cell'] },
+  { art: 'bananascale-pc', w: 16, caps: ['First build! Rate my rig', 'It runs hot. Very hot.'] },
+  { art: 'bananascale-chair', w: 19, tone: 'purple', caps: ["The mod's gaming chair", 'Have not left it since 2019'] },
+  { art: 'bananascale-boxes', w: 27, tone: 'brown', caps: ['Dinner for one', 'Leftovers, day nine'] },
+  { art: 'bananascale-floorlamp', w: 16, caps: ['Thrifted this lamp for $3', 'Lamp. Moths love it.'] },
+  { art: 'bananascale-armchair', w: 32, tone: 'brown', caps: ['Free chair from the kerb', "Grandpa's haunted armchair"] },
 ];
+
+/** A banana sprite sized by the stylesheet (the stack and the answer chips set its box). */
+function nana(): HTMLElement {
+  const el = sprite('bananascale-banana', {}, 'nana');
+  el.style.width = el.style.height = '';
+  return el;
+}
 
 const STACK_MS = 240; // the bananas climb to the top in this long
 const RIGHT_MS = 520; // then the verdict stays up until the next thing
@@ -105,6 +415,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   // speech bubble), the thing stands on the backdrop paper next to one banana, and the
   // bananas stack up beside it when you answer.
   const wrap = h('div', 'g-bananascale scene-kitchen');
+  wrap.style.setProperty('--nar', String(NANA_W / ROWS));
   const head = h('div', 'head');
   const cat = actor('op', { px: 0.38 });
   const title = h('div', 'title');
@@ -114,7 +425,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const pair = h('div', 'pair');
   const stack = h('div', 'stack');
   const thing = h('div', 'thing');
-  const art = h('div', 'art');
+  const art = sprite('bananascale-banana', {}, 'art');
   const stamp = h('div', 'stamp');
   thing.append(art, stamp);
   // The floor line doubles as the progress meter.
@@ -126,7 +437,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const picks = h('div', 'picks');
   const chips = [0, 1, 2].map((i) => {
     const chip = h('div', `pick c-${COLOR[i]}`);
-    chip.innerHTML = `<b></b>${BANANA}`;
+    chip.append(h('b'), nana());
     picks.append(chip);
     return chip;
   });
@@ -140,11 +451,13 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     title.textContent = r.cap;
     cat.mood('idle');
     pair.className = 'pair';
-    pair.style.setProperty('--ar', String(r.thing.w / 100));
+    pair.style.setProperty('--ar', String(r.thing.w / ROWS));
     pair.style.setProperty('--k', String(r.tall));
     // The bottom banana is the one for scale; the rest stay hidden until the reveal.
-    stack.innerHTML = BANANA.repeat(r.tall);
-    art.innerHTML = `<svg viewBox="0 0 ${r.thing.w} 100" aria-hidden="true">${OUTLINE}${r.thing.art}</g></svg>`;
+    stack.replaceChildren(...Array.from({ length: r.tall }, nana));
+    // The stylesheet sizes the thing from --h and --ar, not the sprite's own pixel size.
+    setSprite(art, r.thing.art, { tone: r.thing.tone });
+    art.style.width = art.style.height = '';
     stamp.className = 'stamp';
     chips.forEach((chip, i) => {
       chip.className = `pick c-${COLOR[i]}`;

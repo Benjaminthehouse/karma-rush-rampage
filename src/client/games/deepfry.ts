@@ -1,5 +1,5 @@
 import './deepfry.css';
-import { COLOR, h, person, pick, pulse, randBtn, randInt, ratio, setSprite, shuffled, sprite, type Btn, type GameFactory, type Mood, type Tone } from './common';
+import { COLOR, defineSprite, h, person, pick, pulse, randBtn, randInt, ratio, setSprite, shuffled, sprite, type Btn, type GameFactory, type Mood, type Tone } from './common';
 
 // [top text, bottom text]
 const CAPTIONS = [
@@ -26,6 +26,27 @@ const STAMPS = ['CRISPY!', 'WELL DONE!', 'NUKED!', 'TOASTY!', 'CHARRED!', 'GOLDE
 const BTNS: Btn[] = [0, 1, 2];
 const FACE = 0.42; // one pixel of the face, in em
 const FLAME = 0.24;
+const DIAL = 0.2; // one pixel of a dial, in em
+
+// A dial: a grey ring with a slot per notch, and a round knob with a pointer that turns.
+const disc = (n: number, f: (d: number, x: number, y: number) => string) =>
+  Array.from({ length: n }, (_, y) => Array.from({ length: n }, (_, x) => f(Math.hypot(x - (n - 1) / 2, y - (n - 1) / 2), x, y)).join(''));
+defineSprite('deepfry-ring', disc(21, (d) => (d > 10.4 ? '.' : d > 9.4 ? 'k' : d > 7.4 ? 'd' : d > 6.5 ? 'k' : '.')));
+// The knob turns in sixteen drawn steps, so its pointer stays on the pixel grid.
+for (let f = 0; f < 16; f++) {
+  const g = disc(13, (d, x, y) => (d > 6.6 ? '.' : d > 5.6 ? 'k' : (x - 4) ** 2 + (y - 4) ** 2 < 3 ? 'L' : x + y > 15 ? 'a' : 'A')).map((r) => r.split(''));
+  const a = (f / 16) * 2 * Math.PI;
+  for (let i = 0; i <= 10; i++) g[Math.round(6 - (Math.cos(a) * i) / 2)][Math.round(6 + (Math.sin(a) * i) / 2)] = 'k';
+  defineSprite(`deepfry-knob${f}`, g.map((r) => r.join('')));
+}
+defineSprite('deepfry-notch', 'LA\nAa');
+defineSprite('deepfry-slot', 'xx\nxk');
+// GLOW: a hard-edged lens flare and a stepped streak for each eye.
+defineSprite('deepfry-flare', disc(17, (d, x, y) => (d < 1.6 ? 'W' : d < 2.6 ? 'Y' : d < 5.2 ? 'r' : d < 8.6 && (x + y) % 2 === 0 ? 'r' : '.')));
+defineSprite(
+  'deepfry-streak',
+  Array.from({ length: 11 }, (_, y) => Array.from({ length: 33 }, (_, x) => (Math.abs(y - 9.5 + x * 0.29) < 0.8 ? 'W' : '.')).join('')),
+);
 
 export const create: GameFactory = ({ root, rng, level, duration, good, fx }) => {
   // Every meme has one hungry dial; the other two share as many notches again.
@@ -69,17 +90,24 @@ export const create: GameFactory = ({ root, rng, level, duration, good, fx }) =>
   const dials = BTNS.map((b) => {
     const dial = h('div', `dial c-${COLOR[b]}`);
     const knob = h('div', 'knob');
-    knob.append(h('i'));
+    const ring = sprite('deepfry-ring', { px: DIAL }, 'ring');
+    const turn = sprite('deepfry-knob0', { px: DIAL, tone: COLOR[b] }, 'turn');
+    knob.append(ring, turn);
     const name = h('span', 'name');
     dial.append(knob, name);
     row.append(dial);
-    return { dial, knob, name };
+    return { dial, knob, name, ring, turn, notches: [] as HTMLElement[], lit: 0, step: 0 };
   });
   fryer.append(readout, row);
   wrap.append(frame, fire, fryer);
   root.append(wrap);
 
   const now = () => memes[idx % memes.length];
+  const flare = (side: string) => {
+    const el = h('i', `flare ${side}`);
+    el.append(sprite('deepfry-flare', { px: DIAL }, 'glare'), sprite('deepfry-streak', { px: DIAL }, 'streak'));
+    return el;
+  };
   const cast = () => person({ tone: BLOBS[now().hue], kind: now().kind, mood: now().mood, px: FACE });
   let blob = cast();
 
@@ -92,8 +120,12 @@ export const create: GameFactory = ({ root, rng, level, duration, good, fx }) =>
     // The face notices what is happening to it.
     blob.mood(heat >= 0.3 ? 'shock' : now().mood);
     dials.forEach((d, b) => {
-      d.knob.style.setProperty('--p', String(p[b]));
-      d.knob.style.setProperty('--n', String(now().need[b]));
+      const step = Math.round(Math.min(1, p[b]) * 16) % 16;
+      if (step !== d.step) setSprite(d.turn, `deepfry-knob${(d.step = step)}`, { px: DIAL, tone: COLOR[b] });
+      // Light the notches filled so far; only the ones that change are repainted.
+      const lit = Math.min(fill[b], d.notches.length);
+      for (let i = Math.min(lit, d.lit); i < Math.max(lit, d.lit); i++) setSprite(d.notches[i], i < lit ? 'deepfry-notch' : 'deepfry-slot', { px: DIAL, tone: COLOR[b] });
+      d.lit = lit;
       d.dial.classList.toggle('max', p[b] >= 1);
       d.name.textContent = p[b] >= 1 ? 'MAX!' : DIALS[b];
     });
@@ -104,7 +136,20 @@ export const create: GameFactory = ({ root, rng, level, duration, good, fx }) =>
     meme.className = `meme h${m.hue}`;
     blob = cast();
     // A lens flare waits on each eye for the GLOW dial.
-    face.replaceChildren(blob.el, h('i', 'flare l'), h('i', 'flare r'));
+    face.replaceChildren(blob.el, flare('l'), flare('r'));
+    // One slot per notch the dial wants this meme, spaced round the ring on its pixel grid.
+    dials.forEach((d, b) => {
+      const n = m.need[b];
+      d.notches = Array.from({ length: n }, (_, i) => {
+        const a = (i / n) * 2 * Math.PI;
+        const el = sprite('deepfry-slot', { px: DIAL }, 'notch');
+        el.style.left = `${Math.round(9.5 + 8.5 * Math.sin(a)) * DIAL}em`;
+        el.style.top = `${Math.round(9.5 - 8.5 * Math.cos(a)) * DIAL}em`;
+        return el;
+      });
+      d.lit = 0;
+      d.ring.replaceChildren(...d.notches);
+    });
     top.textContent = m.top;
     bottom.textContent = m.bottom;
     paint();
