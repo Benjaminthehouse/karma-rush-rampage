@@ -15,33 +15,32 @@ function audio(): AudioContext | null {
   if (!settings.get('sound')) return null;
   try {
     if (!ac) {
-      ac = new AudioContext();
-      const comp = ac.createDynamicsCompressor();
-      comp.threshold.value = -16;
-      comp.ratio.value = 6;
-      comp.attack.value = 0.001; // fast enough to catch clicks and snaps before they clip
-      out = ac.createGain();
-      out.gain.value = FX_GAIN;
-// A soft clipper after the compressor: untouched below 70% of full scale, rounded off
-      // above it, so a sharp click can never hard-clip the speaker.
-      const limit = ac.createWaveShaper();
-      const curve = new Float32Array(1025);
-      for (let i = 0; i < curve.length; i++) {
-        const x = (i / 512 - 1) * 2; // the input range covered is -2..2
-        const m = Math.abs(x);
-        curve[i] = Math.sign(x) * (m < 0.7 ? m : 0.7 + 0.3 * Math.tanh((m - 0.7) / 0.3));
+      // Built in full before anything is kept, so a failure can never leave a half-wired
+      // graph that plays into nothing.
+      const ctx = new AudioContext();
+      const fx = ctx.createGain();
+      fx.gain.value = FX_GAIN;
+      const tune = ctx.createGain();
+      tune.gain.value = MUSIC_GAIN;
+      try {
+        const comp = ctx.createDynamicsCompressor();
+        comp.threshold.value = -16;
+        comp.ratio.value = 6;
+        comp.connect(ctx.destination);
+        fx.connect(comp);
+        tune.connect(comp);
+      } catch {
+        // No compressor on this device: straight to the speaker is better than silence.
+        fx.connect(ctx.destination);
+        tune.connect(ctx.destination);
       }
-      limit.curve = curve;
-      const pre = ac.createGain();
-      pre.gain.value = 0.5; // the shaper maps -1..1, so halve going in and use the -2..2 curve
-      comp.connect(pre).connect(limit).connect(ac.destination);
-      out.connect(comp);
-      beat = ac.createGain();
-      beat.gain.value = MUSIC_GAIN;
-      beat.connect(comp);
-      noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
-      const data = noiseBuf.getChannelData(0);
+      const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      const data = buf.getChannelData(0);
       for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+      ac = ctx;
+      out = fx;
+      beat = tune;
+      noiseBuf = buf;
     }
     if (ac.state !== 'running') void ac.resume();
     return ac;
@@ -62,6 +61,9 @@ function tone({ f, dur, type = 'square', vol = 0.08, to, at = 0, attack = 0.004,
   o.type = type;
   o.frequency.setValueAtTime(f, t0);
   if (to) o.frequency.exponentialRampToValueAtTime(Math.max(20, to), t0 + dur);
+  // Silent from the moment it exists: a gain node starts at full volume, and the first
+  // sample of a sound can slip out before the scheduled fade-in takes hold, as a click.
+  g.gain.value = 0.0001;
   g.gain.setValueAtTime(0.0001, t0);
   g.gain.exponentialRampToValueAtTime(vol, t0 + attack);
   // Decay to -34 dB rather than to silence, so short sounds keep some body.
@@ -87,6 +89,9 @@ function noise({ dur, vol = 0.08, type = 'highpass', f = 2000, to, at = 0, attac
   filt.frequency.setValueAtTime(f, t0);
   if (to) filt.frequency.exponentialRampToValueAtTime(to, t0 + dur);
   const g = a.createGain();
+  // Silent from the moment it exists: a gain node starts at full volume, and the first
+  // sample of a sound can slip out before the scheduled fade-in takes hold, as a click.
+  g.gain.value = 0.0001;
   g.gain.setValueAtTime(0.0001, t0);
   g.gain.exponentialRampToValueAtTime(vol, t0 + attack);
   g.gain.exponentialRampToValueAtTime(vol * 0.02, t0 + dur);
@@ -260,8 +265,8 @@ const HIT: Record<HitVoice, (k: number) => void> = {
   },
   // Closing, bursting, bubble-wrap: a pop.
   pop(k) {
-    tone({ f: 380 * k, to: 900 * k, dur: 0.065, type: 'sine', vol: 0.15, attack: 0.004 });
-    noise({ dur: 0.02, vol: 0.035, f: 4000, attack: 0.002 });
+    tone({ f: 380 * k, to: 900 * k, dur: 0.065, type: 'sine', vol: 0.16, attack: 0.004 });
+    noise({ dur: 0.02, vol: 0.06, f: 4000, attack: 0.002 });
   },
   // Dings, chimes, doorbells, "done!".
   bell(k) {
@@ -303,9 +308,9 @@ const HIT: Record<HitVoice, (k: number) => void> = {
   // A camera shutter or a finger snap: spotting, catching, tagging.
   snap(k) {
     const j = k ** 0.8;
-    noise({ dur: 0.016, vol: 0.16, f: 4200, attack: 0.002 });
-    noise({ dur: 0.022, vol: 0.16, f: 3000, at: 0.05, attack: 0.001 });
-    tone({ f: 880 * j, dur: 0.05, type: 'sine', vol: 0.13, at: 0.05, attack: 0.002 });
+    noise({ dur: 0.018, vol: 0.2, f: 4200, attack: 0.002 });
+    noise({ dur: 0.024, vol: 0.18, f: 3000, at: 0.05, attack: 0.002 });
+    tone({ f: 880 * j, dur: 0.05, type: 'sine', vol: 0.13, at: 0.05, attack: 0.003 });
   },
   // A megaphone honk.
   horn(k) {
