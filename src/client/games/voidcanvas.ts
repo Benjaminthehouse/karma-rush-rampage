@@ -116,8 +116,10 @@ const TONE: Tone[] = ['red', 'green', 'blue'];
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   // The void bites harder the more canvas you hold, so every pace finds its own frontline
-  // and only a fast painter can pin it against the edge.
-  const biteGap = (cols: number) => 1000 / (1.3 + level * 0.12 + 4.3 * (cols / COLS) ** 2);
+  // and only a fast painter can pin it against the edge. Tuned for people, who read each
+  // colour before pressing: two presses a second holds about two thirds of the canvas
+  // in the first round, three a second nearly 90%.
+  const biteGap = (cols: number) => 1000 / (0.7 + level * 0.1 + 3 * (cols / COLS) ** 2);
   const seq: Btn[] = [];
   while (seq.length < 120) {
     const b = randBtn(rng);
@@ -135,7 +137,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let held = COLS / 2; // columns that are still ours, counted from the left
   let idx = 0;
   let lockedUntil = 0;
-  let nextBite = 400 + biteGap(held); // a breath to find the first colour
+  let nextBite = 900 + biteGap(held); // a breath to find the first colour
   let raid = 0;
   let bracing = false; // a raid is about to land
   let proud = true; // the big cheer fires once per comeback, not on every flicker at the edge
@@ -272,7 +274,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         return;
       }
       if (b !== want()) {
-        lockedUntil = t + 400;
+        lockedUntil = t + 350;
         locked = true;
         wrap.classList.add('locked');
         pulse(queue, 'shake');
