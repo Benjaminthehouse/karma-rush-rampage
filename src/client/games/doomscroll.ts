@@ -1,5 +1,32 @@
 import './doomscroll.css';
-import { COLOR, h, pulse, ratio, shuffled, type Btn, type GameFactory } from './common';
+import { actor, COLOR, defineSprite, h, pulse, ratio, shuffled, sprite, type ActorMood, type Btn, type GameFactory } from './common';
+
+// Bloodshot rims and bags, laid over the scroller's open eyes on the same 16x16 grid.
+defineSprite('doomscroll-redeyes', `
+................
+................
+................
+................
+................
+................
+................
+...rk.rr.rk.rr..
+...r..r..r..r...
+...rrrr..rrrr...
+...RRRR..RRRR...
+................
+................
+................
+................
+................`);
+// A pillow, a little wider than the head that sinks into it.
+defineSprite('doomscroll-pillow', `
+.kkkkkkkkkkkkkkkkkkkk.
+kwwwwwwwwwwwwwwwwwwwwk
+kwwwwwwwwwwwwwwwwwwwdk
+kwwwwwwwwwwwwwwwwwwddk
+kdwwwwwwwwwwwwwwwwdddk
+.kkkkkkkkkkkkkkkkkkkk.`);
 
 const POSTS = [
   'You won’t believe this',
@@ -34,20 +61,51 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let slipBtn = -1;
   let slipUntil = 0;
 
-  const wrap = h('div', 'g-doomscroll');
+  // The scene: a bedroom at 3am. Someone lies in bed, face lit by the phone held over them;
+  // the clock ticks on, the feed scrolls, and their eyes get redder with every post.
+  const wrap = h('div', 'g-doomscroll scene-night');
+  const top = h('div', 'top');
+  const clock = h('div', 'clock', '3:00');
   const order = h('div', 'order');
   const chips = [0, 1, 2].map((i) => h('i', `c-${COLOR[i]}`));
   const way = h('b', 'way');
   order.append(chips[0], chips[1], chips[2], way);
+  top.append(order);
+  const room = h('div', 'room');
   const phone = h('div', 'phone');
+  const status = h('div', 'status');
+  const feed = h('div', 'feed');
+  const list = h('div', 'list');
+  feed.append(list);
   const cards = texts.map(() => {
     const c = h('div', 'card');
-    phone.append(c);
+    list.append(c);
     return c;
   });
-  const note = h('div', 'g-note');
-  wrap.append(order, phone, note);
+  phone.append(status, feed);
+  const bed = h('div', 'bed');
+  const sleeper = h('div', 'sleeper');
+  const who = actor('npc', { px: 0.42 });
+  const red = sprite('doomscroll-redeyes', { px: 0.42 }, 'red');
+  sleeper.append(sprite('doomscroll-pillow', { px: 0.42 }, 'pillow'), who.el, red);
+  const stand = h('div', 'stand');
+  stand.append(clock);
+  bed.append(h('div', 'glow'), sleeper, h('div', 'blanket'), stand);
+  room.append(phone, bed);
+  wrap.append(top, room);
   root.append(wrap);
+
+  let mood: ActorMood = 'idle';
+  let moodUntil = 0;
+  let clockShown = '';
+  let redShown = -1;
+  const look = (m: ActorMood, t: number, hold: number) => {
+    moodUntil = t + hold;
+    if (m === mood) return;
+    mood = m;
+    who.mood(m);
+    red.classList.toggle('off', m !== 'idle');
+  };
 
   function show() {
     order.classList.toggle('back', dir < 0);
@@ -59,7 +117,13 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       c.className = flip ? 'card flip' : 'card';
       c.textContent = flip ? 'FLIP HERE' : texts[i];
     });
-    note.textContent = `${rolled} posts scrolled`;
+    status.textContent = `${rolled} posts scrolled`;
+    // The eyes go red in four steps on the way to the par.
+    const r = Math.min(3, Math.floor((4 * rolled) / par));
+    if (r !== redShown) {
+      redShown = r;
+      red.dataset.r = String(r);
+    }
   }
   show();
 
@@ -69,8 +133,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       if (b !== expect) {
         if (b === slipBtn && t < slipUntil) return;
         lockedUntil = t + 300;
-        phone.classList.remove('g-doomscroll-roll'); // its animation would override the shake
         pulse(phone, 'shake');
+        look('shock', t, 350);
         bad(chips[expect], 'THUMB SLIPPED');
         return;
       }
@@ -78,11 +142,11 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       good(chips[b]);
       // Recycle the top card to the bottom, with the next post, so the feed never ends.
       const top = cards.shift()!;
-      phone.append(top);
+      list.append(top);
       cards.push(top);
       texts.shift();
       texts.push(posts[dealt++ % posts.length]);
-      pulse(phone, 'g-doomscroll-roll');
+      pulse(list, 'g-doomscroll-roll');
       if (--leftInRun <= 0) {
         run++;
         leftInRun = runs[run % runs.length];
@@ -91,12 +155,19 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         dir = -dir;
         fx.pop(order, dir > 0 ? 'ROLL RIGHT!' : 'ROLL LEFT!', 'gold');
         fx.sound('whoosh');
+        look('shock', t, 250);
         expect = b; // the flip restarts from the pad you are already on
       }
       expect = (((expect + dir) % 3) + 3) % 3 as Btn;
       show();
     },
-    tick() {},
+    tick(t) {
+      // The clock runs fast: a minute every 150 ms.
+      const m = Math.floor(t / 150);
+      const text = `${3 + Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
+      if (text !== clockShown) clock.textContent = clockShown = text;
+      if (mood !== 'idle' && t >= moodUntil) look('idle', t, 0);
+    },
     score: () => ratio(rolled, par),
     hint: (t) => (t >= lockedUntil ? expect : null),
   };

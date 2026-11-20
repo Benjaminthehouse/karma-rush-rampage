@@ -1,10 +1,31 @@
-.g-ninetynine { align-items: stretch !important; }
-.g-ninetynine .row { display: grid; grid-template-columns: 1fr auto; gap: 0.2em 0.6em; align-items: center; }
-.g-ninetynine .step { font-weight: 800; font-size: 0.85em; color: var(--dim); }
-.g-ninetynine .pct { font-weight: 900; font-variant-numeric: tabular-nums; text-align: right; min-width: 3.4em; }
-.g-ninetynine .track { grid-column: 1 / -1; position: relative; height: 2.2em; border-radius: 0.6em; background: var(--bg); border: 0.14em solid var(--line); overflow: hidden; }
-.g-ninetynine .track i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--c); }
-.g-ninetynine .track b { position: absolute; right: 0; top: 0; bottom: 0; width: 7%; background: repeating-linear-gradient(135deg, var(--gold) 0 0.3em, #0000 0.3em 0.6em); }
-.g-ninetynine .row.stopped .track { border-color: var(--c); }
-.g-ninetynine .row.crashed .track i { background: var(--dim); }
-.g-ninetynine .row.crashed .pct { color: var(--red); }
+/* The Dev's cave: three monitors on the wall, the Dev at the desk below them. */
+.g-ninetynine { justify-content: space-between !important; gap: 0.5em !important; padding: 0.8em 0.6em 0.5em !important; }
+
+/* The monitor wall: one monitor per button, its bezel in the button's colour. */
+.g-ninetynine .wall { flex: 1 1 auto; min-height: 0; max-height: 15em; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.7em; width: min(100%, 30em); padding-top: 0.3em; }
+.g-ninetynine .mon { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.g-ninetynine .screen { flex: 1 1 auto; align-self: stretch; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 0.3em; padding: 0.35em 0.35em 0.3em; background: #10142e; color: #c4cbe4; box-shadow: 0 0 0 0.3em var(--c), 0 0 0 0.5em #0b1020, 0.3em 0.35em 0 0.5em #0b1020; }
+.g-ninetynine .step { font-size: 0.85em; line-height: 1; color: var(--c); text-align: center; }
+.g-ninetynine .thing { font-size: 0.68em; line-height: 1.1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g-ninetynine .track { position: relative; flex: 1 1 1.3em; min-height: 1.3em; max-height: 3em; background: #0b1020; box-shadow: inset 0 0 0 0.12em #646e9c; overflow: hidden; }
+.g-ninetynine .track i { position: absolute; left: 0.12em; right: 0.12em; top: 0.12em; bottom: 0.12em; background: var(--c); transform: scaleX(0); transform-origin: left; }
+.g-ninetynine .track b { position: absolute; right: 0; top: 0; bottom: 0; width: 7%; background: repeating-linear-gradient(135deg, #ffcf3f 0 0.25em, #0b1020 0.25em 0.5em); }
+.g-ninetynine .pct { font-size: 1.5em; line-height: 1; text-align: center; font-variant-numeric: tabular-nums; color: #eef1ff; }
+.g-ninetynine .stand { width: 1.2em; height: 0.9em; margin-top: 0.5em; background: #3a4370; box-shadow: 0 0 0 0.16em #0b1020; }
+.g-ninetynine .mon.stopped .pct { color: #8cf28e; }
+.g-ninetynine .mon.crashed .screen { background: #2a1016; }
+.g-ninetynine .mon.crashed .track i { background: #646e9c; }
+.g-ninetynine .mon.crashed .pct { color: #ff6b74; }
+
+/* The Dev at the desk: big, sweating when a bar gets close. */
+.g-ninetynine .room { position: relative; flex: none; width: min(100%, 24em); display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+.g-ninetynine .seat { position: relative; display: flex; flex-direction: column; align-items: center; margin-bottom: -0.4em; }
+.g-ninetynine .hoodie { width: 6.4em; height: 1.6em; margin-top: -0.6em; background: #8a4bd8; box-shadow: 0 0 0 0.2em #0b1020, inset 0 0.3em 0 0 #a86cf0; }
+.g-ninetynine .sweat { position: absolute; left: 0.2em; top: 2.2em; visibility: hidden; }
+.g-ninetynine .sweat.two { left: auto; right: 0.1em; top: 3.4em; }
+.g-ninetynine .seat.nervous .sweat { visibility: visible; animation: g-ninetynine-drip 0.6s ease-in infinite; }
+.g-ninetynine .seat.nervous .sweat.two { animation-delay: -0.3s; }
+@keyframes g-ninetynine-drip { from { transform: translateY(0); opacity: 1; } to { transform: translateY(1.6em); opacity: 0; } }
+.g-ninetynine .desk { position: relative; z-index: 1; align-self: stretch; display: flex; align-items: flex-end; justify-content: space-between; height: 2.6em; padding: 0 0.6em 0.5em; background: #8a5a2c; box-shadow: 0 0 0 0.2em #0b1020, inset 0 0.35em 0 0 #b0703c; }
+.g-ninetynine .lap { margin-bottom: 0.1em; }
+.g-ninetynine .note { padding: 0.1em 0.45em; background: #fff0a8; color: #0b1020; font-size: 0.85em; white-space: nowrap; transform: rotate(-3deg); box-shadow: 0 0 0 0.14em #0b1020; }

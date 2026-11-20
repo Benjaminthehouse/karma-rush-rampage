@@ -1,11 +1,38 @@
-.g-doomscroll .order { position: relative; display: flex; align-items: center; gap: 0.4em; }
-.g-doomscroll .order i { width: 2.2em; height: 2.2em; border-radius: 0.5em; background: var(--c); opacity: 0.4; box-shadow: inset 0 -0.3em 0 var(--cd); }
-.g-doomscroll .order i.next { opacity: 1; outline: 0.2em solid var(--ink); outline-offset: 0.1em; transform: scale(1.1); }
-/* The chips stay in pad order (red left, blue right); only the arrow changes sides. */
-.g-doomscroll .way { position: absolute; top: 50%; left: 100%; margin: 0 0.2em; transform: translateY(-50%); font-size: 2em; font-weight: 900; color: var(--gold); line-height: 1; }
+/* A bedroom at 3am: the drum order up top, the phone held over the bed, the scroller under the covers. */
+.g-doomscroll { justify-content: space-between !important; gap: 0.4em !important; padding: 0.8em 0.6em 0 !important; }
+
+/* The drum order: three pads in pad order (red left, blue right); only the arrow changes sides. */
+.g-doomscroll .top { display: flex; justify-content: center; width: 100%; padding-top: 0.3em; margin-bottom: 0.4em; }
+.g-doomscroll .order { position: relative; display: flex; align-items: center; gap: 0.45em; }
+.g-doomscroll .order i { width: 2.1em; height: 2.1em; background: var(--c); opacity: 0.45; box-shadow: 0 0 0 0.18em #0b1020, inset 0 -0.3em 0 var(--cd); transition: transform 0.06s; }
+.g-doomscroll .order i.next { opacity: 1; transform: translateY(-0.3em) scale(1.12); box-shadow: 0 0 0 0.18em #0b1020, 0 0 0 0.36em #fff, inset 0 -0.3em 0 var(--cd); }
+.g-doomscroll .way { position: absolute; top: 50%; left: 100%; margin: 0 0.35em; transform: translateY(-50%); font-size: 2em; line-height: 1; color: #ffcf3f; }
 .g-doomscroll .order.back .way { left: auto; right: 100%; }
-.g-doomscroll .phone { width: min(100%, 15em); height: 12em; border: 0.25em solid var(--ink); border-radius: 1.2em; background: var(--bg); padding: 0.5em; display: flex; flex-direction: column; gap: 0.35em; overflow: hidden; }
-.g-doomscroll .card { flex: none; background: var(--panel-2); border-radius: 0.5em; padding: 0.55em 0.6em; font-weight: 800; font-size: 0.8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.g-doomscroll .card.flip { background: var(--gold); color: var(--bg); font-weight: 900; text-align: center; letter-spacing: 0.08em; }
+
+.g-doomscroll .room { position: relative; flex: 1 1 auto; min-height: 0; width: min(100%, 26em); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+
+/* The phone: a big black slab with a lit screen, held up over the bed. */
+.g-doomscroll .phone { position: relative; z-index: 2; flex: 1 1 auto; min-height: 8.5em; max-height: 13em; width: min(78%, 14em); margin-bottom: 0.3em; padding: 0.35em 0.35em 0.6em; background: #0b1020; display: flex; flex-direction: column; gap: 0.25em; box-shadow: 0 0 0 0.18em #3a4370, 0.35em 0.4em 0 0.18em #0b1020aa; transform: rotate(2deg); }
+.g-doomscroll .status { flex: none; padding: 0 0.3em; background: #3fe0ff; color: #0b1020; font-size: 0.72em; white-space: nowrap; text-align: center; }
+.g-doomscroll .feed { flex: 1 1 auto; min-height: 0; padding: 0.3em; background: #dfe4f5; overflow: hidden; }
+.g-doomscroll .list { display: flex; flex-direction: column; gap: 0.3em; }
+.g-doomscroll .card { flex: none; padding: 0.4em 0.5em; background: #fff; color: #0b1020; font-size: 0.8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 0 0 0.14em #0b1020; }
+.g-doomscroll .card.flip { background: #ffcf3f; text-align: center; letter-spacing: 0.08em; }
 .g-doomscroll .g-doomscroll-roll { animation: g-doomscroll-roll 0.09s ease-out; }
 @keyframes g-doomscroll-roll { from { transform: translateY(1.6em); } }
+
+/* The bed: pillow, scroller, quilt pulled up to the chin, a nightstand with the alarm clock. */
+.g-doomscroll .bed { position: relative; flex: none; align-self: stretch; height: 8.2em; }
+.g-doomscroll .glow { position: absolute; z-index: 1; left: 3em; bottom: 4.5em; width: 9em; height: 4em; background: #3fe0ff; opacity: 0.18; clip-path: polygon(55% 0, 100% 0, 40% 100%, 0 100%); }
+.g-doomscroll .sleeper { position: absolute; left: 0.3em; bottom: 1.2em; width: 9.24em; height: 6.72em; }
+.g-doomscroll .pillow { position: absolute; left: 0; bottom: 0; }
+.g-doomscroll .sleeper > .actor, .g-doomscroll .sleeper > .red { position: absolute; left: 1.4em; bottom: 0.5em; }
+.g-doomscroll .red { opacity: 0; transition: opacity 0.3s steps(3); }
+.g-doomscroll .red[data-r='1'] { opacity: 0.4; }
+.g-doomscroll .red[data-r='2'] { opacity: 0.75; }
+.g-doomscroll .red[data-r='3'] { opacity: 1; }
+.g-doomscroll .red.off { visibility: hidden; }
+.g-doomscroll .blanket { position: absolute; z-index: 1; left: -0.6em; right: -0.6em; bottom: 0; height: 2.4em; background: #5a3fa8; box-shadow: 0 -0.2em 0 0 #0b1020, inset 0 0.4em 0 0 #7a5ad0; background-image: linear-gradient(90deg, #0000 0 47%, #4a3290 47% 53%, #0000 53%); background-size: 3em 100%; }
+.g-doomscroll .stand { position: absolute; z-index: 1; right: 0; bottom: 2.4em; width: 5em; height: 2.6em; display: flex; align-items: flex-start; justify-content: center; background: #6e3f1c; box-shadow: 0 0 0 0.18em #0b1020, inset 0 0.3em 0 0 #8a5a2c; }
+.g-doomscroll .clock { margin-top: -1.5em; padding: 0.05em 0.35em; background: #0b1020; color: #ff4b55; font-size: 1.1em; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 0.14em #3a4370; }
+.g-doomscroll .clock::after { content: ' AM'; font-size: 0.65em; }

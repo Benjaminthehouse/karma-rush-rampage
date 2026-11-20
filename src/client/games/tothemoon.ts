@@ -1,5 +1,29 @@
 import './tothemoon.css';
-import { COLOR, clamp1000, h, randBtn, type Btn, type GameFactory } from './common';
+import { actor, COLOR, clamp1000, defineSprite, h, randBtn, sprite, type ActorMood, type Btn, type GameFactory } from './common';
+
+// A stubby rocket with a porthole; the nose and fins take the lane's colour.
+defineSprite('tothemoon-rocket', `
+....kk....
+...kLAk...
+..kLAAak..
+..kwwwdk..
+.kwwkkwdk.
+.kwkcckdk.
+.kwkcckdk.
+.kwwkkwdk.
+.kwwwwwdk.
+.kwwwwwdk.
+kAkwwwdkAk
+kAkwwwdkAk
+kAakkkkaAk
+kkk.kk.kkk`);
+// The exhaust, shown only while the button is held.
+defineSprite('tothemoon-flame', `
+kooook
+koyyok
+koyyok
+.kyyk.
+..kk..`);
 
 const TICKERS = ['$KARMA', '$DOGGO', '$STONK', '$HODL', '$CATCOIN', '$UPVOTE', '$COPIUM', '$BANANA'];
 
@@ -22,24 +46,48 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let landed = 0;
   let misses = 0;
 
-  const wrap = h('div', 'g-tothemoon');
+  // The scene: a launch pad at night. Three rockets stand on their pads under the moon;
+  // the Ape climbs onto the lit one and rides it up while you hold its button.
+  const wrap = h('div', 'g-tothemoon scene-night');
+  wrap.append(sprite('moon', { px: 0.4 }, 'moon'));
+  const ape = actor('ape', { px: 0.32 });
+  let mood: ActorMood = 'idle';
+  const look = (m: ActorMood) => {
+    if (m === mood) return;
+    mood = m;
+    ape.mood(m);
+  };
   const lanes = [0, 1, 2].map((i) => {
     const lane = h('div', `lane c-${COLOR[i]}`);
-    // The track is the lane minus half a rocket at each end, and the rocket hangs half below
-    // its own position, so the rocket's centre is drawn exactly at its judged height.
+    // The track is the lane minus the rider above and half a rocket below, and the rocket hangs
+    // half below its carrier's floor, so the rocket's centre is drawn exactly at its judged height.
     const track = h('div', 'track');
     const zone = h('div', 'zone', 'MOON');
+    const carrier = h('div', 'carrier');
+    const ride = h('div', 'ride');
+    const seat = h('div', 'seat');
     const rocket = h('div', 'rocket');
-    rocket.append(h('i'));
+    rocket.append(sprite('tothemoon-rocket', { tone: COLOR[i], px: 0.36 }), sprite('tothemoon-flame', { px: 0.3 }, 'flame'));
+    ride.append(seat, rocket);
+    carrier.append(ride);
     const tag = h('div', 'ticker');
-    track.append(zone, rocket);
-    lane.append(track, tag);
+    track.append(zone, carrier);
+    const pad = h('div', 'pad');
+    pad.append(tag);
+    lane.append(track, pad);
     wrap.append(lane);
-    return { lane, zone, rocket, tag };
+    return { lane, zone, rocket, carrier, seat, tag };
   });
-  const note = h('div', 'g-note');
+  const note = h('div', 'note');
   wrap.append(note);
   root.append(wrap);
+  let shownY = -1;
+  const lift = (l: (typeof lanes)[number], y: number) => {
+    const v = Math.round(Math.min(1, y) * 1000) / 10;
+    if (v === shownY) return;
+    shownY = v;
+    l.carrier.style.transform = `translateY(${-v}%)`;
+  };
 
   const cur = () => launches[idx];
   const height = (t: number) => (t - t0) / climbMs;
@@ -52,8 +100,19 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     const l = lanes[c.col];
     l.zone.style.bottom = `${c.lo * 100}%`;
     l.zone.style.height = `${(c.hi - c.lo) * 100}%`;
-    l.rocket.style.bottom = '0%';
-    l.rocket.className = 'rocket';
+    // Every rocket is back on its pad for the next launch.
+    shownY = -1;
+    lanes.forEach((other) => {
+      other.carrier.style.transform = '';
+      other.rocket.className = 'rocket';
+    });
+    lift(l, 0);
+    // The Ape hops onto the lit rocket.
+    if (ape.el.parentElement !== l.seat) {
+      l.seat.append(ape.el);
+      if (idx > 0) fx.poof(l.seat);
+    }
+    look('idle');
     l.tag.textContent = c.ticker;
     note.textContent = `${landed} moon landing${landed === 1 ? '' : 's'}`;
   }
@@ -63,12 +122,14 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     if (ok) {
       landed++;
       l.rocket.className = 'rocket landed';
+      look('cool');
       good(l.rocket, word);
       fx.burst(l.zone, 'gold', 14);
       fx.sound('coin');
     } else {
       misses++;
       l.rocket.className = 'rocket crashed';
+      look('dead');
       bad(l.rocket, word);
     }
     phase = 'wait';
@@ -83,11 +144,13 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       if (b !== cur().col) {
         misses++;
         bad(lanes[b].lane, 'WRONG ROCKET');
+        look('shock');
         return;
       }
       phase = 'climb';
       t0 = t;
       lanes[b].rocket.className = 'rocket burning';
+      look('happy');
       fx.sound('power');
     },
     release(b, t) {
@@ -101,7 +164,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       if (phase === 'wait' && t >= nextAt) arm();
       if (phase !== 'climb') return;
       const y = height(t);
-      lanes[cur().col].rocket.style.bottom = `${Math.min(1, y) * 100}%`;
+      lift(lanes[cur().col], y);
       if (y >= 1.06) settle(t, false, 'TOO GREEDY');
     },
     score: () => clamp1000((1000 * (landed - misses / 2)) / par),

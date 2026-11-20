@@ -1,18 +1,31 @@
-.g-worksonmine .say { max-width: 100%; min-height: 3.5em; display: flex; align-items: center; }
-.g-worksonmine .rule i { color: #ff9aa0; }
-.g-worksonmine .stamp { display: inline-block; font-size: 0.9em; font-weight: 900; line-height: 1.1; letter-spacing: 0.03em; color: var(--green); border: 0.16em solid; border-radius: 0.4em; padding: 0.2em 0.6em; transform: rotate(-3deg); animation: g-worksonmine-stamp 0.18s ease-out; }
-.g-worksonmine .stamp.gold { color: var(--gold); box-shadow: 0 0 0.8em #ffcf3f99; }
+/* The Dev's cave: the Dev talks in a speech bubble up top, peers over a desk of three laptops, the build log below. */
+.g-worksonmine { justify-content: space-between !important; gap: 0.3em !important; padding: 0.7em 0.6em 0.6em !important; }
+
+/* The speech bubble: white, thick outline, a tail pointing down at the Dev. */
+.g-worksonmine .say { position: relative; z-index: 3; width: min(100%, 18em); min-height: 3.1em; display: flex; align-items: center; justify-content: center; padding: 0.35em 0.7em; background: #fff; color: #0b1020; text-align: center; box-shadow: 0 0 0 0.2em #0b1020, 0.35em 0.4em 0 0.2em #0b102099; }
+.g-worksonmine .say::after { content: ''; position: absolute; left: 50%; top: 100%; margin: 0.18em 0 0 -0.65em; border: 0.65em solid #0000; border-top: 0.7em solid #0b1020; border-bottom: 0; }
+.g-worksonmine .say::before { content: ''; position: absolute; left: 50%; top: 100%; z-index: 1; margin: -0.05em 0 0 -0.42em; border: 0.42em solid #0000; border-top: 0.5em solid #fff; border-bottom: 0; }
+.g-worksonmine .rule { font-size: 1.15em; line-height: 1.05; text-wrap: balance; }
+.g-worksonmine .rule b { font-weight: inherit; color: #1f9e3a; }
+.g-worksonmine .rule i { font-style: normal; color: #c8323c; }
+.g-worksonmine .stamp { display: inline-block; font-size: 0.9em; line-height: 1.1; color: #1f9e3a; padding: 0.15em 0.5em; box-shadow: inset 0 0 0 0.16em currentColor; transform: rotate(-3deg); animation: g-worksonmine-stamp 0.18s ease-out; }
+.g-worksonmine .stamp.gold { color: #0b1020; background: #ffcf3f; box-shadow: inset 0 0 0 0.16em #0b1020; }
 /* Slams in from small with a little overshoot, so it never pokes out of the stage. */
 @keyframes g-worksonmine-stamp { from { transform: rotate(-3deg) scale(0.5); opacity: 0; } 65% { transform: rotate(-3deg) scale(1.07); opacity: 1; } }
 
-/* Three fixed slots, one above each button; the laptops slide between them. The side margins leave
-   room for an end laptop to swell (tick, hop, smoke) without leaving the stage, however wide it is. */
-.g-worksonmine .desk { position: relative; width: 94%; height: 11.6em; flex: none; }
-.g-worksonmine .pad { position: absolute; bottom: 0; width: 30%; height: 1.3em; border-radius: 0.45em; background: var(--c); box-shadow: 0 0.28em 0 var(--cd); }
-.g-worksonmine .pad:nth-child(2) { left: 35%; }
-.g-worksonmine .pad:nth-child(3) { left: 70%; }
-.g-worksonmine .desk.ask .pad { box-shadow: 0 0.28em 0 var(--cd), 0 0 1.3em var(--c); filter: brightness(1.25); }
-.g-worksonmine .rig { position: absolute; bottom: 1.7em; width: 30%; transition: left var(--ms) ease-in-out; }
+/* The desk. Three fixed slots, one above each button; the laptops slide between them. The side margins
+   leave room for an end laptop to swell (tick, hop, smoke) without leaving the stage. */
+.g-worksonmine .desk { position: relative; flex: 1 1 auto; width: min(94%, 24em); min-height: 13.6em; max-height: 18em; }
+.g-worksonmine .devbox { position: absolute; z-index: 0; left: 50%; bottom: 6.2em; margin-left: -4em; display: flex; flex-direction: column; align-items: center; }
+.g-worksonmine .hoodie { width: 6.4em; height: 1.6em; margin-top: -0.6em; background: #8a4bd8; box-shadow: 0 0 0 0.2em #0b1020, inset 0 0.3em 0 0 #a86cf0; }
+.g-worksonmine .top { position: absolute; z-index: 1; left: -3%; right: -3%; bottom: 0; height: 2.7em; background: #8a5a2c; box-shadow: 0 0 0 0.2em #0b1020, inset 0 0.35em 0 0 #b0703c, 0.3em 0.35em 0 0.2em #0b1020; }
+.g-worksonmine .pad { position: absolute; z-index: 1; bottom: 0.55em; width: 30%; height: 0.9em; background: var(--c); box-shadow: 0 0 0 0.16em #0b1020, inset 0 -0.25em 0 0 var(--cd); }
+.g-worksonmine .pad:nth-child(3) { left: 0; }
+.g-worksonmine .pad:nth-child(4) { left: 35%; }
+.g-worksonmine .pad:nth-child(5) { left: 70%; }
+.g-worksonmine .desk.ask .pad { animation: g-worksonmine-glow 0.4s steps(2) infinite; }
+@keyframes g-worksonmine-glow { 50% { transform: translateY(-0.2em); } }
+.g-worksonmine .rig { position: absolute; z-index: 2; left: 0; bottom: 1.85em; width: 30%; transition: transform var(--ms) ease-in-out; }
 .g-worksonmine .laptop { position: relative; z-index: 1; transition: transform 0.12s; animation-duration: var(--ms); animation-timing-function: ease-in-out; }
 .g-worksonmine .laptop.over { z-index: 0; animation-name: g-worksonmine-over; }
 .g-worksonmine .laptop.under { z-index: 2; animation-name: g-worksonmine-under; }
@@ -20,34 +33,35 @@
 @keyframes g-worksonmine-over { 50% { transform: translateY(-2.9em) scale(0.92); } }
 @keyframes g-worksonmine-under { 50% { transform: translateY(0.45em) scale(1.05); } }
 
-.g-worksonmine .screen { aspect-ratio: 0.95; max-height: 6.6em; width: 100%; border: 0.28em solid #c9d1ee; border-radius: 0.65em 0.65em 0.15em 0.15em; background: linear-gradient(155deg, #1c2550, var(--bg) 60%); display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.g-worksonmine .base { position: relative; height: 0.8em; margin: 0 -0.2em; border-radius: 0.15em 0.15em 0.65em 0.65em; background: linear-gradient(#e6eafb, #8e99c4); }
-.g-worksonmine .base::after { content: ''; position: absolute; left: 36%; right: 36%; top: 0; height: 0.28em; border-radius: 0 0 0.3em 0.3em; background: #6f7aa8; }
-.g-worksonmine .screen svg { display: none; height: 60%; aspect-ratio: 1; fill: none; stroke: currentColor; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; }
-.g-worksonmine .screen b { display: none; font-size: 3.4em; font-weight: 900; line-height: 1; color: var(--gold); }
-.g-worksonmine .screen span { display: none; font-size: 0.72em; font-weight: 900; line-height: 1.2; white-space: nowrap; }
+/* A chunky laptop: a screen in a grey bezel over a keyboard slab. */
+.g-worksonmine .screen { aspect-ratio: 0.95; max-height: 6.4em; width: 100%; padding: 0.2em; background: #1a1f40; color: #c4cbe4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15em; box-shadow: 0 0 0 0.22em #c4cbe4, 0 0 0 0.42em #0b1020; }
+.g-worksonmine .base { position: relative; height: 0.8em; margin: 0.22em -0.4em 0; background: #c4cbe4; box-shadow: 0 0 0 0.2em #0b1020, inset 0 -0.25em 0 0 #8e99c4; }
+.g-worksonmine .base::after { content: ''; position: absolute; left: 38%; right: 38%; top: 0; height: 0.22em; background: #646e9c; }
+.g-worksonmine .screen .px { display: none; }
+.g-worksonmine .screen b { display: none; font-size: 3.2em; font-weight: inherit; line-height: 1; color: #ffcf3f; }
+.g-worksonmine .screen span { display: none; font-size: 0.72em; line-height: 1.1; white-space: nowrap; }
 
 /* What each laptop is showing. */
-.g-worksonmine .rig.off .screen::after { content: ''; width: 0.5em; height: 0.5em; border-radius: 50%; background: #3a4780; }
+.g-worksonmine .rig.off .screen::after { content: ''; width: 0.5em; height: 0.5em; background: #3a4370; }
 .g-worksonmine .rig.ok .tick, .g-worksonmine .rig.win .tick, .g-worksonmine .rig.was .tick, .g-worksonmine .rig.err .cross, .g-worksonmine .rig.boom .cross, .g-worksonmine .rig.ask b { display: block; }
 .g-worksonmine .rig.ok span, .g-worksonmine .rig.win span, .g-worksonmine .rig.was span, .g-worksonmine .rig.err span, .g-worksonmine .rig.boom span { display: block; }
-.g-worksonmine .rig.ok .screen, .g-worksonmine .rig.win .screen { border-color: var(--green); color: var(--green); background: #0d2a1c; box-shadow: 0 0 1.4em var(--green); }
+.g-worksonmine .rig.ok .screen, .g-worksonmine .rig.win .screen { background: #1f9e3a; color: #fff; box-shadow: 0 0 0 0.22em #8cf28e, 0 0 0 0.42em #0b1020; }
 .g-worksonmine .rig.ok .laptop { z-index: 2; transform: scale(1.08); }
-.g-worksonmine .rig.err .screen { color: var(--red); background: #1d1220; }
-.g-worksonmine .rig.ask .screen { border-color: var(--gold); box-shadow: 0 0 0.9em #ffcf3f88; }
+.g-worksonmine .rig.err .screen { color: #ff9aa0; background: #2a1016; }
+.g-worksonmine .rig.ask .screen { box-shadow: 0 0 0 0.22em #ffcf3f, 0 0 0 0.42em #0b1020; }
 .g-worksonmine .rig.ask b { animation: g-worksonmine-bob 0.4s ease-in-out infinite; }
 .g-worksonmine .rig.win .laptop { animation: g-worksonmine-win 0.4s ease-out; }
-.g-worksonmine .rig.was .screen { border-style: dashed; border-color: var(--green); color: var(--green); }
-.g-worksonmine .rig.boom .screen { color: var(--red); border-color: var(--dim); background: #2a1016; }
+.g-worksonmine .rig.was .screen { color: #8cf28e; box-shadow: 0 0 0 0.22em #1f9e3a, 0 0 0 0.42em #0b1020; }
+.g-worksonmine .rig.boom .screen { color: #ff9aa0; background: #2a1016; box-shadow: 0 0 0 0.22em #646e9c, 0 0 0 0.42em #0b1020; }
 .g-worksonmine .rig.boom .laptop { transform: rotate(-6deg); }
-.g-worksonmine .rig.boom::before, .g-worksonmine .rig.boom::after { content: ''; position: absolute; z-index: 3; left: 18%; top: -0.4em; width: 1.7em; height: 1.7em; border-radius: 50%; background: #9aa5cfcc; animation: g-worksonmine-smoke 0.7s ease-out both; }
+.g-worksonmine .rig.boom::before, .g-worksonmine .rig.boom::after { content: ''; position: absolute; z-index: 3; left: 18%; top: -0.4em; width: 1.6em; height: 1.6em; background: #9aa5cf; box-shadow: 0 0 0 0.16em #0b1020; animation: g-worksonmine-smoke 0.7s ease-out both; }
 .g-worksonmine .rig.boom::after { left: 52%; animation-delay: 0.12s; }
 @keyframes g-worksonmine-bob { 50% { transform: translateY(-0.18em); } }
 @keyframes g-worksonmine-win { 30% { transform: translateY(-1.1em) scale(1.18); } }
-@keyframes g-worksonmine-smoke { from { transform: scale(0.4); opacity: 0.9; } to { transform: translateY(-3em) scale(1.4); opacity: 0; } }
+@keyframes g-worksonmine-smoke { from { transform: scale(0.4); opacity: 0.9; } to { transform: translateY(-3em) scale(1.4) rotate(45deg); opacity: 0; } }
 
-.g-worksonmine .builds { display: flex; gap: 0.45em; }
-.g-worksonmine .builds i { width: 2.1em; height: 2.1em; border-radius: 0.5em; border: 0.14em solid var(--line); background: var(--bg); display: flex; align-items: center; justify-content: center; }
-.g-worksonmine .builds svg { width: 70%; height: 70%; fill: none; stroke: #071022; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
-.g-worksonmine .builds .ok { background: var(--green); border-color: var(--green); }
-.g-worksonmine .builds .fail { background: var(--red); border-color: var(--red); }
+/* The build log: four sticky notes, ticked or crossed. */
+.g-worksonmine .builds { display: flex; gap: 0.5em; }
+.g-worksonmine .builds > i { width: 2em; height: 2em; background: #3a4370; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 0.16em #0b1020, 0.2em 0.25em 0 0.16em #0b102099; }
+.g-worksonmine .builds .ok { background: #fff0a8; }
+.g-worksonmine .builds .fail { background: #ffb3b8; }

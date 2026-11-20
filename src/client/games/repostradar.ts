@@ -1,5 +1,27 @@
 import './repostradar.css';
-import { clamp1000, h, pulse, randBtn, shuffled, type Btn, type GameFactory } from './common';
+import { actor, clamp1000, defineSprite, h, pulse, randBtn, shuffled, sprite, type ActorMood, type Btn, type GameFactory } from './common';
+
+// The Lurker's magnifying glass: a brass rim, a glinting lens and a wooden handle.
+defineSprite('repostradar-glass', `
+..kkkkkk......
+.kyyyyyyk.....
+kyccwwccyk....
+kycwccccyk....
+kyccccccyk....
+kyccccccyk....
+.kyyyyyyk.....
+..kkkkkkknk...
+........knnk..
+.........knnk.
+..........knnk
+...........kkk`);
+// A red push pin for the evidence board.
+defineSprite('repostradar-pin', `
+.kkk.
+krrRk
+kRRRk
+.kkk.
+..k..`);
 
 const SHAPES = ['disc', 'box', 'tri', 'star', 'gem', 'drop', 'cross', 'bolt', 'moon', 'ring'];
 const TINTS = ['gold', 'purple', 'ink', 'teal', 'pink'];
@@ -35,14 +57,20 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let wrong = 0;
   let lockedUntil = 0;
 
-  const wrap = h('div', 'g-repostradar');
+  // The scene: a detective's office. Three posts are pinned to the evidence board with red
+  // string; the Lurker sits below with a magnifying glass and swings it at your pick.
+  // Every repost caught goes into the case files on the desk.
+  const wrap = h('div', 'g-repostradar scene-office');
   const banner = h('div', 'rule', 'Remember these!');
+  const board = h('div', 'board');
   const row = h('div', 'row');
   const cells = [0, 1, 2].map(() => {
     const c = h('div', 'tile');
+    const photo = h('div', 'photo');
     const art = h('i');
+    photo.append(art);
     const cap = h('span');
-    c.append(art, cap);
+    c.append(sprite('repostradar-pin', { px: 0.2 }, 'pin'), photo, cap);
     row.append(c);
     return { c, art, cap };
   });
@@ -50,9 +78,29 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   // (or get cut off at the edge of the stage).
   const stamp = h('i', 'stamp');
   row.append(stamp);
-  const note = h('div', 'g-note');
-  wrap.append(banner, row, note);
+  board.append(h('i', 'string'), row);
+  const desk = h('div', 'desk');
+  const sleuth = h('div', 'sleuth');
+  const lurker = actor('lurker', { mood: 'peep', px: 0.42 });
+  sleuth.append(lurker.el);
+  const glassWay = h('div', 'glassway');
+  const glass = sprite('repostradar-glass', { px: 0.3 }, 'glass');
+  glassWay.append(glass);
+  const files = h('div', 'files');
+  const note = h('span', 'count');
+  files.append(note);
+  desk.append(glassWay, sleuth, files);
+  wrap.append(banner, board, desk);
   root.append(wrap);
+
+  let mood: ActorMood = 'peep';
+  let moodUntil = 0;
+  const look = (m: ActorMood, t: number) => {
+    moodUntil = t + 420;
+    if (m === mood) return;
+    mood = m;
+    lurker.mood(m);
+  };
 
   function show() {
     const tiles = idx < 0 ? intro : screens[idx % screens.length].tiles;
@@ -79,17 +127,27 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         right++;
         good(stamp, 'REPOST!');
         fx.burst(cells[b].c, 'gold', 10);
+        look('cool', t);
+        // The caught repost goes into the case files: one stamped folder per catch.
+        if (files.childElementCount < 9) files.insertBefore(h('i', 'case'), note);
       } else {
         wrong++;
         lockedUntil = t + 450;
         bad(stamp, 'THAT WAS OC');
+        look('shock', t);
       }
+      glassWay.className = `glassway at-${b}`;
+      pulse(glass, 'bump');
       idx++;
       show();
     },
     tick(t) {
       // Red frames while a wrong call has the buttons locked.
       row.classList.toggle('locked', t < lockedUntil);
+      if (mood !== 'idle' && idx >= 0 && t >= moodUntil) {
+        mood = 'idle';
+        lurker.mood('idle');
+      }
       if (idx < 0 && t >= INTRO_MS) {
         idx = 0;
         show();

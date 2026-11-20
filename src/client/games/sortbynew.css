@@ -1,6 +1,31 @@
+/* A bakery: the baker and the oven on the back wall, three tagged loaves on the counter, your bag below. */
+.g-sortbynew { justify-content: space-between !important; gap: 0.4em !important; padding: 0.7em 0.6em 0.6em !important; }
+
+/* Back wall: the baker in a tall hat beside a big brick oven with fire in the door. */
+.g-sortbynew .back { flex: 1 1 auto; min-height: 0; margin-bottom: 0.5em; display: flex; align-items: flex-end; justify-content: center; gap: 0.8em; width: min(100%, 24em); }
+.g-sortbynew .baker { flex: none; display: flex; flex-direction: column; align-items: center; }
+.g-sortbynew .hat { margin-bottom: -1.4em; position: relative; z-index: 1; }
+.g-sortbynew .oven { flex: 1 1 auto; max-width: 12em; display: flex; flex-direction: column; align-items: center; gap: 0.35em; padding: 0.4em 0.5em 0.6em; background: #b8452a; background-image: linear-gradient(#0000 0 calc(100% - 0.15em), #8a2e1a 0), linear-gradient(90deg, #0000 0 calc(100% - 0.15em), #8a2e1a 0); background-size: 100% 1em, 2em 1em; box-shadow: 0 0 0 0.2em #0b1020, 0.3em 0.35em 0 0.2em #0b1020; }
+.g-sortbynew .sign { padding: 0.1em 0.6em; background: #fff0a8; color: #8e1a2c; font-size: 1.2em; white-space: nowrap; box-shadow: 0 0 0 0.18em #0b1020, 0.25em 0.3em 0 0.18em #0b1020; }
+.g-sortbynew .door { width: 80%; height: 3.4em; display: flex; align-items: flex-end; justify-content: center; background: #1a1f40; box-shadow: 0 0 0 0.18em #0b1020, inset 0 0 0 0.25em #646e9c; overflow: hidden; }
+.g-sortbynew .fire { width: 70%; height: 1.4em; margin-bottom: 0.25em; background: linear-gradient(90deg, #ff8a3d 0 20%, #ffcf3f 20% 40%, #ff4b55 40% 60%, #ffcf3f 60% 80%, #ff8a3d 80%); transform-origin: bottom; animation: g-sortbynew-fire 0.5s steps(2) infinite; }
+@keyframes g-sortbynew-fire { 50% { transform: scaleY(0.7); } }
+
+/* The counter: three loaves, each with an age tag above and its title on a slip below. */
+.g-sortbynew .counter { flex: none; display: flex; align-items: flex-end; width: min(100%, 26em); padding: 0 0.3em 0.6em; background: linear-gradient(#0000 0 calc(100% - 1.2em), #8a5a2c calc(100% - 1.2em)); }
 .g-sortbynew .row { display: flex; gap: 0.45em; width: 100%; }
-.g-sortbynew .row.locked { filter: saturate(0.3) brightness(0.6); }
-.g-sortbynew .post { flex: 1; min-width: 0; min-height: 8em; background: var(--panel-2); border: 0.16em solid var(--line); border-radius: 0.8em; padding: 0.7em 0.3em; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5em; text-align: center; }
-.g-sortbynew .post b { font-size: 1.8em; font-weight: 900; line-height: 1; color: var(--gold); white-space: nowrap; }
-.g-sortbynew .post b::after { content: 'ago'; display: block; margin-top: 0.3em; font-size: 0.42em; font-weight: 800; letter-spacing: 0.06em; }
-.g-sortbynew .post span { font-size: 0.72em; font-weight: 700; color: var(--dim); line-height: 1.15; }
+.g-sortbynew .row.locked { opacity: 0.55; }
+.g-sortbynew .g-sortbynew-bake { animation: g-sortbynew-bake 0.16s ease-out; }
+@keyframes g-sortbynew-bake { from { transform: translateY(-1.2em); opacity: 0.3; } }
+.g-sortbynew .post { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.3em; text-align: center; }
+.g-sortbynew .tag { position: relative; padding: 0.25em 0.45em 0.2em; background: #fff; color: #8e1a2c; box-shadow: 0 0 0 0.16em #0b1020, 0.2em 0.25em 0 0.16em #0b1020; transform: rotate(-3deg); }
+.g-sortbynew .post:nth-child(2) .tag { transform: rotate(2deg); }
+.g-sortbynew .tag b { display: block; font-size: 1.7em; font-weight: inherit; line-height: 1; white-space: nowrap; }
+.g-sortbynew .tag b::after { content: 'ago'; display: block; font-size: 0.42em; color: #0b1020; }
+.g-sortbynew .slip { align-self: stretch; padding: 0.2em 0.25em; background: #fff0a8; color: #0b1020; font-size: 0.72em; line-height: 1.1; box-shadow: 0 0 0 0.14em #0b1020; }
+
+/* Your bag: one mini loaf per fresh post. */
+.g-sortbynew .bag { display: flex; align-items: center; gap: 0.5em; max-width: 100%; padding: 0.2em 0.5em; background: #c98a4a; box-shadow: 0 0 0 0.18em #0b1020; }
+.g-sortbynew .pile { display: flex; flex-wrap: wrap; max-width: 9em; gap: 0.1em; }
+.g-sortbynew .pile:empty { display: none; }
+.g-sortbynew .count { font-size: 0.85em; white-space: nowrap; }

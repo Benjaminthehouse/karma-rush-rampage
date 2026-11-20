@@ -1,5 +1,5 @@
 import './worksonmine.css';
-import { COLOR, clamp1000, h, pick, pulse, randBtn, shuffled, type Btn, type GameFactory } from './common';
+import { actor, COLOR, clamp1000, h, pick, pulse, randBtn, shuffled, sprite, type ActorMood, type Btn, type GameFactory } from './common';
 
 const ERRORS = ['segfault', 'off by one', 'NaN', 'undefined', 'exit 1', 'it’s DNS', 'timeout', '404', 'bad merge', 'missing ;'];
 const EXCUSES = [
@@ -18,8 +18,6 @@ const PAIRS: Btn[][] = [
   [1, 2],
   [0, 2],
 ];
-const TICK = '<svg class="tick" viewBox="0 0 24 24"><path d="M4 13l5.5 5.5L20 6"/></svg>';
-const CROSS = '<svg class="cross" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg>';
 const SWAP_MS = [290, 265, 225, 208, 190]; // per level: later rounds add swaps and speed them up
 const LEAD_MS = 1320; // tick on to question mark, the same at every level: faster swaps buy more swaps, not more picks
 const OK_MS = 350; // celebration before the next laptop lights up
@@ -60,13 +58,19 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let right = 0;
   let wrong = 0;
 
-  const wrap = h('div', 'g-worksonmine');
+  // The scene: the Dev's cave. The Dev peers over a desk with three laptops on it and
+  // shuffles them, talking the whole time; one laptop boots, the others crash.
+  const wrap = h('div', 'g-worksonmine scene-devcave');
   wrap.style.setProperty('--ms', `${Math.round(swapMs * 0.88)}ms`);
   const say = h('div', 'say');
   const banner = h('div', 'rule');
   banner.innerHTML = 'Watch the <b>green tick</b>!';
   say.append(banner);
   const desk = h('div', 'desk');
+  const dev = actor('dev', { px: 0.5 });
+  const devEl = h('div', 'devbox');
+  devEl.append(dev.el, h('div', 'hoodie'));
+  desk.append(devEl, h('div', 'top'));
   const pads = [0, 1, 2].map((i) => {
     const pad = h('div', `pad c-${COLOR[i]}`);
     desk.append(pad);
@@ -76,7 +80,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     const el = h('div', 'rig');
     const laptop = h('div', 'laptop');
     const screen = h('div', 'screen');
-    screen.innerHTML = `${TICK}${CROSS}<b>?</b>`;
+    screen.append(sprite('check', { px: 0.26 }, 'tick'), sprite('cross', { px: 0.26 }, 'cross'), h('b', '', '?'));
     const msg = h('span');
     screen.append(msg);
     laptop.append(screen, h('div', 'base'));
@@ -92,13 +96,19 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     builds.append(pip);
     return pip;
   });
-  const note = h('div', 'g-note', '0 shipped');
-  wrap.append(say, desk, builds, note);
+  wrap.append(say, desk, builds);
   root.append(wrap);
+  let mood: ActorMood = 'idle';
+  const look = (m: ActorMood) => {
+    if (m === mood) return;
+    mood = m;
+    dev.mood(m);
+  };
 
   const bout = () => bouts[n % bouts.length];
   const rigAt = (slot: Btn) => rigs.find((r) => r.slot === slot)!;
-  const place = (r: Rig) => (r.el.style.left = `${r.slot * 35}%`);
+  // Slots sit 35% of the desk apart and a laptop is 30% wide, so one slot is 116.67% of its own width.
+  const place = (r: Rig) => (r.el.style.transform = `translateX(${r.slot * 116.667}%)`);
   const face = (r: Rig, state: string, text = '') => {
     r.el.className = `rig ${state}`;
     r.laptop.className = 'laptop';
@@ -110,6 +120,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     askAt = shuffleAt + swaps * swapMs;
     step = 0;
     phase = 'show';
+    look('talk');
     let e = 0;
     rigs.forEach((r) => (r.slot === bout().start ? face(r, 'ok', 'WORKS') : face(r, 'err', bout().errors[e++])));
   }
@@ -140,6 +151,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       right++;
       const clean = right >= 3 && !wrong; // three for three, and a fourth keeps the gold
       face(mine, 'win', 'WORKS');
+      look('happy');
       banner.innerHTML = clean ? '<span class="stamp gold">CERTIFIED: WORKS EVERYWHERE</span>' : '<span class="stamp">WORKS ON MY MACHINE!</span>';
       good(mine.el, CHEERS[right % CHEERS.length]);
       fx.burst(mine.el, 'green', 18);
@@ -152,6 +164,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     } else {
       face(mine, 'boom', bout().errors[0]);
       face(lucky, 'was', 'WORKS');
+      look('shock');
       banner.innerHTML = `<i>“${excuses[wrong % excuses.length]}”</i>`;
       wrong++;
       bad(mine.el, 'NOPE');
@@ -161,11 +174,10 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     const pip = pips[n];
     if (pip) {
       pip.className = ok ? 'ok' : 'fail';
-      pip.innerHTML = ok ? TICK : CROSS;
+      pip.replaceChildren(sprite(ok ? 'check' : 'cross', { px: 0.16 }));
       pulse(pip, 'pop-in');
     }
     n++;
-    note.textContent = `${right} shipped`;
   }
 
   rigs.forEach(place);
@@ -184,6 +196,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         phase = 'shuffle';
         rigs.forEach((r) => face(r, 'off'));
         banner.textContent = 'Don’t lose it…';
+        look('cool');
       }
       if (phase !== 'shuffle') return;
       while (step < swaps && t >= shuffleAt + step * swapMs) swap(bout().moves[step++]);
@@ -192,6 +205,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         desk.className = 'desk ask';
         rigs.forEach((r) => face(r, 'ask'));
         banner.innerHTML = '<b>Which one works?</b>';
+        look('wink');
         fx.sound('ding');
       }
     },
