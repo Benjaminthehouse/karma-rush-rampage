@@ -488,3 +488,13 @@ body #final, body.ios #final { padding-bottom: 0.8rem; }
 .ui .breakdown li span { max-width: 100%; font-size: 0.7rem; line-height: 1.05; text-align: center; color: var(--dim); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .ui .breakdown li em { display: none; }
 .ui .breakdown b { font-size: 1.25rem; text-align: center; }
+
+/* ---------- paced rounds: the READY prompt, and the free-retry card ---------- */
+#card .ready { margin-top: 0.9rem; padding: 0.35rem 0.9rem; font-size: 1.15rem; letter-spacing: 0.06em; color: #0b1020; background: #fff; box-shadow: 0 0 0 3px #0b1020, 0.25rem 0.3rem 0 3px #0b102066; opacity: 0; }
+#card .ready.in { opacity: 1; animation: ready-blink 0.9s steps(1) infinite; }
+@keyframes ready-blink { 50% { background: var(--gold); } }
+#card.card-retry { background: #1a2140; gap: 0.6rem; }
+#card.card-retry .oops { font-size: clamp(2.2rem, 11vw, 3.2rem); line-height: 1; color: var(--gold); text-shadow: 0.07em 0.08em 0 #0b1020; }
+#card.card-retry .why { margin: 0; max-width: 22rem; font-size: 0.95rem; color: var(--dim); text-align: center; }
+#card.card-retry .how { color: #fff; font-size: 1.15rem; text-align: center; }
+#card.card-retry .ready { margin-top: 0.4rem; }

@@ -56,7 +56,8 @@ or `engine.ts`, so the look can change without touching the rules.
 | Arcade | One game at a time: title, shout, how-to, button labels, your best |
 | Lobby | Players in the party, START |
 | Countdown | 3, 2, 1 |
-| Round intro | Round number, the shout dictated word by word, how-to, button legend |
+| Round intro | Round number, the shout dictated word by word, how-to, button legend. In solo modes it waits: TAP ANY BUTTON TO START |
+| Free retry | Solo modes: a round under 200 points shows the how-to again and offers one retry (freshly dealt), or keeping the score |
 | Round | HUD (round pips, title, combo, live score), timer, race track, the stage, three pads |
 | Round result | Score counting up, verdict, standings |
 | Final | Total, verdict, per-round breakdown, leaderboard or party standings. After a saved daily run: post the score as a comment, wear streak flair (opt-in), join the community |

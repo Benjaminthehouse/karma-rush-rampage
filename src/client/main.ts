@@ -69,7 +69,7 @@ function setPads(labels: [string, string, string], actions?: ((() => void) | nul
 
 const held = [false, false, false];
 /** Shown on the menu so a tester can tell which build they are looking at. */
-const BUILD = 26;
+const BUILD = 27;
 let dayLine = '';
 /** The menu's status line, with the audio state so "no sound" can be told apart by cause. */
 function paintStatus() {
@@ -365,6 +365,7 @@ async function arcadePlay(id: string) {
     pulsePad,
     held: () => held,
     autoplay: params.has('autoplay') ? { press, release } : undefined,
+    paced: !params.has('autoplay'),
   });
   const mine = match;
   const [score] = await mine.done;
@@ -399,6 +400,7 @@ async function solo(kind: 'daily' | 'practice', lineup: Round[], rivals: Rival[]
     held: () => held,
     // Demo mode for practice runs only: `?autoplay=1` lets a bot play.
     autoplay: kind === 'practice' && params.has('autoplay') ? { press, release } : undefined,
+    paced: !(kind === 'practice' && params.has('autoplay')),
     onRound: (done) => kind === 'daily' && track.round(done.length, lineup.length, lineup[done.length - 1].id, done[done.length - 1]),
   });
   if (kind === 'daily') track.start();

@@ -15,6 +15,11 @@ import { HIT_VOICE } from './hits';
 import { music, sfx } from './sfx';
 import { voice } from './voice';
 
+/** A paced round scoring under this did not click with the player: it earns one free retry. */
+const RETRY_UNDER = 200;
+/** The beat between a "ready" tap and the round starting. */
+const GO_MS = 500;
+
 /** Speech engines take about this long to start a word, so each one is asked for early. */
 const VOICE_LEAD = 90;
 
@@ -82,6 +87,12 @@ export function runMatch(o: {
   held?: () => readonly boolean[];
   /** Demo mode: a bot plays by following each game's hint(). Practice only. */
   autoplay?: { press: (b: Btn) => void; release: (b: Btn) => void };
+  /**
+   * Solo runs set this: nobody else shares the clock, so it can wait for the player.
+   * Each round's instructions stay up until a button is tapped, and a round that scores
+   * next to nothing (the game plainly did not click) offers one free retry.
+   */
+  paced?: boolean;
   onRound?: (rounds: number[]) => void;
 }): Match {
   const phases = timeline(o.lineup);
@@ -95,6 +106,27 @@ export function runMatch(o: {
   const scores: number[] = [];
   const down = [false, false, false];
   let p = -1;
+  // The pausable clock for paced runs. While a card waits for a tap, time stands still.
+  let heldMs = 0; // total time spent waiting so far
+  let waitSince = -1; // the raw clock when the current wait began, or -1
+  let waitFor: '' | 'ready' | 'retry' = '';
+  let readyFrom = Infinity; // ms into the intro from which a tap counts as "ready"
+  let readyEl: HTMLElement | null = null;
+  const ready: boolean[] = []; // rounds whose instructions have been tapped away
+  const retried: boolean[] = []; // rounds that have used their free retry
+  const now = () => (waitSince >= 0 ? waitSince : o.clock()) - heldMs;
+  /** Stops the clock at `at` (match time) until `resume()`. */
+  const hold = (why: 'ready' | 'retry', at: number) => {
+    waitFor = why;
+    waitSince = o.clock();
+    heldMs = waitSince - at;
+  };
+  /** Starts the clock again, at `at` (match time) if given, else where it stopped. */
+  const resume = (at?: number) => {
+    heldMs = at === undefined ? heldMs + (o.clock() - waitSince) : o.clock() - at;
+    waitSince = -1;
+    waitFor = '';
+  };
   let inst: GameInst | null = null;
   let cues: Cue[] = [];
   let combo = 0;
@@ -257,7 +289,16 @@ export function runMatch(o: {
       chip.prepend(h('kbd', '', 'ASD'[i]));
       legend.append(chip);
     });
-    showCard('intro', h('div', 'eyebrow', `ROUND ${ph.round + 1} OF ${o.lineup.length} · ${meta.title}`), shout, how, legend);
+    readyEl = o.paced && !ready[ph.round] ? h('div', 'ready', 'TAP ANY BUTTON TO START') : null;
+    readyFrom = Infinity;
+    showCard(
+      'intro',
+      h('div', 'eyebrow', `ROUND ${ph.round + 1} OF ${o.lineup.length} · ${meta.title}`),
+      shout,
+      how,
+      legend,
+      ...(readyEl ? [readyEl] : [])
+    );
 
     const lead = 450;
     // Slow enough for a spoken word to fit in each beat.
@@ -295,6 +336,9 @@ export function runMatch(o: {
       run: () => {
         how.classList.add('in');
         legend.classList.add('in');
+        // From here the whole instruction is on screen: a tap means "got it, go".
+        readyEl?.classList.add('in');
+        readyFrom = lead + words.length * cadence + 120;
       },
     });
   }
@@ -360,7 +404,7 @@ export function runMatch(o: {
       inst = null;
     }
     // A player who heard "HOLD!" may already be holding: tell the game.
-    o.held?.().forEach((isDown, b) => isDown && input('press', b as Btn));
+    if (!o.paced) o.held?.().forEach((isDown, b) => isDown && input('press', b as Btn));
   }
 
   function endPlay(ph: Phase) {
@@ -386,6 +430,24 @@ export function runMatch(o: {
   function result(ph: Phase, round: Round) {
     const meta = GAME_META[round.id];
     const score = scores[ph.round] ?? 0;
+    if (o.paced && score < RETRY_UNDER && !retried[ph.round]) {
+      // Next to nothing scored: the game did not click. Stop the clock and offer one free go.
+      const legend = h('div', 'legend in');
+      meta.labels.forEach((l, i) => legend.append(h('span', `c-${COLOR[i]}`, l)));
+      showCard(
+        'retry',
+        h('div', 'eyebrow', meta.title),
+        h('div', 'oops', 'NO WORRIES!'),
+        h('p', 'why', `Under ${RETRY_UNDER} points does not count the first time. Here is the idea again:`),
+        h('p', 'how in', meta.how),
+        legend,
+        h('div', 'ready in', 'ONE FREE RETRY')
+      );
+      o.setPads(['KEEP SCORE', 'RETRY', 'RETRY']);
+      hud();
+      hold('retry', ph.start + 1);
+      return;
+    }
     const tr = tier(score);
     const num = h('div', 'round-score', '+0');
     const verdict = h('div', `rating t${tr}`, TIERS[tr]);
@@ -436,7 +498,7 @@ export function runMatch(o: {
   function frame() {
     if (stopped) return;
     raf = requestAnimationFrame(frame);
-    const t = o.clock();
+    const t = now();
     if (t < 0) {
       const n = Math.ceil(-t / 1000);
       if (n !== lastCount) {
@@ -449,6 +511,12 @@ export function runMatch(o: {
       return;
     }
     if (p < 0) enter(phases[(p = 0)]);
+    // A paced intro does not run out: it waits, GO_MS short of its end, for a tap.
+    const cur = phases[p];
+    if (o.paced && !waitFor && cur?.type === 'intro' && !ready[cur.round] && t >= cur.end - GO_MS) {
+      hold('ready', cur.end - GO_MS);
+      return;
+    }
     while (p < phases.length && t >= phases[p].end) {
       if (phases[p].type === 'play') endPlay(phases[p]);
       p++;
@@ -511,9 +579,45 @@ export function runMatch(o: {
     card.hidden = true;
   }
 
+  /** A tap on a card that is waiting (or about to wait) for one. True if it was used. */
+  function answer(ph: Phase, b: Btn): boolean {
+    if (ph.type === 'intro' && !ready[ph.round] && (waitFor === 'ready' || now() - ph.start >= readyFrom)) {
+      // Ready: skip whatever is left of the intro and go.
+      ready[ph.round] = true;
+      if (readyEl) readyEl.textContent = 'GO!';
+      sfx.go();
+      if (waitFor) resume();
+      else heldMs -= Math.max(0, ph.end - GO_MS - now());
+      return true;
+    }
+    if (waitFor === 'retry' && ph.type === 'result') {
+      retried[ph.round] = true;
+      sfx.press(b);
+      if (b === 0) {
+        // Keep the score: carry on to the ordinary result card.
+        resume();
+        cues = [];
+        result(ph, o.lineup[ph.round]);
+        return true;
+      }
+      // Retry: wind the clock back to this round's instructions, with a fresh deal so the
+      // first attempt cannot be used as a peek.
+      const first = p - 2;
+      scores.length = ph.round;
+      ready[ph.round] = false;
+      o.lineup[ph.round] = { ...o.lineup[ph.round], seed: (o.lineup[ph.round].seed + 7919) >>> 0 };
+      resume(phases[first].start);
+      p = first;
+      enter(phases[p]);
+      return true;
+    }
+    return false;
+  }
+
   function input(kind: 'press' | 'release', b: Btn) {
     down[b] = kind === 'press';
     const ph = phases[p];
+    if (kind === 'press' && o.paced && ph && answer(ph, b)) return;
     if (ph?.type !== 'play' || !inst) {
       if (kind === 'press') sfx.press(b);
       return;
@@ -521,8 +625,8 @@ export function runMatch(o: {
     // The tap itself sounds like the game: its voice, at this pad's note, as high as the streak.
     if (kind === 'press') sfx.tap(b, combo, HIT_VOICE[o.lineup[ph.round].id]);
     try {
-      if (kind === 'press') inst.press(b, o.clock() - ph.start);
-      else inst.release?.(b, o.clock() - ph.start);
+      if (kind === 'press') inst.press(b, now() - ph.start);
+      else inst.release?.(b, now() - ph.start);
     } catch (err) {
       console.error(`${kind}() failed`, err);
     }
