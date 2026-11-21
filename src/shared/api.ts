@@ -55,18 +55,31 @@ export type SubmitResponse = {
   players: number;
 };
 
-export type PartyPlayer = { name: string; rounds: number[]; inMatch: boolean; live: number; avatar?: string };
+export type PartyPlayer = {
+  name: string;
+  rounds: number[];
+  inMatch: boolean;
+  live: number;
+  avatar?: string;
+  /** Has tapped READY on the instructions everyone is waiting on. */
+  ready?: boolean;
+};
 export type PartyState = {
   /** Match id; also the seed of its lineup. Empty before the first match. */
   id: string;
   status: 'lobby' | 'running';
   startAt: number;
+  /** Server time at which each round's play starts (a round still waiting shows its deadline). */
+  go: number[];
+  /** The round whose instructions are up and waiting for everyone's READY, or -1. */
+  gate: number;
   now: number;
   you: string;
   players: PartyPlayer[];
 };
 export type PartyBeat = { guest?: string; matchId?: string };
 export type PartyScore = { guest?: string; matchId: string; rounds: number[]; live?: number };
+export type PartyReady = { guest?: string; matchId: string; round: number };
 
 export type FeedMessage = { t: 'score'; name: string; total: number };
 export type PartyMessage = { t: 'sync' };

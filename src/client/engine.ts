@@ -4,7 +4,7 @@
 // timed inside a phase (announcer words, score count-up) is a cue checked against
 // that clock, never a timer, so nothing can fire after the phase is over.
 import type { Rival } from '../shared/api';
-import { GAME_META, MAX_ROUND_SCORE, TIMING, hashStr, mulberry32, timeline, type Phase, type Round } from '../shared/daily';
+import { GAME_META, GO_MS, MAX_ROUND_SCORE, TIMING, hashStr, mulberry32, timeline, type Phase, type Round } from '../shared/daily';
 import { fmt } from './api';
 import { avatar, shortName } from './avatar';
 import { createBot } from './bot';
@@ -17,8 +17,6 @@ import { voice } from './voice';
 
 /** A paced round scoring under this did not click with the player: it earns one free retry. */
 const RETRY_UNDER = 200;
-/** The beat between a "ready" tap and the round starting. */
-const GO_MS = 500;
 
 /** Speech engines take about this long to start a word, so each one is asked for early. */
 const VOICE_LEAD = 90;
@@ -93,6 +91,15 @@ export function runMatch(o: {
    * next to nothing (the game plainly did not click) offers one free retry.
    */
   paced?: boolean;
+  /**
+   * Live Party sets this: the shared clock itself waits at the end of each round's
+   * instructions until everyone has tapped READY (or time is up). `ready` reports this
+   * player's tap; `status` says how the wait for that round is going.
+   */
+  gate?: {
+    ready: (round: number) => void;
+    status: (round: number) => { ready: number; of: number; left: number };
+  };
   onRound?: (rounds: number[]) => void;
 }): Match {
   const phases = timeline(o.lineup);
@@ -112,6 +119,7 @@ export function runMatch(o: {
   let waitFor: '' | 'ready' | 'retry' = '';
   let readyFrom = Infinity; // ms into the intro from which a tap counts as "ready"
   let readyEl: HTMLElement | null = null;
+  let gateText = ''; // what the party READY prompt says now
   const ready: boolean[] = []; // rounds whose instructions have been tapped away
   const retried: boolean[] = []; // rounds that have used their free retry
   const now = () => (waitSince >= 0 ? waitSince : o.clock()) - heldMs;
@@ -289,7 +297,12 @@ export function runMatch(o: {
       chip.prepend(h('kbd', '', 'ASD'[i]));
       legend.append(chip);
     });
-    readyEl = o.paced && !ready[ph.round] ? h('div', 'ready', 'TAP ANY BUTTON TO START') : null;
+    readyEl = o.gate
+      ? h('div', 'ready', 'TAP WHEN READY')
+      : o.paced && !ready[ph.round]
+        ? h('div', 'ready', 'TAP ANY BUTTON TO START')
+        : null;
+    gateText = '';
     readyFrom = Infinity;
     showCard(
       'intro',
@@ -404,7 +417,7 @@ export function runMatch(o: {
       inst = null;
     }
     // A player who heard "HOLD!" may already be holding: tell the game.
-    if (!o.paced) o.held?.().forEach((isDown, b) => isDown && input('press', b as Btn));
+    if (!o.paced && !o.gate) o.held?.().forEach((isDown, b) => isDown && input('press', b as Btn));
   }
 
   function endPlay(ph: Phase) {
@@ -517,6 +530,7 @@ export function runMatch(o: {
       hold('ready', cur.end - GO_MS);
       return;
     }
+    if (o.gate && cur?.type === 'intro') waitAtGate(cur, t);
     while (p < phases.length && t >= phases[p].end) {
       if (phases[p].type === 'play') endPlay(phases[p]);
       p++;
@@ -579,8 +593,45 @@ export function runMatch(o: {
     card.hidden = true;
   }
 
+  /** Live Party: keeps the READY prompt saying how the wait is going, and calls GO. */
+  function waitAtGate(ph: Phase, t: number) {
+    if (!readyEl || !o.gate) return;
+    let text = 'GO!';
+    if (t <= ph.end - GO_MS) {
+      if (!readyEl.classList.contains('in')) return; // still dictating the command
+      const s = o.gate.status(ph.round);
+      const secs = Math.max(0, Math.ceil(s.left / 1000));
+      const more = Math.max(0, s.of - s.ready);
+      text = !ready[ph.round]
+        ? `TAP WHEN READY · ${secs}`
+        : more > 0
+          ? `READY! WAITING FOR ${more} MORE · ${secs}`
+          : 'READY!';
+    }
+    if (text === gateText) return;
+    gateText = text;
+    readyEl.textContent = text;
+    readyEl.classList.toggle('set', !!ready[ph.round] || text === 'GO!');
+    if (text === 'GO!') {
+      readyEl.classList.add('in');
+      sfx.go();
+    }
+  }
+
   /** A tap on a card that is waiting (or about to wait) for one. True if it was used. */
   function answer(ph: Phase, b: Btn): boolean {
+    if (o.gate) {
+      // Live Party: the tap says "I am ready"; the round goes when everyone has.
+      const t = now();
+      const shown = t - ph.start >= readyFrom || t >= ph.end - GO_MS;
+      if (ph.type !== 'intro' || ready[ph.round] || !shown || t > ph.end - GO_MS) return false;
+      ready[ph.round] = true;
+      sfx.good(2);
+      o.pulsePad?.(b);
+      o.gate.ready(ph.round);
+      waitAtGate(ph, t);
+      return true;
+    }
     if (ph.type === 'intro' && !ready[ph.round] && (waitFor === 'ready' || now() - ph.start >= readyFrom)) {
       // Ready: skip whatever is left of the intro and go.
       ready[ph.round] = true;
@@ -617,7 +668,7 @@ export function runMatch(o: {
   function input(kind: 'press' | 'release', b: Btn) {
     down[b] = kind === 'press';
     const ph = phases[p];
-    if (kind === 'press' && o.paced && ph && answer(ph, b)) return;
+    if (kind === 'press' && (o.paced || o.gate) && ph && answer(ph, b)) return;
     if (ph?.type !== 'play' || !inst) {
       if (kind === 'press') sfx.press(b);
       return;

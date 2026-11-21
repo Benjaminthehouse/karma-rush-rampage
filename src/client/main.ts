@@ -7,7 +7,7 @@ import {
   type PartyState,
   type Rival,
 } from '../shared/api';
-import { GAME_IDS, GAME_META, MAX_TOTAL, TIMING, botRounds, dayKey, lineupFor, prettyDay, roundsFromIds, untilNextDay, type Round } from '../shared/daily';
+import { GAME_IDS, GAME_META, GO_MS, MAX_TOTAL, TIMING, botRounds, dayKey, lineupFor, partyClock, prettyDay, roundsFromIds, untilNextDay, type Round } from '../shared/daily';
 import { api, fmt } from './api';
 import { avatar, shortName } from './avatar';
 import { rating, runMatch, standings, type Match } from './engine';
@@ -69,7 +69,7 @@ function setPads(labels: [string, string, string], actions?: ((() => void) | nul
 
 const held = [false, false, false];
 /** Shown on the menu so a tester can tell which build they are looking at. */
-const BUILD = 29;
+const BUILD = 30;
 let dayLine = '';
 /** The menu's status line, with the audio state so "no sound" can be told apart by cause. */
 function paintStatus() {
@@ -729,8 +729,8 @@ function paintLobby() {
   );
   const status = $('lobby-status');
   if (party.status === 'running' && !seen.has(party.id)) {
-    // Joinable until the first game actually starts.
-    if (party.now < party.startAt + TIMING.intro - 400) return void joinParty(party);
+    // Joinable until the first game actually starts (so, all through its instructions).
+    if (party.now < party.go[0] - 400) return void joinParty(party);
     seen.add(party.id);
   }
   if (party.status === 'running') {
@@ -749,9 +749,34 @@ async function joinParty(state: PartyState) {
   const lineup = lineupFor(id);
   show('play');
   void beat(id);
+  // The latest word on when each round goes (it moves up once everyone is ready).
+  const go = () => (party?.id === id ? party.go : state.go);
+  let nudge = 0;
   match = runMatch({
     lineup,
-    clock: () => serverNow() - state.startAt,
+    clock: () => partyClock(serverNow(), state.startAt, lineup, go()),
+    gate: {
+      ready: (round) => {
+        track.did('party_ready');
+        api.partyReady({ guest, matchId: id, round }).then(takeParty, console.error);
+        // Until this round has its start time, ask often: the answer is the starting gun.
+        clearInterval(nudge);
+        nudge = window.setInterval(() => {
+          if (match !== mine || party?.id !== id || party.gate !== round) return clearInterval(nudge);
+          void beat(id);
+        }, 600);
+      },
+      status: (round) => {
+        const inMatch = party?.id === id ? party.players.filter((p) => p.inMatch) : [];
+        // Once the round has its start time nobody is being waited for any more.
+        const waiting = party?.id === id && party.gate === round;
+        return {
+          ready: waiting ? inMatch.filter((p) => p.ready).length : inMatch.length,
+          of: inMatch.length,
+          left: go()[round] - GO_MS - serverNow(),
+        };
+      },
+    },
     me: myName(),
     avatar: init?.avatar,
     rivals: partyRivals,
@@ -768,6 +793,7 @@ async function joinParty(state: PartyState) {
   });
   const mine = match;
   const rounds = await mine.done;
+  clearInterval(nudge);
   if (match !== mine) return;
   match = null;
   await beat();

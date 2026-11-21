@@ -1,6 +1,7 @@
 import type {
   InitResponse,
   PartyBeat,
+  PartyReady,
   PartyScore,
   PartyState,
   SocialResponse,
@@ -24,6 +25,7 @@ export const api = {
   partyBeat: (b: PartyBeat) => call<PartyState>('/api/party/beat', b),
   partyStart: (b: PartyBeat) => call<PartyState>('/api/party/start', b),
   partyScore: (b: PartyScore) => call<PartyState>('/api/party/score', b),
+  partyReady: (b: PartyReady) => call<PartyState>('/api/party/ready', b),
   share: () => call<SocialResponse>('/api/share', {}),
   join: () => call<SocialResponse>('/api/join', {}),
   flair: () => call<SocialResponse>('/api/flair', {}),

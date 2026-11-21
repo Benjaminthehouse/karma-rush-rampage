@@ -6,9 +6,11 @@ import {
   botRounds,
   clampScore,
   hashStr,
+  goTimes,
+  introAt,
   lineupFor,
-  matchLength,
   mulberry32,
+  partyEnd,
   prevDayKey,
 } from '../shared/daily';
 
@@ -17,6 +19,8 @@ export interface Store {
   hSet(key: string, fieldValues: Record<string, string>): Promise<unknown>;
   hGetAll(key: string): Promise<Record<string, string>>;
   hDel(key: string, fields: string[]): Promise<unknown>;
+  /** Sets the field only if it is not there yet. */
+  hSetNX(key: string, field: string, value: string): Promise<unknown>;
   zAdd(key: string, ...members: { member: string; score: number }[]): Promise<unknown>;
   zScore(key: string, member: string): Promise<number | undefined | null>;
   zRank(key: string, member: string): Promise<number | undefined | null>;
@@ -231,31 +235,85 @@ function parseSeat(raw: string | undefined | null): Seat {
   return { hb: 0, m: '', r: [], p: 0 };
 }
 
+/** From "everyone is ready" to the round starting: time for the news to reach every phone. */
+const GO_LEAD = 1200;
+/** A seat that has not been heard from for this long does not hold the others up. */
+const AWAY_TTL = 7000;
+/** Nobody can be ready before the instructions have had this long on screen. */
+const MIN_READ = 1500;
+
+const readyKey = (post: string) => `party:${post}:ready`;
+
 async function readMeta(store: Store, post: string, now: number) {
   const meta = await store.hGetAll(metaKey(post));
   const id = meta.id ?? '';
   const startAt = Number(meta.startAt) || 0;
-  const running = !!id && now < startAt + matchLength(lineupFor(id)) + 1500;
-  return { id, startAt, running };
+  const lineup = id ? lineupFor(id) : [];
+  const settled = lineup.map((_, r) => Number(meta[`go${r}`]) || undefined);
+  const go = goTimes(startAt, lineup, settled);
+  const running = !!id && now < partyEnd(startAt, lineup, go) + 1500;
+  // The gate: the round whose instructions are up, with no start time fixed yet.
+  let gate = -1;
+  if (running) {
+    gate = lineup.findIndex((_, r) => settled[r] === undefined && now >= introAt(startAt, lineup, go, r) && now < go[r]);
+  }
+  return { id, startAt, running, lineup, go, gate };
 }
 
 async function partyState(store: Store, post: string, who: string, now: number): Promise<PartyState> {
-  const meta = await readMeta(store, post, now);
+  let meta = await readMeta(store, post, now);
   const all = await store.hGetAll(seatsKey(post));
+  const tapped = meta.gate >= 0 ? await store.hGetAll(readyKey(post)) : {};
+  const want = `${meta.id}:${meta.gate}`;
   const players: PartyPlayer[] = [];
   const dead: string[] = [];
+  let here = 0; // players in the match who are still around
+  let waiting = 0; // and how many of those have not tapped READY
   for (const [name, raw] of Object.entries(all)) {
     const seat = parseSeat(raw);
     const inMatch = !!meta.id && seat.m === meta.id;
     const age = now - seat.hb;
     if (age > SEAT_TTL && !(inMatch && meta.running)) dead.push(name);
     else if (age < LOBBY_TTL || inMatch) {
-      players.push({ name, inMatch, rounds: inMatch ? seat.r : [], live: inMatch ? seat.p : 0, ...(await withAvatar(store, name)) });
+      const ready = inMatch && meta.gate >= 0 && tapped[name] === want;
+      if (inMatch && age < AWAY_TTL) {
+        here++;
+        if (!ready) waiting++;
+      }
+      players.push({
+        name,
+        inMatch,
+        rounds: inMatch ? seat.r : [],
+        live: inMatch ? seat.p : 0,
+        ...(ready ? { ready } : {}),
+        ...(await withAvatar(store, name)),
+      });
     }
   }
-  if (dead.length) await store.hDel(seatsKey(post), dead);
+  if (dead.length) {
+    await store.hDel(seatsKey(post), dead);
+    await store.hDel(readyKey(post), dead);
+  }
+  if (meta.gate >= 0 && here > 0 && waiting === 0) {
+    // Everyone still here is ready: fix this round's start. The first write wins, so
+    // players asking at the same moment all get the same answer.
+    const earliest = introAt(meta.startAt, meta.lineup, meta.go, meta.gate) + MIN_READ;
+    const at = Math.min(Math.max(now + GO_LEAD, earliest), meta.go[meta.gate]);
+    await store.hSetNX(metaKey(post), `go${meta.gate}`, String(at));
+    meta = await readMeta(store, post, now);
+    for (const pl of players) delete pl.ready;
+  }
   players.sort((a, b) => sum(b.rounds) - sum(a.rounds) || a.name.localeCompare(b.name));
-  return { id: meta.id, status: meta.running ? 'running' : 'lobby', startAt: meta.startAt, now, you: who, players };
+  return {
+    id: meta.id,
+    status: meta.running ? 'running' : 'lobby',
+    startAt: meta.startAt,
+    go: meta.go,
+    gate: meta.gate,
+    now,
+    you: who,
+    players,
+  };
 }
 
 /** Heartbeat. Passing the current match id (before its first round ends) takes a seat in it. */
@@ -276,6 +334,7 @@ export async function partyStart(store: Store, post: string, who: string, now: n
   const meta = await readMeta(store, post, now);
   if (!meta.running) {
     const id = `${post}-${now.toString(36)}`;
+    await store.hDel(metaKey(post), Array.from({ length: ROUNDS }, (_, r) => `go${r}`));
     await store.hSet(metaKey(post), { id, startAt: String(now + PARTY_COUNTDOWN) });
     await store.hSet(seatsKey(post), { [who]: JSON.stringify({ hb: now, m: id, r: [], p: 0 } satisfies Seat) });
   }
@@ -300,6 +359,30 @@ export async function partyScore(
     await store.hSet(seatsKey(post), { [who]: JSON.stringify(seat) });
   }
   return partyState(store, post, who, now);
+}
+
+/**
+ * A player has read the instructions for `round` and tapped READY. When the last player
+ * does, the round's start is fixed (in `partyState`). Returns whether this was news.
+ */
+export async function partyReady(
+  store: Store,
+  post: string,
+  who: string,
+  now: number,
+  matchId: string,
+  round: unknown
+): Promise<{ state: PartyState; fresh: boolean }> {
+  const meta = await readMeta(store, post, now);
+  const seat = parseSeat(await store.hGet(seatsKey(post), who));
+  let fresh = false;
+  if (meta.gate >= 0 && round === meta.gate && matchId === meta.id && seat.m === matchId) {
+    const mark = `${matchId}:${round}`;
+    fresh = (await store.hGet(readyKey(post), who)) !== mark;
+    // Its own hash, one field per player, so a heartbeat landing at the same time cannot undo it.
+    if (fresh) await store.hSet(readyKey(post), { [who]: mark });
+  }
+  return { state: await partyState(store, post, who, now), fresh };
 }
 
 export function guestName(input: unknown): string | null {

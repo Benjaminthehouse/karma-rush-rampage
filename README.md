@@ -38,7 +38,10 @@ Red, green and blue are the only inputs. Tap the pads, or on a keyboard:
   players of the same day, padded with labelled house bots while the day is young.
 - **Live Party** — one lobby per post. Anyone presses START and everyone in the lobby
   plays a fresh lineup on a shared, server-timed clock, with live standings between
-  rounds. Realtime pushes updates; a 2 s poll is the heartbeat and the fallback.
+  rounds. Each round's instructions wait until everyone has tapped READY (12 s at
+  most, and a player who has gone quiet is not waited for); the server then fixes
+  the round's start for all. Realtime pushes updates; a 2 s poll is the heartbeat
+  and the fallback.
 - **Practice** — a random five, or the **Arcade**: browse every mini-game with the
   pads (prev / play / next) and practise one at a time. Nothing is recorded.
 
@@ -56,7 +59,7 @@ or `engine.ts`, so the look can change without touching the rules.
 | Arcade | One game at a time: title, shout, how-to, button labels, your best |
 | Lobby | Players in the party, START |
 | Countdown | 3, 2, 1 |
-| Round intro | Round number, the shout dictated word by word, how-to, button legend. In solo modes it waits: TAP ANY BUTTON TO START |
+| Round intro | Round number, the shout dictated word by word, how-to, button legend. In solo modes it waits: TAP ANY BUTTON TO START. In Live Party it waits for everyone: TAP WHEN READY, then READY! WAITING FOR 1 MORE |
 | Free retry | Solo modes: a round under 200 points shows the how-to again and offers one retry (freshly dealt), or keeping the score |
 | Round | HUD (round pips, title, combo, live score), timer, race track, the stage, three pads |
 | Round result | Score counting up, verdict, standings |

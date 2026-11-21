@@ -502,3 +502,6 @@ body #final, body.ios #final { padding-bottom: 0.8rem; }
 /* Today's Rush once played: ticked off, quieter than the thing to press next. */
 .ui .choice.done { opacity: 0.8; }
 .ui .choice.done b::after { content: ' ✓'; color: var(--green); }
+
+/* Live Party: READY tapped, waiting for the others (and the GO that follows). */
+#card .ready.set { animation: none; background: var(--green); }

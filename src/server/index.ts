@@ -21,6 +21,7 @@ import {
   markFlair,
   markShared,
   partyBeat,
+  partyReady,
   partyScore,
   partyStart,
   setAvatar,
@@ -206,6 +207,22 @@ router.post('/api/party/start', partyRoute((post, who) => partyStart(store, post
 router.post(
   '/api/party/score',
   partyRoute((post, who, b) => partyScore(store, post, who, Date.now(), String(b.matchId ?? ''), b.rounds, b.live), 'onRoundEnd')
+);
+
+router.post(
+  '/api/party/ready',
+  route(async (req, res) => {
+    const post = context.postId;
+    const who = await partyWho(req.body);
+    if (!post || !who) {
+      res.status(400).json({ status: 'error', message: 'Party needs a post and a player' });
+      return;
+    }
+    const { state, fresh } = await partyReady(store, post, who, Date.now(), String(req.body?.matchId ?? ''), req.body?.round);
+    // One more player ready (or the round now has its start time): everyone should hear.
+    if (fresh) await push<PartyMessage>(partyChannel(post), { t: 'sync' });
+    res.json(state);
+  })
 );
 
 // ------------------------------------------------------------- daily posts

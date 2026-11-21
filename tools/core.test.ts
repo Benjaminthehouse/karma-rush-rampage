@@ -1,7 +1,7 @@
 // Rules check for src/server/core.ts on an in-memory store: `npm test`.
 import assert from 'node:assert/strict';
-import { getInit, partyBeat, partyScore, partyStart, setAvatar, submitRun, type Store } from '../src/server/core';
-import { GAME_IDS, GAME_META, lineupFor, matchLength, roundsFromIds } from '../src/shared/daily';
+import { getInit, partyBeat, partyReady, partyScore, partyStart, setAvatar, submitRun, type Store } from '../src/server/core';
+import { GAME_IDS, GAME_META, GO_MS, READY_WAIT, ROUNDS, TIMING, goTimes, lineupFor, matchLength, partyClock, roundsFromIds, timeline } from '../src/shared/daily';
 
 function memory(): Store {
   const hs = new Map<string, Map<string, string>>();
@@ -15,6 +15,7 @@ function memory(): Store {
     hSet: async (k, fv) => void Object.entries(fv).forEach(([f, v]) => hash(k).set(f, v)),
     hGetAll: async (k) => Object.fromEntries(hash(k)),
     hDel: async (k, fs) => void fs.forEach((f) => hash(k).delete(f)),
+    hSetNX: async (k, f, v) => void (hash(k).has(f) || hash(k).set(f, v)),
     zAdd: async (k, ...ms) => void ms.forEach((m) => zset(k).set(m.member, m.score)),
     zScore: async (k, m) => zset(k).get(m),
     zRank: async (k, m) => {
@@ -99,11 +100,89 @@ p = await partyScore(s, 't3_x', 'bob', now + 9600, id, [800]);
 assert.equal(p.players.find((x) => x.name === 'bob')!.live, 0);
 p = await partyScore(s, 't3_x', 'cat', now + 9000, id, [999]);
 assert.ok(!p.players.some((x) => x.name === 'cat'), 'cannot score without a seat');
-now += 5000 + matchLength(lineupFor(id)) + 2000;
+// Nobody tapped READY, so every round waited out its full time before going.
+now += 5000 + matchLength(lineupFor(id)) + ROUNDS * READY_WAIT - 2000;
+assert.equal((await partyBeat(s, 't3_x', 'ann', now)).status, 'running');
+now += 4000;
 p = await partyBeat(s, 't3_x', 'ann', now);
 assert.equal(p.status, 'lobby');
 assert.notEqual((await partyStart(s, 't3_x', 'ann', now)).id, id);
 
+// ---- party ready-up: each round's instructions wait until everyone has tapped READY
+{
+  const s = memory();
+  const post = 't3_r';
+  let now = 5_000_000;
+  await partyBeat(s, post, 'ann', now);
+  await partyBeat(s, post, 'bob', now);
+  let p = await partyStart(s, post, 'ann', now);
+  const id = p.id;
+  const lineup = lineupFor(id);
+  const tl = timeline(lineup);
+  p = await partyBeat(s, post, 'bob', now + 100, id);
+  const startAt = p.startAt;
+  const deadline = startAt + TIMING.intro + READY_WAIT;
+  assert.equal(p.go[0], deadline, 'an unsettled round goes at its deadline');
+  assert.equal(p.gate, -1, 'nothing to be ready for during the countdown');
+  assert.equal((await partyReady(s, post, 'ann', now + 200, id, 0)).fresh, false, 'no READY before the instructions');
+
+  // Instructions up: ann taps, bob has not.
+  now = startAt + 2500;
+  await partyBeat(s, post, 'bob', now, id);
+  let r = await partyReady(s, post, 'ann', now, id, 0);
+  assert.equal(r.fresh, true);
+  assert.equal(r.state.gate, 0);
+  assert.equal(r.state.go[0], deadline, 'one of two ready does not start the round');
+  assert.deepEqual(r.state.players.map((x) => [x.name, !!x.ready]), [['ann', true], ['bob', false]]);
+  assert.equal((await partyReady(s, post, 'ann', now + 50, id, 0)).fresh, false, 'a repeat is not news');
+  // The shared clock stands still, GO_MS short of the end of the intro.
+  assert.equal(partyClock(now + 3000, startAt, lineup, r.state.go), tl[0].end - GO_MS);
+  // A heartbeat must not undo the tap.
+  await partyBeat(s, post, 'ann', now + 300, id);
+
+  // bob taps: the round gets a start time a beat from now, the same for both.
+  now += 3000;
+  await partyBeat(s, post, 'ann', now, id);
+  r = await partyReady(s, post, 'bob', now, id, 0);
+  const go0 = r.state.go[0];
+  assert.equal(go0, now + 1200);
+  assert.equal(r.state.gate, -1);
+  assert.equal((await partyBeat(s, post, 'ann', now + 100, id)).go[0], go0);
+  assert.equal(partyClock(go0, startAt, lineup, r.state.go), tl[1].start, 'play starts at the go time');
+  assert.equal(partyClock(go0 - GO_MS, startAt, lineup, r.state.go), tl[0].end - GO_MS);
+  assert.equal(partyClock(go0 + 700, startAt, lineup, r.state.go), tl[1].start + 700);
+
+  // Round 2: bob has left. ann alone being ready is enough once bob has gone quiet.
+  const intro1 = go0 + GAME_META[lineup[0].id].duration + TIMING.result;
+  assert.equal(partyClock(intro1, startAt, lineup, r.state.go), tl[3].start);
+  now = intro1 + 2600;
+  await partyBeat(s, post, 'ann', now, id);
+  await partyBeat(s, post, 'bob', now - 500, id);
+  r = await partyReady(s, post, 'ann', now, id, 0);
+  assert.equal(r.fresh, false, 'a tap for a round that has gone is ignored');
+  r = await partyReady(s, post, 'ann', now, id, 1);
+  assert.equal(r.state.gate, 1, 'bob was heard from too recently to be skipped');
+  now += 7000;
+  p = await partyBeat(s, post, 'ann', now, id);
+  assert.equal(p.go[1], now + 1200, 'the player who is still here is not held up');
+
+  // The clock never runs backwards as go times arrive, and covers the whole timeline.
+  const go = goTimes(startAt, lineup, [go0, p.go[1]]);
+  let last = -Infinity;
+  for (let t = startAt - 3000; t < go[ROUNDS - 1] + 60_000; t += 37) {
+    const m = partyClock(t, startAt, lineup, go);
+    assert.ok(m >= last, `clock ran backwards at ${t - startAt}`);
+    last = m;
+  }
+  assert.ok(last > tl[tl.length - 1].end);
+  assert.equal(partyClock(startAt - 1000, startAt, lineup, go), -1000, 'counts down before the start');
+
+  // A new match on the same post starts with a clean slate.
+  now = go[ROUNDS - 1] + 60_000;
+  p = await partyStart(s, post, 'ann', now);
+  assert.notEqual(p.id, id);
+  assert.equal(p.go[0], p.startAt + TIMING.intro + READY_WAIT);
+}
 
 // ---- rivals come from the leaderboard: the leader, the top quarter, the middle
 {

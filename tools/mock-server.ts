@@ -5,7 +5,7 @@ import express from 'express';
 import path from 'node:path';
 import { feedChannel, partyChannel } from '../src/shared/api';
 import { GAME_META, dayKey } from '../src/shared/daily';
-import { cleanRounds, getInit, guestName, hasShared, markFlair, setAvatar, markShared, shareText, streakFlair, wantsFlair, partyBeat, partyScore, partyStart, submitRun, type Store } from '../src/server/core';
+import { cleanRounds, getInit, guestName, hasShared, markFlair, setAvatar, markShared, shareText, streakFlair, wantsFlair, partyBeat, partyReady, partyScore, partyStart, submitRun, type Store } from '../src/server/core';
 
 const hashes = new Map<string, Map<string, string>>();
 const zsets = new Map<string, Map<string, number>>();
@@ -19,6 +19,7 @@ const store: Store = {
   hSet: async (k, fv) => void Object.entries(fv).forEach(([f, v]) => hash(k).set(f, v)),
   hGetAll: async (k) => Object.fromEntries(hash(k)),
   hDel: async (k, fs) => void fs.forEach((f) => hash(k).delete(f)),
+  hSetNX: async (k, f, v) => void (hash(k).has(f) || hash(k).set(f, v)),
   zAdd: async (k, ...ms) => void ms.forEach((m) => zset(k).set(m.member, m.score)),
   zScore: async (k, m) => zset(k).get(m),
   zRank: async (k, m) => {
@@ -108,6 +109,11 @@ app.post('/api/party/beat', async (req, res) => {
 app.post('/api/party/start', async (req, res) => {
   res.json(await partyStart(store, POST, who(req), Date.now()));
   send(partyChannel(POST), { t: 'sync' });
+});
+app.post('/api/party/ready', async (req, res) => {
+  const { state, fresh } = await partyReady(store, POST, who(req), Date.now(), String(req.body?.matchId ?? ''), req.body?.round);
+  res.json(state);
+  if (fresh) send(partyChannel(POST), { t: 'sync' });
 });
 app.post('/api/party/score', async (req, res) => {
   res.json(await partyScore(store, POST, who(req), Date.now(), String(req.body?.matchId ?? ''), req.body?.rounds, req.body?.live));

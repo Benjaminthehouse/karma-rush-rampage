@@ -124,3 +124,54 @@ export function botRounds(seed: string): { name: string; rounds: number[] }[] {
     };
   });
 }
+
+// ---------------------------------------------------------------- live party clock
+// A party shares one clock, and that clock waits: each round's instructions stay up until
+// everyone has tapped READY, or until READY_WAIT runs out. The server decides when each
+// round goes; from those times every player derives the same match time.
+
+/** The beat between "ready" and a round starting. */
+export const GO_MS = 500;
+/** The longest a party round's instructions wait for everyone to tap READY. */
+export const READY_WAIT = 12_000;
+
+/**
+ * The server time at which each round's play starts. `settled[r]` is the time the server
+ * fixed for round r (everyone was ready); a round not settled yet goes at its deadline.
+ */
+export function goTimes(startAt: number, lineup: Round[], settled: (number | undefined)[]): number[] {
+  const out: number[] = [];
+  let intro = startAt;
+  lineup.forEach((r, i) => {
+    const go = settled[i] ?? intro + TIMING.intro + READY_WAIT;
+    out.push(go);
+    intro = go + GAME_META[r.id].duration + TIMING.result;
+  });
+  return out;
+}
+
+/** The server time at which round r's instructions come up. */
+export const introAt = (startAt: number, lineup: Round[], go: number[], r: number) =>
+  r === 0 ? startAt : go[r - 1] + GAME_META[lineup[r - 1].id].duration + TIMING.result;
+
+/** The server time at which a party match is over. */
+export const partyEnd = (startAt: number, lineup: Round[], go: number[]) => introAt(startAt, lineup, go, lineup.length);
+
+/**
+ * Match time (a position on `timeline()`) for a server time. Each intro stops GO_MS short
+ * of its end and stays there until GO_MS before the round's go time.
+ */
+export function partyClock(now: number, startAt: number, lineup: Round[], go: number[]): number {
+  let at = 0; // match time at which this round's intro starts
+  for (let r = 0; r < lineup.length; r++) {
+    const round = TIMING.intro + GAME_META[lineup[r].id].duration + TIMING.result;
+    const next = introAt(startAt, lineup, go, r + 1);
+    if (now < next || r === lineup.length - 1) {
+      if (now >= go[r]) return at + TIMING.intro + (now - go[r]);
+      const reading = Math.min(now - introAt(startAt, lineup, go, r), TIMING.intro - GO_MS);
+      return at + Math.max(reading, TIMING.intro - (go[r] - now));
+    }
+    at += round;
+  }
+  return now - startAt;
+}
