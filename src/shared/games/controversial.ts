@@ -3,9 +3,9 @@ import { defineGame } from '../meta';
 export default defineGame({
   id: 'controversial',
   title: 'Sort By Controversial',
-  shout: 'KEEP IT FIFTY FIFTY!',
-  how: 'The crowd shoves the vote. Tap it back to the gold middle. ORDER! stuns the crowd.',
-  labels: ['DOWNVOTE', 'ORDER!', 'UPVOTE'],
+  shout: 'KEEP THEM FIFTY FIFTY!',
+  how: 'Trolls keep downvoting. Tap a button to upvote its arrow. Keep all three in the gold.',
+  labels: ['UPVOTE', 'UPVOTE', 'UPVOTE'],
   duration: 8000,
   kind: 'timing',
   think: 0,

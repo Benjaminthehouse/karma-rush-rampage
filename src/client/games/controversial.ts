@@ -1,202 +1,115 @@
 import './controversial.css';
-import { actor, defineSprite, h, pick, pulse, randInt, ratio, sprite, type Actor, type GameFactory } from './common';
+import { actor, COLOR, h, pulse, ratio, sprite, type Btn, type GameFactory } from './common';
 
-const TAKES = [
-  'Pineapple belongs on pizza',
-  'Cereal is a soup',
-  'A hot dog is a sandwich',
-  'Socks with sandals are fine',
-  'The book was worse',
-  'Mornings are the best part of the day',
-  'Water is not wet',
-  'GIF has a hard G',
-];
-
-// The flag tied to the middle of the rope.
-defineSprite('controversial-flag', `
-.kkkkkkkkk..
-.kyyyyyyyyk.
-.kyYyyyyyyyk
-.kyyyyyyyyyk
-.kyyyyyyyyk.
-.kkkkkkkkk..
-.kn.........
-.kn.........
-.kn.........
-.kn.........
-.kn.........
-.kk.........`);
-
+// One rule: every arrow sinks, a tap lifts its arrow one step, and the gold band in the
+// middle is where it scores. Too few taps and it is buried; too many and it is too popular.
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
-  const half = 0.1 - level * 0.006; // half-width of the gold zone
-  const nudge = 0.07;
-  const speed = 0.00015 + level * 0.000028; // how hard the crowd shoves, per ms
-  // ORDER!: the judge's gavel stuns the crowd. Long enough to be worth a button, and it
-  // has to recharge, so it is a breather rather than a way to play the round.
-  const ORDER_MS = 800;
-  const RECHARGE_MS = 2800;
-  // The crowd builds up to full speed, so the first shove can be read before it lands.
-  // (At full speed the last round would be out of the zone 0.23 s after the bell.)
-  const warm = 300 + level * 150;
-  // The crowd shoves in bursts, and mostly piles on: away from the middle.
-  const shoves: { until: number; roll: number }[] = [];
-  for (let at = 0; at < duration + 1000; ) {
-    at += randInt(rng, 450, 850);
-    shoves.push({ until: at, roll: rng() });
-  }
-  let shove = 0;
-  let dir = rng() < 0.5 ? -1 : 1;
-  let touched = false; // any press during the current shove
+  const half = 0.12 - level * 0.007; // half-height of the gold band
+  const step = 0.085; // one upvote
+  // Each lane sinks at its own steady pace, so each wants its own rhythm: about one tap a
+  // second on the slowest lane, up to two on the fastest in the last round.
+  const pace = 1 + level * 0.08;
+  const sink = [0, 1, 2].map(() => (0.07 + rng() * 0.05) * pace); // per second
+  const warm = 400; // the trolls take a moment to get going, so the start can be read
 
-  let pos = 0.5;
+  // Each arrow starts in the lower half of the gold, already on its way down.
+  const pos = [0, 1, 2].map(() => 0.5 - half * (0.2 + rng() * 0.6));
+  const lastBad = [-1000, -1000, -1000];
+  const wasIn = [true, true, true];
   let last = 0;
-  let inZone = 0;
-  let orderUntil = 0;
-  let orderReadyAt = 0;
-  let wasIn = true;
+  let banked = 0; // lane-milliseconds spent in the gold
   let streak = 0;
-  let lastBad = -1000;
 
-  // The scene: a tug of war in court. Mod Bear presides with a gavel; the downvote crowd
-  // hauls the rope left, the upvote crowd hauls it right, and the flag must stay over the
-  // gold zone. A big readout says where the vote stands and which way to tap.
+  // The scene: three posts in court, each with its upvote arrow floating over a troll who
+  // keeps dragging it down. The gold band across the middle is 50/50.
   const wrap = h('div', 'g-controversial scene-court');
-  const top = h('div', 'top');
-  const bench = h('div', 'bench');
-  const judge = actor('modbear', { mood: 'peep', px: 0.26 });
-  const gavel = sprite('hammer', { px: 0.2 }, 'gavel');
-  bench.append(judge.el, gavel);
-  const take = h('div', 'take', `“${pick(rng, TAKES)}”`);
-  const pct = h('b', 'pct');
-  const tip = h('span', 'tip');
-  const meter = h('div', 'readout');
-  meter.append(pct, tip);
-  top.append(bench, take, meter);
-
-  const field = h('div', 'field');
-  const zone = h('i', 'zone');
-  zone.style.left = `${(0.5 - half) * 100}%`;
-  zone.style.width = `${half * 200}%`;
-  zone.append(h('span', '', '50/50'));
-  const rail = h('div', 'rail');
-  rail.append(zone, h('i', 'rope'));
-  const flag = h('div', 'flag');
-  flag.append(sprite('controversial-flag', { px: 0.26 }));
-  // Pop-ups float up from above the rope, so they never hide the flag or the zone.
-  const stamp = h('i', 'stamp');
-  rail.append(flag, stamp);
-  const team = (side: 'down' | 'up') => {
-    const el = h('div', `team ${side}`);
-    const back = actor('npc', { mood: 'angry', px: 0.26 });
-    back.el.classList.add('back');
-    const front = actor('npc', { mood: 'angry', px: 0.34 });
-    front.el.classList.add('front');
-    const sign = sprite('up', { tone: side === 'up' ? 'blue' : 'red', flipY: side === 'down', px: 0.2 }, 'sign');
-    el.append(back.el, front.el, sign);
-    return { el, crew: [back, front] as Actor[] };
-  };
-  const downs = team('down');
-  const ups = team('up');
-  field.append(rail, downs.el, ups.el);
-
-  const ends = h('div', 'ends');
-  // Over the middle button: lit while ORDER! is ready, dim while the gavel recharges.
-  const chip = h('span', 'chip');
-  ends.append(h('span', 'side t-red', '◀ downvotes'), chip, h('span', 'side t-blue', 'upvotes ▶'));
-  wrap.append(top, field, ends);
+  const lanes = ([0, 1, 2] as Btn[]).map((b) => {
+    const lane = h('div', `lane c-${COLOR[b]}`);
+    const track = h('div', 'track');
+    const band = h('div', 'band');
+    band.style.bottom = `${(0.5 - half) * 100}%`;
+    band.style.height = `${half * 200}%`;
+    const carrier = h('div', 'carrier');
+    const ride = h('div', 'ride');
+    const arrow = sprite('up', { tone: COLOR[b], px: 0.24 }, 'arrow');
+    ride.append(arrow);
+    carrier.append(ride);
+    track.append(h('span', 'edge top', 'TOO POPULAR'), band, h('span', 'edge low', 'BURIED'), carrier);
+    const troll = actor('troll', { mood: 'angry', px: 0.17 });
+    const pct = h('div', 'pct');
+    const foot = h('div', 'foot');
+    foot.append(troll.el, sprite('up', { tone: 'red', flipY: true, px: 0.11 }, 'down'));
+    lane.append(track, foot, pct);
+    wrap.append(lane);
+    return { lane, carrier, arrow, troll, pct, shownY: '', shownPct: -1, state: '' };
+  });
   root.append(wrap);
 
-  // What is on screen, so tick only touches the DOM when something changes.
-  let shownPos = '';
-  let shownPct = -1;
-  let shownState = '';
+  const where = (i: number) => (Math.abs(pos[i] - 0.5) <= half ? 'in' : pos[i] > 0.5 ? 'high' : 'low');
 
   return {
-    press(b, t) {
-      touched = true;
-      if (b === 1) {
-        if (t < orderReadyAt) {
-          fx.sound('tick');
-          pulse(chip, 'shake');
-          return;
-        }
-        // The gavel comes down: the crowd is stunned and stops shoving for a moment.
-        orderUntil = t + ORDER_MS;
-        orderReadyAt = t + RECHARGE_MS;
-        fx.sound('thud');
-        pulse(gavel, 'slam');
-        fx.shake();
-        fx.pop(bench, 'ORDER!', 'green');
-        return;
-      }
-      pos = Math.max(0, Math.min(1, pos + (b === 2 ? nudge : -nudge)));
-      // Your tug: that crowd heaves and the flag jumps their way.
-      pulse((b === 2 ? ups : downs).el, 'heave');
+    press(b) {
+      pos[b] = Math.min(1, pos[b] + step);
+      pulse(lanes[b].arrow, 'bump');
       fx.sound('pop');
     },
     tick(t) {
       const dt = Math.min(60, Math.max(0, t - last));
       last = t;
-      while (shoves[shove + 1] && t >= shoves[shove].until) {
-        shove++;
-        const away = pos >= 0.5 ? 1 : -1;
-        // Left alone the crowd only piles on, so a vote nobody is tending never wanders
-        // back into the zone (an idle round used to score up to 850 on a lucky day).
-        dir = touched && shoves[shove].roll >= 0.72 ? -away : away;
-        touched = false;
-      }
-      if (t >= orderUntil) pos = Math.max(0, Math.min(1, pos + dir * speed * Math.min(1, t / warm) * dt));
-      const inside = Math.abs(pos - 0.5) <= half;
-      if (inside) {
-        inZone += dt;
-        // A cheer for every 0.9 s banked, like the score: a wobble does not wipe it.
+      const pull = Math.min(1, t / warm);
+      let inside = 0;
+      lanes.forEach((l, i) => {
+        pos[i] = Math.max(0, pos[i] - (sink[i] * pull * dt) / 1000);
+        const state = where(i);
+        if (state === 'in') {
+          inside++;
+          banked += dt;
+        } else if (wasIn[i] && t - lastBad[i] >= 700) {
+          // One buzz per fall, not one per wobble across the edge.
+          lastBad[i] = t;
+          bad(l.arrow, state === 'high' ? 'TOO POPULAR' : 'BURIED');
+        }
+        wasIn[i] = state === 'in';
+        if (state !== l.state) {
+          l.state = state;
+          l.lane.classList.toggle('in', state === 'in');
+          l.lane.classList.toggle('high', state === 'high');
+          l.lane.classList.toggle('low', state === 'low');
+          // The troll gloats over a buried post and sulks over a popular one.
+          l.troll.mood(state === 'low' ? 'happy' : state === 'high' ? 'sad' : 'angry');
+        }
+        const y = (pos[i] * 100).toFixed(1);
+        if (y !== l.shownY) {
+          l.shownY = y;
+          l.carrier.style.transform = `translateY(${-y}%)`;
+        }
+        const pct = Math.round(pos[i] * 100);
+        if (pct !== l.shownPct) {
+          l.shownPct = pct;
+          l.pct.textContent = `${pct}%`;
+        }
+      });
+      // A cheer for every 0.9 s with all three in the gold.
+      if (inside === 3) {
         streak += dt;
         if (streak >= 900) {
           streak = 0;
-          good(stamp, '50/50');
+          good(lanes[1].arrow, '50/50');
         }
-      } else if (wasIn && t - lastBad >= 650) {
-        // One buzz per fall, not one per wobble across the edge.
-        lastBad = t;
-        bad(stamp, pos > 0.5 ? 'TOO POPULAR' : 'BURIED');
-      }
-      wasIn = inside;
-      const p = pos.toFixed(3);
-      if (p !== shownPos) {
-        shownPos = p;
-        flag.style.setProperty('--p', p);
-      }
-      const frozen = t < orderUntil;
-      const spent = t < orderReadyAt;
-      const state = `${inside} ${pos > 0.5} ${frozen} ${spent} ${dir}`;
-      if (state !== shownState) {
-        shownState = state;
-        wrap.classList.toggle('in', inside);
-        wrap.classList.toggle('order', frozen);
-        wrap.classList.toggle('high', !inside && pos > 0.5);
-        wrap.classList.toggle('low', !inside && pos < 0.5);
-        wrap.classList.toggle('spent', spent);
-        wrap.classList.toggle('pull-up', !frozen && dir > 0);
-        wrap.classList.toggle('pull-down', !frozen && dir < 0);
-        // The readout says it in words: where the vote is, and which button fixes it.
-        tip.textContent = inside ? 'CONTROVERSIAL! KEEP IT HERE' : pos > 0.5 ? 'TOO POPULAR! TAP DOWNVOTE' : 'BURIED! TAP UPVOTE';
-        chip.textContent = frozen ? 'ORDER!' : spent ? 'gavel recharging' : 'ORDER! ready';
-        // Whoever is winning cheers; the losing crowd strains; ice shocks everyone.
-        const face = (mine: boolean) => (frozen ? 'shock' : inside ? 'angry' : mine ? 'happy' : 'sad');
-        for (const a of downs.crew) a.mood(face(!inside && pos < 0.5));
-        for (const a of ups.crew) a.mood(face(!inside && pos > 0.5));
-        judge.mood(frozen ? 'angry' : 'peep');
-      }
-      const now = Math.round(pos * 100);
-      if (now !== shownPct) {
-        shownPct = now;
-        pct.textContent = `${now}%`;
       }
     },
-    score: () => ratio(inZone, duration * 0.88),
+    score: () => ratio(banked, 3 * duration * 0.88),
     hint() {
-      const off = pos - 0.5;
-      return Math.abs(off) < nudge * 0.55 ? null : off > 0 ? 0 : 2;
+      // Upvote whichever arrow has sunk furthest below the middle.
+      let pickB: Btn | null = null;
+      let lowest = 0.5 - step * 0.45;
+      pos.forEach((p, i) => {
+        if (p < lowest) {
+          lowest = p;
+          pickB = i as Btn;
+        }
+      });
+      return pickB;
     },
   };
 };
