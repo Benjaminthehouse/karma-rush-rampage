@@ -28,11 +28,13 @@ koyyok
 const TICKERS = ['$KARMA', '$DOGGO', '$STONK', '$HODL', '$CATCOIN', '$UPVOTE', '$COPIUM', '$BANANA'];
 
 export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
-  const climbMs = 1050 - level * 95; // hold time from the pad to the top of the lane
-  const par = 5 + Math.floor(level / 2);
+  // Tuned for thumbs, not bots: the rocket is slow enough to follow, and the moon is a
+  // window of about a third of a second at first, a fifth of a second by the last round.
+  const climbMs = 1400 - level * 80; // hold time from the pad to the top of the lane
+  const par = 4 + Math.floor(level / 3); // a person fits five or six launches in a round
   const launches = Array.from({ length: 24 }, (_, i) => {
-    const mid = 0.52 + rng() * 0.3;
-    const half = 0.11 - level * 0.008;
+    const mid = 0.5 + rng() * 0.28;
+    const half = 0.13 - level * 0.008;
     return { col: randBtn(rng), lo: mid - half, hi: mid + half, ticker: TICKERS[(i + Math.floor(rng() * 8)) % 8] };
   });
   for (let i = 1; i < launches.length; i++) {
@@ -46,11 +48,11 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   let landed = 0;
   let misses = 0;
 
-  // The scene: a launch pad at night. Three rockets stand on their pads under the moon;
-  // the Ape climbs onto the lit one and rides it up while you hold its button.
+  // The scene: a launch pad at night. Three rockets stand on their pads. The moon hangs
+  // in the lit rocket's lane, in a band of moonlight: that band is exactly where letting
+  // go counts. The Ape watches from mission control, beside the tally.
   const wrap = h('div', 'g-tothemoon scene-night');
-  wrap.append(sprite('moon', { px: 0.4 }, 'moon'));
-  const ape = actor('ape', { px: 0.32 });
+  const ape = actor('ape', { px: 0.15 });
   let mood: ActorMood = 'idle';
   const look = (m: ActorMood) => {
     if (m === mood) return;
@@ -59,16 +61,16 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   };
   const lanes = [0, 1, 2].map((i) => {
     const lane = h('div', `lane c-${COLOR[i]}`);
-    // The track is the lane minus the rider above and half a rocket below, and the rocket hangs
-    // half below its carrier's floor, so the rocket's centre is drawn exactly at its judged height.
+    // The track is the lane minus half a rocket at each end, and the rocket hangs half below
+    // its carrier's floor, so the rocket's centre is drawn exactly at its judged height.
     const track = h('div', 'track');
-    const zone = h('div', 'zone', 'MOON');
+    const zone = h('div', 'zone');
+    zone.append(sprite('moon', {}, 'target'));
     const carrier = h('div', 'carrier');
     const ride = h('div', 'ride');
-    const seat = h('div', 'seat');
     const rocket = h('div', 'rocket');
-    rocket.append(sprite('tothemoon-rocket', { tone: COLOR[i], px: 0.36 }), sprite('tothemoon-flame', { px: 0.3 }, 'flame'));
-    ride.append(seat, rocket);
+    rocket.append(sprite('tothemoon-rocket', { tone: COLOR[i], px: 0.26 }), sprite('tothemoon-flame', { px: 0.22 }, 'flame'));
+    ride.append(rocket);
     carrier.append(ride);
     const tag = h('div', 'ticker');
     track.append(zone, carrier);
@@ -76,10 +78,12 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
     pad.append(tag);
     lane.append(track, pad);
     wrap.append(lane);
-    return { lane, zone, rocket, carrier, seat, tag };
+    return { lane, zone, rocket, carrier, tag };
   });
-  const note = h('div', 'note');
-  wrap.append(note);
+  const control = h('div', 'control');
+  const note = h('span', 'note');
+  control.append(ape.el, note);
+  wrap.append(control);
   root.append(wrap);
   let shownY = -1;
   const lift = (l: (typeof lanes)[number], y: number) => {
@@ -107,11 +111,6 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       other.rocket.className = 'rocket';
     });
     lift(l, 0);
-    // The Ape hops onto the lit rocket.
-    if (ape.el.parentElement !== l.seat) {
-      l.seat.append(ape.el);
-      if (idx > 0) fx.poof(l.seat);
-    }
     look('idle');
     l.tag.textContent = c.ticker;
     note.textContent = `${landed} moon landing${landed === 1 ? '' : 's'}`;

@@ -1,24 +1,33 @@
-/* A launch pad at night: three lanes of sky, a rocket on each pad, the moon up top. */
+/* A launch pad at night: three lanes of sky, a rocket on each pad, the moon in the lit lane. */
 .g-tothemoon { flex-direction: row !important; flex-wrap: wrap; padding: 0.5em !important; gap: 0.4em !important; align-items: stretch !important; align-content: stretch; }
-.g-tothemoon .moon { position: absolute; z-index: 0; left: 50%; top: 0.6em; margin-left: -2.4em; }
-.g-tothemoon .lane { flex: 1; min-width: 0; height: calc(100% - 2.2em); position: relative; z-index: 1; overflow: hidden; }
+.g-tothemoon .lane { flex: 1; min-width: 0; height: calc(100% - 3em); position: relative; z-index: 1; overflow: hidden; }
 .g-tothemoon .lane.live { background: linear-gradient(#0000 40%, #ffffff14); box-shadow: inset 0 0 0 0.14em #ffffff55; }
-/* The track: the lane minus the rider above and half a rocket below. */
-.g-tothemoon .track { position: absolute; left: 0; right: 0; top: 7.2em; bottom: 4.1em; }
-.g-tothemoon .zone { position: absolute; left: 0.3em; right: 0.3em; display: none; align-items: center; justify-content: center; font-size: 0.75em; letter-spacing: 0.12em; color: #0b1020; background: repeating-linear-gradient(135deg, #ffcf3f 0 0.6em, #ffe58a 0.6em 1.2em); box-shadow: 0 0 0 0.16em #0b1020; }
-.g-tothemoon .lane.live .zone { display: flex; }
+/* The track: the lane minus half a rocket at each end. */
+.g-tothemoon .track { position: absolute; left: 0; right: 0; top: 2.3em; bottom: 3.4em; }
+/* The landing window: a band of moonlight right across the lane, edged in gold, with the
+   moon in the middle of it. Letting go while the rocket is in the band is a landing. */
+.g-tothemoon .zone { position: absolute; left: 0; right: 0; display: none; background: #ffcf3f38; box-shadow: inset 0 0.18em 0 0 var(--gold), inset 0 -0.18em 0 0 var(--gold); }
+.g-tothemoon .lane.live .zone { display: block; }
+.g-tothemoon .zone .target { position: absolute; inset: 0.4em 0.3em; width: auto !important; height: auto !important; background-size: contain; background-position: center; }
 .g-tothemoon .carrier { position: absolute; inset: 0; }
-/* The rocket's centre sits on the carrier's floor; the Ape rides on its nose. */
+/* The rocket's centre sits on the carrier's floor. */
 .g-tothemoon .ride { position: absolute; left: 50%; bottom: 0; width: 0; height: 0; }
-.g-tothemoon .rocket { position: absolute; left: -1.8em; top: -2.52em; width: 3.6em; height: 5.04em; transition: transform 0.25s; }
+.g-tothemoon .rocket { position: absolute; left: -1.3em; top: -1.82em; width: 2.6em; height: 3.64em; transition: transform 0.25s; }
 .g-tothemoon .rocket > .px:first-child { display: block; }
-.g-tothemoon .flame { position: absolute; left: 50%; top: 100%; margin-left: -0.9em; visibility: hidden; transform-origin: top; }
+.g-tothemoon .flame { position: absolute; left: 50%; top: 100%; margin-left: -0.66em; visibility: hidden; transform-origin: top; }
 .g-tothemoon .rocket.burning .flame { visibility: visible; animation: g-tothemoon-flame 0.1s steps(2) infinite; }
 @keyframes g-tothemoon-flame { 50% { transform: scaleY(1.4); } }
-.g-tothemoon .seat { position: absolute; left: -2.56em; bottom: 1.9em; }
 .g-tothemoon .lane:not(.live) .rocket { opacity: 0.5; }
 .g-tothemoon .rocket.crashed { transform: rotate(140deg); }
 /* The launch pad under each rocket, in its button's colour. */
 .g-tothemoon .pad { position: absolute; left: 8%; right: 8%; bottom: 0.2em; height: 1.3em; display: flex; align-items: center; justify-content: center; background: var(--c); box-shadow: 0 0 0 0.16em #0b1020, inset 0 -0.3em 0 0 var(--cd); }
 .g-tothemoon .ticker { font-size: 0.75em; line-height: 1; color: #0b1020; white-space: nowrap; }
-.g-tothemoon .note { flex-basis: 100%; text-align: center; font-size: 0.9em; color: #eef1ff; }
+/* Mission control: the Ape and the tally. */
+.g-tothemoon .control { flex-basis: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5em; height: 2.6em; }
+.g-tothemoon .note { font-size: 0.9em; color: #eef1ff; white-space: nowrap; }
+/* Short stages (a small phone, desktop): the moonlight band is shorter, so the rocket is
+   smaller too. It should always fit inside the band with room to spare. */
+@container (max-height: 470px) {
+  .g-tothemoon .ride { font-size: 0.72em; }
+  .g-tothemoon .track { top: 1.7em; bottom: 2.9em; }
+}
