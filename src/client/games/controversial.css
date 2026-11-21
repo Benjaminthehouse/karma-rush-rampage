@@ -1,19 +1,35 @@
-/* Tug of war in court: the judge and the hot take up top, two crowds hauling a rope below. */
+/* Tug of war in court: the judge, the hot take and the vote readout up top, two crowds
+   hauling a rope below. */
 .g-controversial { justify-content: space-between !important; gap: 0.3em !important; padding: 0.5em 0.6em 0.4em !important; color: #0b1020; }
 
 .g-controversial .top { flex: none; display: flex; flex-direction: column; align-items: center; }
-.g-controversial .take { position: relative; margin-top: -0.4em; max-width: 17em; text-align: center; text-wrap: balance; font-size: 1.15em; line-height: 1.05; padding: 0.3em 0.6em; background: #fff8e2; box-shadow: 0 0 0 0.2em #0b1020, 0.3em 0.35em 0 0.2em #0b102066; }
+/* The judge on the bench, gavel in hand. */
+.g-controversial .bench { position: relative; }
+.g-controversial .gavel { position: absolute; left: 100%; bottom: 0.5em; margin-left: -0.6em; transform-origin: 30% 100%; transform: rotate(25deg); }
+.g-controversial .gavel.slam { animation: g-controversial-slam 0.3s steps(3); }
+@keyframes g-controversial-slam { 0% { transform: rotate(-40deg); } 40% { transform: rotate(80deg); } }
+.g-controversial .take { position: relative; margin-top: -0.4em; max-width: 17em; text-align: center; text-wrap: balance; font-size: 1.05em; line-height: 1.05; padding: 0.25em 0.6em; background: #fff8e2; box-shadow: 0 0 0 0.2em #0b1020, 0.3em 0.35em 0 0.2em #0b102066; }
+
+/* The readout: the vote as a big number, and in words which way to tap. Gold while the
+   vote is in the zone; the colour of the button that fixes it when it is not. */
+.g-controversial .readout { margin-top: 0.6em; display: flex; flex-direction: column; align-items: center; gap: 0.15em; }
+.g-controversial .pct { font-weight: inherit; font-size: 2.6em; line-height: 0.9; color: var(--gold); text-shadow: 0.06em 0.07em 0 #0b1020, -0.04em 0 0 #0b1020, 0.04em 0 0 #0b1020, 0 -0.04em 0 #0b1020; }
+.g-controversial .pct::after { content: ' upvoted'; font-size: 0.4em; }
+.g-controversial .tip { padding: 0.1em 0.6em; font-size: 0.95em; white-space: nowrap; background: var(--gold); box-shadow: 0 0 0 0.16em #0b1020; }
+.g-controversial.high .pct { color: var(--red); }
+.g-controversial.high .tip { background: var(--red); color: #fff; }
+.g-controversial.low .pct { color: #6aa8ff; }
+.g-controversial.low .tip { background: var(--blue); color: #fff; }
 
 /* The field: the gold zone painted on the floor, the rope across in front, a crowd at each end. */
 .g-controversial .field { flex: 1 1 auto; min-height: 7.4em; position: relative; width: 100%; }
 .g-controversial .rail { position: absolute; z-index: 2; left: 1.4em; right: 1.4em; bottom: 2.3em; height: 3.6em; container-type: inline-size; }
 .g-controversial .zone { position: absolute; top: 0.4em; bottom: -1.6em; background: repeating-linear-gradient(135deg, var(--gold) 0 0.5em, #ffe58a 0.5em 1em); box-shadow: 0 0 0 0.16em #0b1020; }
+.g-controversial .zone span { position: absolute; left: 50%; bottom: 0.05em; transform: translateX(-50%); font-size: 0.7em; line-height: 1; white-space: nowrap; }
 .g-controversial .rope { position: absolute; left: -0.6em; right: -0.6em; bottom: 0.6em; height: 0.45em; background: repeating-linear-gradient(90deg, #dba678 0 0.5em, #b0703c 0.5em 0.8em); box-shadow: 0 0 0 0.12em #0b1020; }
 /* The flag hangs from the rope; --p is the vote, 0 (all down) to 1 (all up). */
 .g-controversial .flag { --p: 0.5; position: absolute; left: 0; bottom: 0.65em; width: 0; height: 0; transform: translateX(calc(var(--p) * 100cqw)); will-change: transform; }
 .g-controversial .flag .px { position: absolute; left: -0.4em; bottom: 0; }
-.g-controversial .ice { position: absolute; left: -1.2em; bottom: -0.6em; width: 2.6em; height: 3.8em; background: #a6f5ec99; box-shadow: 0 0 0 0.14em #2fd6c4; opacity: 0; }
-.g-controversial.frozen .ice { opacity: 1; }
 .g-controversial .stamp { position: absolute; left: 50%; top: -0.6em; width: 0; height: 0; }
 
 /* The crowds: a big puller in front, a smaller one behind, a vote sign held up. */
@@ -36,13 +52,23 @@
 .g-controversial .team.up.heave { animation-name: g-controversial-heave-up; }
 @keyframes g-controversial-heave { 50% { transform: translateX(-0.4em); } }
 @keyframes g-controversial-heave-up { 50% { transform: translateX(0.4em); } }
+/* ORDER!: both crowds are stunned and stand still. */
+.g-controversial.order .team { opacity: 0.55; }
 
+/* Above the buttons: which crowd is which, and whether the gavel is ready. */
 .g-controversial .ends { flex: none; display: flex; align-items: center; width: 100%; font-size: 0.85em; }
-.g-controversial .ends .side { flex: 1; background: #0b1020; padding: 0 0.4em; }
+.g-controversial .ends .side { flex: 1; background: #0b1020; padding: 0 0.4em; white-space: nowrap; }
 .g-controversial .ends .side:last-child { text-align: right; }
 .g-controversial .ends .t-red { color: var(--red); }
 .g-controversial .ends .t-blue { color: #6aa8ff; }
-.g-controversial .chip { flex: none; margin: 0 0.4em; padding: 0.05em 0.6em; background: var(--green); color: #0b1020; box-shadow: 0 0 0 0.14em #0b1020; }
-.g-controversial.spent .chip { opacity: 0.35; }
+.g-controversial .chip { flex: none; margin: 0 0.4em; padding: 0.05em 0.6em; background: var(--green); color: #0b1020; white-space: nowrap; box-shadow: 0 0 0 0.14em #0b1020; }
+.g-controversial.spent .chip { background: #c4cbe4; }
+.g-controversial.order .chip { background: var(--green); }
 
-.g-controversial .note { flex: none; background: #0b1020; color: var(--gold); font-size: 0.85em; padding: 0 0.5em; }
+/* Short stages: a smaller take and readout so the tug of war keeps its room. */
+@container (max-height: 470px) {
+  .g-controversial .take { font-size: 0.9em; }
+  .g-controversial .readout { margin-top: 0.4em; }
+  .g-controversial .pct { font-size: 2em; }
+  .g-controversial .tip { font-size: 0.85em; }
+}

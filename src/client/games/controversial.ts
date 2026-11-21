@@ -28,9 +28,13 @@ defineSprite('controversial-flag', `
 .kk.........`);
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
-  const half = 0.1 - level * 0.0075; // half-width of the gold zone
+  const half = 0.1 - level * 0.006; // half-width of the gold zone
   const nudge = 0.07;
-  const speed = 0.00016 + level * 0.000035; // how hard the crowd shoves, per ms
+  const speed = 0.00015 + level * 0.000028; // how hard the crowd shoves, per ms
+  // ORDER!: the judge's gavel stuns the crowd. Long enough to be worth a button, and it
+  // has to recharge, so it is a breather rather than a way to play the round.
+  const ORDER_MS = 800;
+  const RECHARGE_MS = 2800;
   // The crowd builds up to full speed, so the first shove can be read before it lands.
   // (At full speed the last round would be out of the zone 0.23 s after the bell.)
   const warm = 300 + level * 150;
@@ -47,28 +51,37 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let pos = 0.5;
   let last = 0;
   let inZone = 0;
-  let frozenUntil = 0;
-  let freezeReadyAt = 0;
+  let orderUntil = 0;
+  let orderReadyAt = 0;
   let wasIn = true;
   let streak = 0;
   let lastBad = -1000;
 
-  // The scene: a tug of war in court. Mod Bear presides; the downvote crowd hauls the rope
-  // left, the upvote crowd hauls it right, and the flag must stay over the gold zone.
+  // The scene: a tug of war in court. Mod Bear presides with a gavel; the downvote crowd
+  // hauls the rope left, the upvote crowd hauls it right, and the flag must stay over the
+  // gold zone. A big readout says where the vote stands and which way to tap.
   const wrap = h('div', 'g-controversial scene-court');
   const top = h('div', 'top');
-  const judge = actor('modbear', { mood: 'peep', px: 0.3 });
+  const bench = h('div', 'bench');
+  const judge = actor('modbear', { mood: 'peep', px: 0.26 });
+  const gavel = sprite('hammer', { px: 0.2 }, 'gavel');
+  bench.append(judge.el, gavel);
   const take = h('div', 'take', `“${pick(rng, TAKES)}”`);
-  top.append(judge.el, take);
+  const pct = h('b', 'pct');
+  const tip = h('span', 'tip');
+  const meter = h('div', 'readout');
+  meter.append(pct, tip);
+  top.append(bench, take, meter);
 
   const field = h('div', 'field');
   const zone = h('i', 'zone');
   zone.style.left = `${(0.5 - half) * 100}%`;
   zone.style.width = `${half * 200}%`;
+  zone.append(h('span', '', '50/50'));
   const rail = h('div', 'rail');
   rail.append(zone, h('i', 'rope'));
   const flag = h('div', 'flag');
-  flag.append(sprite('controversial-flag', { px: 0.26 }), h('i', 'ice'));
+  flag.append(sprite('controversial-flag', { px: 0.26 }));
   // Pop-ups float up from above the rope, so they never hide the flag or the zone.
   const stamp = h('i', 'stamp');
   rail.append(flag, stamp);
@@ -87,11 +100,10 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   field.append(rail, downs.el, ups.el);
 
   const ends = h('div', 'ends');
-  // Lit while FREEZE is ready, dim while it recharges.
-  const ice = h('span', 'chip', 'freeze');
-  ends.append(h('span', 'side t-red', 'downvoted'), ice, h('span', 'side t-blue', 'upvoted'));
-  const note = h('div', 'note');
-  wrap.append(top, field, ends, note);
+  // Over the middle button: lit while ORDER! is ready, dim while the gavel recharges.
+  const chip = h('span', 'chip');
+  ends.append(h('span', 'side t-red', '◀ downvotes'), chip, h('span', 'side t-blue', 'upvotes ▶'));
+  wrap.append(top, field, ends);
   root.append(wrap);
 
   // What is on screen, so tick only touches the DOM when something changes.
@@ -103,15 +115,18 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     press(b, t) {
       touched = true;
       if (b === 1) {
-        if (t < freezeReadyAt) {
+        if (t < orderReadyAt) {
           fx.sound('tick');
-          pulse(ice, 'shake');
+          pulse(chip, 'shake');
           return;
         }
-        frozenUntil = t + 450;
-        freezeReadyAt = t + 1400;
-        fx.sound('zap');
-        fx.pop(stamp, 'FROZEN', 'green');
+        // The gavel comes down: the crowd is stunned and stops shoving for a moment.
+        orderUntil = t + ORDER_MS;
+        orderReadyAt = t + RECHARGE_MS;
+        fx.sound('thud');
+        pulse(gavel, 'slam');
+        fx.shake();
+        fx.pop(bench, 'ORDER!', 'green');
         return;
       }
       pos = Math.max(0, Math.min(1, pos + (b === 2 ? nudge : -nudge)));
@@ -130,7 +145,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         dir = touched && shoves[shove].roll >= 0.72 ? -away : away;
         touched = false;
       }
-      if (t >= frozenUntil) pos = Math.max(0, Math.min(1, pos + dir * speed * Math.min(1, t / warm) * dt));
+      if (t >= orderUntil) pos = Math.max(0, Math.min(1, pos + dir * speed * Math.min(1, t / warm) * dt));
       const inside = Math.abs(pos - 0.5) <= half;
       if (inside) {
         inZone += dt;
@@ -151,26 +166,31 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         shownPos = p;
         flag.style.setProperty('--p', p);
       }
-      const frozen = t < frozenUntil;
-      const spent = t < freezeReadyAt;
+      const frozen = t < orderUntil;
+      const spent = t < orderReadyAt;
       const state = `${inside} ${pos > 0.5} ${frozen} ${spent} ${dir}`;
       if (state !== shownState) {
         shownState = state;
         wrap.classList.toggle('in', inside);
-        wrap.classList.toggle('frozen', frozen);
+        wrap.classList.toggle('order', frozen);
+        wrap.classList.toggle('high', !inside && pos > 0.5);
+        wrap.classList.toggle('low', !inside && pos < 0.5);
         wrap.classList.toggle('spent', spent);
-        wrap.classList.toggle('pull-up', dir > 0);
-        wrap.classList.toggle('pull-down', dir < 0);
+        wrap.classList.toggle('pull-up', !frozen && dir > 0);
+        wrap.classList.toggle('pull-down', !frozen && dir < 0);
+        // The readout says it in words: where the vote is, and which button fixes it.
+        tip.textContent = inside ? 'CONTROVERSIAL! KEEP IT HERE' : pos > 0.5 ? 'TOO POPULAR! TAP DOWNVOTE' : 'BURIED! TAP UPVOTE';
+        chip.textContent = frozen ? 'ORDER!' : spent ? 'gavel recharging' : 'ORDER! ready';
         // Whoever is winning cheers; the losing crowd strains; ice shocks everyone.
         const face = (mine: boolean) => (frozen ? 'shock' : inside ? 'angry' : mine ? 'happy' : 'sad');
         for (const a of downs.crew) a.mood(face(!inside && pos < 0.5));
         for (const a of ups.crew) a.mood(face(!inside && pos > 0.5));
-        judge.mood(inside ? 'peep' : 'angry');
+        judge.mood(frozen ? 'angry' : 'peep');
       }
-      const pct = Math.round(pos * 100);
-      if (pct !== shownPct) {
-        shownPct = pct;
-        note.textContent = `${pct}% upvoted`;
+      const now = Math.round(pos * 100);
+      if (now !== shownPct) {
+        shownPct = now;
+        pct.textContent = `${now}%`;
       }
     },
     score: () => ratio(inZone, duration * 0.88),
