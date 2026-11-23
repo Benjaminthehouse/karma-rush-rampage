@@ -86,6 +86,8 @@ Which sound that is comes from one table, `src/client/hits.ts`: pick the voice t
 matches what the player is doing (`vote`, `coin`, `water`, `key`, `stamp`, `pop`,
 `bell`, `zap`, `pluck`, `swipe`, `step`, `sizzle`, `snap`, `horn`, or the default
 `blip`) and add a line for your game. `fx.sound(name)` one-offs climb with the streak too.
+`fx.note(b)` plays pad `b`'s note without a press, for showing a sequence to copy; list the
+game in `FIXED_NOTES` there if each pad should keep one note all round.
 
 `hint(t)` drives the automated play-tester (and never scoring). Return `null` to
 wait, a button to tap it now, an array to tap a chord, or `{ hold: [...] }` for the

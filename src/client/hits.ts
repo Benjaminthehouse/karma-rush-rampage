@@ -64,3 +64,6 @@ export const HIT_GOOD: Record<string, HitVoice> = {
 
 /** Games played to the music: the round's beat is spelled out so it can be heard on a phone. */
 export const ON_THE_BEAT = new Set(['cakeday']);
+
+/** Games where each pad keeps one note all round (a tune to copy), not climbing with the streak. */
+export const FIXED_NOTES = new Set(['commentchain']);

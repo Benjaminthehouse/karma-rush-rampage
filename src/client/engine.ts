@@ -11,7 +11,7 @@ import { createBot } from './bot';
 import { createFx } from './fx';
 import { BEAT_SYNC, COLOR, clamp1000, h, type Btn, type FxColor, type GameInst } from './games/common';
 import { GAMES } from './games/registry.gen';
-import { HIT_GOOD, HIT_VOICE, ON_THE_BEAT } from './hits';
+import { FIXED_NOTES, HIT_GOOD, HIT_VOICE, ON_THE_BEAT } from './hits';
 import { music, sfx } from './sfx';
 import { voice } from './voice';
 
@@ -411,6 +411,7 @@ export function runMatch(o: {
           flash: fx.flash,
           shake: fx.shake,
           sound: (name) => sfx.named(name, combo),
+          note: (b) => sfx.tap(b, 0, HIT_VOICE[round.id]),
         },
       });
     } catch (err) {
@@ -676,7 +677,10 @@ export function runMatch(o: {
       return;
     }
     // The tap itself sounds like the game: its voice, at this pad's note, as high as the streak.
-    if (kind === 'press') sfx.tap(b, combo, HIT_VOICE[o.lineup[ph.round].id]);
+    if (kind === 'press') {
+      const id = o.lineup[ph.round].id;
+      sfx.tap(b, FIXED_NOTES.has(id) ? 0 : combo, HIT_VOICE[id]);
+    }
     try {
       if (kind === 'press') inst.press(b, now() - ph.start);
       else inst.release?.(b, now() - ph.start);

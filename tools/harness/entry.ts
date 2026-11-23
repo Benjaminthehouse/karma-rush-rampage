@@ -37,7 +37,7 @@ pads.forEach((p, i) => (p.querySelector('span')!.textContent = meta.labels[i]));
 $('hud-title').textContent = meta.title;
 document.body.classList.add('fx-low'); // steady frame for screenshots
 const fx = createFx($('arena'), $('fx'));
-const noFx = { burst() {}, pop() {}, poof() {}, flash() {}, shake() {}, sound() {} };
+const noFx = { burst() {}, pop() {}, poof() {}, flash() {}, shake() {}, sound() {}, note() {} };
 
 function validScore(v: unknown) {
   return typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 1000;
@@ -67,7 +67,7 @@ function driver(level: number, seed: number, bot: Bot, real: boolean) {
       stats.bads++;
       if (real && text) fx.pop(at ?? null, text, 'red');
     },
-    fx: real ? { burst: fx.burst, pop: fx.pop, poof: fx.poof, flash: fx.flash, shake: fx.shake, sound() {} } : noFx,
+    fx: real ? { burst: fx.burst, pop: fx.pop, poof: fx.poof, flash: fx.flash, shake: fx.shake, sound() {}, note() {} } : noFx,
   });
   const startHtml = stage.innerHTML;
   const botRng = mulberry32(('seed' in bot ? bot.seed : 1) * 7919 + 13);

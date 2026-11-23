@@ -55,6 +55,8 @@ export type GameCtx = {
     flash(color?: FxColor): void;
     shake(): void;
     sound(name: SoundName): void;
+    /** The note of a pad, as if it had been tapped: for showing a sequence to copy. */
+    note(b: Btn): void;
   };
 };
 
