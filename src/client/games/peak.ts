@@ -45,7 +45,7 @@ function wedge(startQ: number, widthQ: number): string {
         if (d > FACE_R || d < 2.6 || into > width) return '.';
         // A dark edge along both sides, and a stripe of light for texture.
         const side = Math.min(into, width - into) * ((2 * Math.PI * d) / 12);
-        return side < 0.8 ? 'k' : (x + y) % 5 === 0 ? 'L' : 'A';
+        return side < (width < 1.1 ? 0.55 : 0.8) ? 'k' : (x + y) % 5 === 0 ? 'L' : 'A';
       }),
     );
   }
@@ -59,17 +59,30 @@ const PX = 0.34; // one clock pixel, in em
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   const par = 6 + Math.floor(level / 2);
   const lap = 2300 - level * 150; // ms for the hand to go once round
-  // Wide enough to hit by eye: the hand is inside for about a third of a second at
-  // first, a fifth of a second in the last round.
-  const widthQ = Math.round((2 - level * 0.15) * 4);
-  const width = widthQ / 4;
+  // Slices come in three sizes around a base that is wide enough to hit by eye (the hand
+  // is inside for about a third of a second at first, a fifth of a second in the last
+  // round). One slice in every four is a sliver, a bullseye worth two posts.
+  const baseQ = Math.round((2 - level * 0.15) * 4); // in quarter hours
+  const thinQ = level >= 3 ? 4 : 3;
   // Every press locks input for 250 ms, so this is more slices than anyone can use up.
   const n = Math.ceil(duration / 250) + 2;
-  const slices = Array.from({ length: n }, () => ({ want: randBtn(rng), ahead: 2.5 + rng() * 3.5 }));
+  const slices = Array.from({ length: n }, () => ({
+    want: randBtn(rng),
+    ahead: 2.5 + rng() * 3.5,
+    widthQ: baseQ + [-2, 0, 0, 2][Math.floor(rng() * 4)],
+    thin: false,
+  }));
+  for (let g = 0; g < n; g += 4) {
+    // Never the very first slice of the round: that one teaches the game.
+    const i = Math.min(n - 1, g + (g === 0 ? 1 : 0) + Math.floor(rng() * (g === 0 ? 3 : 4)));
+    slices[i].thin = true;
+    slices[i].widthQ = thinQ;
+  }
   for (let i = 1; i < n; i++) while (slices[i].want === slices[i - 1].want) slices[i].want = ((slices[i].want + 1) % 3) as Btn;
 
   let idx = -1;
   let start = 0; // where the slice begins, in hours
+  let width = 0; // and how many hours wide it is
   let hits = 0;
   let misses = 0;
   let hour = 0; // where the hand points
@@ -83,7 +96,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   const note = h('span', 'note');
   top.append(cat.el, sprite('phone', { px: 0.16 }, 'phone'), note);
   const clock = h('div', 'clock');
-  const slice = sprite(wedge(0, widthQ), { tone: 'red', px: PX }, 'slice');
+  const slice = sprite(wedge(0, baseQ), { tone: 'red', px: PX }, 'slice');
   const hand = h('b', 'hand');
   hand.append(sprite('peak-tip', { px: 0.2 }, 'tip'));
   // Words pop from the top of the clock, clear of the hand and the slice.
@@ -110,7 +123,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     const s = slices[idx % n];
     const startQ = Math.round((hour + s.ahead) * 4) % 48;
     start = startQ / 4;
-    setSprite(slice, wedge(startQ, widthQ), { tone: COLOR[s.want], px: PX });
+    width = s.widthQ / 4;
+    setSprite(slice, wedge(startQ, s.widthQ), { tone: COLOR[s.want], px: PX });
     pulse(slice, 'pop-in');
     note.textContent = `${hits} ${hits === 1 ? 'post' : 'posts'} landed`;
   }
@@ -119,12 +133,12 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   return {
     press(b, t) {
       if (t < pausedUntil) return;
-      const want = slices[idx % n].want;
+      const { want, thin } = slices[idx % n];
       if (b === want && inside()) {
-        hits++;
-        react('happy', t);
-        good(stamp, 'POSTED');
-        fx.burst(clock, 'gold', 10);
+        hits += thin ? 2 : 1;
+        react(thin ? 'cool' : 'happy', t);
+        good(stamp, thin ? 'BULLSEYE! ×2' : 'POSTED');
+        fx.burst(clock, 'gold', thin ? 22 : 10);
       } else {
         misses++;
         react(b === want ? 'sad' : 'shock', t);
@@ -148,6 +162,6 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     },
     score: () => clamp1000((1000 * (hits - misses / 2)) / par),
     // A touch inside the edges, so a bot's press lands before the hand has left.
-    hint: (t) => (t >= pausedUntil && inside(0.12) ? slices[idx % n].want : null),
+    hint: (t) => (t >= pausedUntil && inside(Math.min(0.12, width / 4)) ? slices[idx % n].want : null),
   };
 };
