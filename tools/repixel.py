@@ -15,6 +15,8 @@ up crisply (`image-rendering: pixelated`).
 --alpha    keep the transparency the picture already has
 --cutout   the picture is a sprite on a plain white background: everything near-white
            that connects to the border becomes transparent (white inside the art stays)
+--holes    with --cutout: near-white fully enclosed by the art goes too (the sky seen
+           between a tree's branches)
 """
 import argparse
 from collections import deque
@@ -27,6 +29,7 @@ ap.add_argument('--block', type=float, default=5)
 ap.add_argument('--colours', type=int, default=48)
 ap.add_argument('--alpha', action='store_true')
 ap.add_argument('--cutout', action='store_true')
+ap.add_argument('--holes', action='store_true')
 a = ap.parse_args()
 
 im = Image.open(a.src).convert('RGBA' if (a.alpha or a.cutout) else 'RGB')
@@ -46,6 +49,11 @@ if a.cutout:
             continue
         px[x, y] = (0, 0, 0, 0)
         todo.extend(((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)))
+    if a.holes:
+        for y in range(H):
+            for x in range(W):
+                if white(px[x, y]):
+                    px[x, y] = (0, 0, 0, 0)
 
 w, h = round(im.width / a.block), round(im.height / a.block)
 if im.mode == 'RGBA':
