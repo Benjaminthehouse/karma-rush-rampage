@@ -1,82 +1,117 @@
 import './peak.css';
-import { actor, COLOR, clamp1000, defineSprite, h, pulse, randBtn, sprite, type ActorMood, type Btn, type GameFactory } from './common';
+import { actor, COLOR, clamp1000, defineSprite, h, hasSprite, pulse, randBtn, setSprite, sprite, type ActorMood, type Btn, type GameFactory } from './common';
 
-// The arrowhead at each end of the marker (pointing down; flipped for the one underneath).
-defineSprite('peak-pin', `
-kkkkkkkkk
-kyyYYYyyk
-.kyyYyyk.
-..kyyyk..
-...kyk...
-....k....`);
+// The clock, in pixels: a 45-pixel face with a gold rim and a mark at every hour.
+const S = 45;
+const C = 22;
+const FACE_R = 16.9; // the face inside the rim
+/** Where a pixel is on the dial, in hours: 0 at twelve o'clock, clockwise. */
+const hourAt = (x: number, y: number) => ((Math.atan2(x - C, C - y) / (2 * Math.PI)) * 12 + 12) % 12;
+const grid = (cell: (x: number, y: number, d: number, hr: number) => string) =>
+  Array.from({ length: S }, (_, y) => Array.from({ length: S }, (_, x) => cell(x, y, Math.hypot(x - C, y - C), hourAt(x, y))).join(''));
 
-// One bar, one arrow, one coloured zone. The arrow sweeps back and forth; the zone is the
-// peak hour. Its colour says which button, the arrow says when. Nothing else moves.
+defineSprite(
+  'peak-face',
+  grid((x, y, d, hr) => {
+    if (d > 22.4) return '.';
+    if (d > 21.2) return 'k';
+    if (d > 17.9) {
+      // The rim: gold, lit from the top left, with a dark mark at each hour.
+      const off = Math.abs(hr - Math.round(hr)) * ((2 * Math.PI * d) / 12);
+      return off < 0.65 ? 'k' : x + y < 36 ? 'Y' : x + y > 52 ? 'o' : 'y';
+    }
+    if (d > FACE_R) return 'k';
+    return d > 14.6 ? 'd' : 'w';
+  }),
+);
+// The arrowhead on the end of the hand.
+defineSprite('peak-tip', `
+...k...
+..kyk..
+.kyYyk.
+kyyYyyk
+kkkkkkk`);
+
+/** A slice of the face from `start`, `width` hours wide (both in quarter hours), in the sprite's tone. */
+function wedge(startQ: number, widthQ: number): string {
+  const name = `peak-wedge-${startQ}-${widthQ}`;
+  if (!hasSprite(name)) {
+    const start = startQ / 4;
+    const width = widthQ / 4;
+    defineSprite(
+      name,
+      grid((x, y, d, hr) => {
+        const into = (hr - start + 12) % 12;
+        if (d > FACE_R || d < 2.6 || into > width) return '.';
+        // A dark edge along both sides, and a stripe of light for texture.
+        const side = Math.min(into, width - into) * ((2 * Math.PI * d) / 12);
+        return side < 0.8 ? 'k' : (x + y) % 5 === 0 ? 'L' : 'A';
+      }),
+    );
+  }
+  return name;
+}
+
+const PX = 0.34; // one clock pixel, in em
+
+// One clock, one hand, one coloured slice. The hand sweeps round; the slice is the peak
+// hour. Its colour says which button, the hand says when. Nothing else moves.
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   const par = 6 + Math.floor(level / 2);
-  const sweep = 1150 - level * 70; // ms for the arrow to cross once
-  // Every press locks input for 250 ms, so this is more zones than anyone can use up.
-  const n = Math.ceil(duration / 250) + 2;
-  // Wide enough to hit by eye: the arrow is inside for about a third of a second at
+  const lap = 2300 - level * 150; // ms for the hand to go once round
+  // Wide enough to hit by eye: the hand is inside for about a third of a second at
   // first, a fifth of a second in the last round.
-  const zones = Array.from({ length: n }, () => ({
-    want: randBtn(rng),
-    width: 0.26 - level * 0.02 + rng() * 0.08,
-    u: rng(),
-  }));
-  for (let i = 1; i < n; i++) while (zones[i].want === zones[i - 1].want) zones[i].want = ((zones[i].want + 1) % 3) as Btn;
+  const widthQ = Math.round((2 - level * 0.15) * 4);
+  const width = widthQ / 4;
+  // Every press locks input for 250 ms, so this is more slices than anyone can use up.
+  const n = Math.ceil(duration / 250) + 2;
+  const slices = Array.from({ length: n }, () => ({ want: randBtn(rng), ahead: 2.5 + rng() * 3.5 }));
+  for (let i = 1; i < n; i++) while (slices[i].want === slices[i - 1].want) slices[i].want = ((slices[i].want + 1) % 3) as Btn;
 
   let idx = -1;
-  let lo = 0;
-  let hi = 0;
+  let start = 0; // where the slice begins, in hours
   let hits = 0;
   let misses = 0;
-  let pos = 0;
+  let hour = 0; // where the hand points
   let pausedUntil = 0;
 
-  // The scene: OP Cat, phone out, over the day's timeline. The lit zone is when everyone
-  // is online; the gold arrow is the time now.
+  // The scene: OP Cat, phone out, under the town clock. The lit slice is when everyone is
+  // online; the gold hand is the time now.
   const wrap = h('div', 'g-peak scene-stage');
-  const note = h('div', 'g-note');
-  const poster = h('div', 'poster');
-  const cat = actor('op', { px: 0.5 });
-  poster.append(cat.el, sprite('phone', { px: 0.3 }, 'phone'));
-  const bar = h('div', 'bar');
-  const zone = h('div', 'zone');
-  const carrier = h('div', 'carrier');
-  const marker = h('b', 'marker');
-  marker.append(sprite('peak-pin', { px: 0.16 }, 'tip'), sprite('peak-pin', { px: 0.16, flipY: true }, 'tip'));
-  carrier.append(marker);
-  // The carrier slides inside a clip a little bigger than the bar, so it never pokes out of the stage.
-  const clip = h('div', 'clip');
-  clip.append(carrier);
-  bar.append(zone, clip);
-  const rule = h('div', 'rule', 'Tap the zone’s colour while the arrow is in it');
-  wrap.append(note, poster, bar, rule);
+  const top = h('div', 'top');
+  const cat = actor('op', { px: 0.24 });
+  const note = h('span', 'note');
+  top.append(cat.el, sprite('phone', { px: 0.16 }, 'phone'), note);
+  const clock = h('div', 'clock');
+  const slice = sprite(wedge(0, widthQ), { tone: 'red', px: PX }, 'slice');
+  const hand = h('b', 'hand');
+  hand.append(sprite('peak-tip', { px: 0.2 }, 'tip'));
+  // Words pop from the top of the clock, clear of the hand and the slice.
+  const stamp = h('i', 'stamp');
+  clock.append(sprite('peak-face', { px: PX }, 'face'), slice, hand, h('i', 'hub'), stamp);
+  const rule = h('div', 'rule', 'Tap the slice’s colour while the hand is in it');
+  wrap.append(top, clock, rule);
   root.append(wrap);
 
-  let x = '';
+  let turn = '';
   let moodUntil = 0;
   function react(m: ActorMood, t: number) {
     cat.mood(m);
     moodUntil = t + 450;
   }
+  const inside = (margin = 0) => {
+    const into = (hour - start + 12) % 12;
+    return into >= margin && into <= width - margin;
+  };
 
-  /** The next peak hour: a new colour, somewhere the arrow is not. */
+  /** The next peak hour: a new colour, a few hours ahead of the hand. */
   function next() {
     idx++;
-    const z = zones[idx % n];
-    const half = z.width / 2;
-    let mid = half + z.u * (1 - z.width);
-    // Never under the arrow: a zone that appeared around it would be a free hit or a trap.
-    if (Math.abs(mid - pos) < half + 0.14) mid = 1 - mid;
-    if (Math.abs(mid - pos) < half + 0.14) mid = pos < 0.5 ? 1 - half : half;
-    lo = mid - half;
-    hi = mid + half;
-    zone.className = `zone c-${COLOR[z.want]}`;
-    zone.style.left = `${lo * 100}%`;
-    zone.style.width = `${z.width * 100}%`;
-    pulse(zone, 'pop-in');
+    const s = slices[idx % n];
+    const startQ = Math.round((hour + s.ahead) * 4) % 48;
+    start = startQ / 4;
+    setSprite(slice, wedge(startQ, widthQ), { tone: COLOR[s.want], px: PX });
+    pulse(slice, 'pop-in');
     note.textContent = `${hits} ${hits === 1 ? 'post' : 'posts'} landed`;
   }
   next();
@@ -84,30 +119,27 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   return {
     press(b, t) {
       if (t < pausedUntil) return;
-      const want = zones[idx % n].want;
-      const inside = pos >= lo && pos <= hi;
-      if (b === want && inside) {
+      const want = slices[idx % n].want;
+      if (b === want && inside()) {
         hits++;
         react('happy', t);
-        pulse(poster, 'bump');
-        good(zone, 'POSTED');
-        fx.burst(zone, 'gold', 10);
+        good(stamp, 'POSTED');
+        fx.burst(clock, 'gold', 10);
       } else {
         misses++;
         react(b === want ? 'sad' : 'shock', t);
-        pulse(bar, 'shake');
-        bad(zone, b === want ? 'NOBODY ONLINE' : 'WRONG COLOUR');
+        pulse(clock, 'shake');
+        bad(stamp, b === want ? 'NOBODY ONLINE' : 'WRONG COLOUR');
       }
       pausedUntil = t + 250;
       next();
     },
     tick(t) {
-      const phase = (t / sweep) % 2;
-      pos = phase < 1 ? phase : 2 - phase;
-      const nx = `translateX(${(pos * 100).toFixed(1)}%)`;
-      if (nx !== x) {
-        x = nx;
-        carrier.style.transform = nx;
+      hour = ((t / lap) * 12) % 12;
+      const deg = `rotate(${(hour * 30).toFixed(1)}deg)`;
+      if (deg !== turn) {
+        turn = deg;
+        hand.style.transform = deg;
       }
       if (moodUntil && t >= moodUntil) {
         moodUntil = 0;
@@ -115,9 +147,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       }
     },
     score: () => clamp1000((1000 * (hits - misses / 2)) / par),
-    hint(t) {
-      // A touch inside the edges, so a bot's press lands before the arrow has left.
-      return t >= pausedUntil && pos >= lo + 0.02 && pos <= hi - 0.02 ? zones[idx % n].want : null;
-    },
+    // A touch inside the edges, so a bot's press lands before the hand has left.
+    hint: (t) => (t >= pausedUntil && inside(0.12) ? slices[idx % n].want : null),
   };
 };
