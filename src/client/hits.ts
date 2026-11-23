@@ -10,7 +10,7 @@ export const HIT_VOICE: Record<string, HitVoice> = {
   banevasion: 'stamp', // the ban hammer
   cakeday: 'drum', // drumming along to the beat; a lit candle chimes (HIT_GOOD)
   chartcrime: 'stamp', // slamming the true number
-  commentchain: 'pluck', // each reply is a note in the chain
+  commentchain: 'simon', // each colour is a note; the chain is a tune
   controversial: 'vote',
   cookiewall: 'snap', // a cookie snapped
   copypasta: 'pop', // pasta dropped in the pot
@@ -65,5 +65,9 @@ export const HIT_GOOD: Record<string, HitVoice> = {
 /** Games played to the music: the round's beat is spelled out so it can be heard on a phone. */
 export const ON_THE_BEAT = new Set(['cakeday']);
 
-/** Games where each pad keeps one note all round (a tune to copy), not climbing with the streak. */
+/**
+ * Games where each pad keeps one note all round (a tune to copy), not climbing with the
+ * streak. Their music drops to soft drums and the hit jingle is left out, so the notes are
+ * what is heard.
+ */
 export const FIXED_NOTES = new Set(['commentchain']);

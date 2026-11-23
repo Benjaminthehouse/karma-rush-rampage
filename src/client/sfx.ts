@@ -157,6 +157,7 @@ let musicNext = 0;
 let musicStep = 0;
 let musicRush = false;
 let musicBeat = false; // a round played to the beat: the beat is spelled out
+let musicQuiet = false; // a round whose own notes are the tune: soft drums only
 
 function musicTick(stepLen: number, riff: number[], root: number) {
   const a = ac;
@@ -164,13 +165,13 @@ function musicTick(stepLen: number, riff: number[], root: number) {
   while (musicNext < a.currentTime + 0.12) {
     const at = Math.max(0, musicNext - a.currentTime);
     const s = musicStep % 16;
-    if (s % 4 === 0) kick(at, musicBeat ? 0.5 : 0.36, true);
+    if (s % 4 === 0) kick(at, musicBeat ? 0.5 : musicQuiet ? 0.16 : 0.36, true);
     // To the beat: a woodblock on every beat, high on the first of the bar, and no
     // backbeat snare, because the snare is what the player's own taps sound like.
     if (musicBeat && s % 4 === 0) block(at, s === 0 ? 0.13 : 0.09);
-    if (!musicBeat && (s === 4 || s === 12)) snare(at, 0.1);
+    if (!musicBeat && !musicQuiet && (s === 4 || s === 12)) snare(at, 0.1);
     if (s % 2 === 1 || musicRush) hat(at, s % 4 === 2 ? 0.04 : 0.022);
-    if (s % 2 === 0) {
+    if (s % 2 === 0 && !musicQuiet) {
       const n = riff[(musicStep / 2) % riff.length | 0];
       const thin = musicBeat ? 0.55 : 1; // the riff steps back so the beat is what you hear
       tone({ f: root * semis(n), dur: stepLen * 1.7, type: 'sawtooth', vol: 0.07 * thin, at, music: true });
@@ -188,9 +189,10 @@ export const music = {
   /**
    * `lead` is how many seconds from now the first kick should be heard; the time the
    * device takes to get sound out of the speaker is taken off it, so what is heard lines
-   * up with what is seen. `beat` spells the beat out for rounds played to it.
+   * up with what is seen. `beat` spells the beat out for rounds played to it; `quiet`
+   * leaves only soft drums, for rounds whose own notes are the tune.
    */
-  start(seed: number, round: number, o: { lead?: number; beat?: boolean } = {}) {
+  start(seed: number, round: number, o: { lead?: number; beat?: boolean; quiet?: boolean } = {}) {
     music.stop();
     const a = audio();
     if (!a) return;
@@ -203,6 +205,7 @@ export const music = {
     musicStep = 0;
     musicRush = false;
     musicBeat = !!o.beat;
+    musicQuiet = !!o.quiet;
     musicTimer = window.setInterval(() => musicTick(stepLen, riff, root), 25);
     musicTick(stepLen, riff, root);
   },
@@ -250,7 +253,7 @@ const NAMED: Record<string, (k: number) => void> = {
  */
 export type HitVoice =
   | 'blip' | 'vote' | 'coin' | 'water' | 'key' | 'stamp' | 'pop' | 'bell'
-  | 'zap' | 'pluck' | 'swipe' | 'step' | 'sizzle' | 'snap' | 'horn' | 'drum';
+  | 'zap' | 'pluck' | 'swipe' | 'step' | 'sizzle' | 'snap' | 'horn' | 'drum' | 'simon';
 
 const HIT: Record<HitVoice, (k: number) => void> = {
   // A game-console blip: the default, and anything robotic.
@@ -297,6 +300,13 @@ const HIT: Record<HitVoice, (k: number) => void> = {
   pop(k) {
     tone({ f: 380 * k, to: 900 * k, dur: 0.065, type: 'sine', vol: 0.16, attack: 0.004 });
     noise({ dur: 0.02, vol: 0.06, f: 4000, attack: 0.002 });
+  },
+  // A toy-keyboard note, full and held: a tune to remember and play back.
+  simon(k) {
+    const f = 329.63 * k;
+    tone({ f, dur: 0.3, type: 'triangle', vol: 0.2, attack: 0.003 });
+    tone({ f, dur: 0.24, type: 'square', vol: 0.07, attack: 0.003 });
+    tone({ f: f * 2, dur: 0.16, type: 'sine', vol: 0.05, attack: 0.003 });
   },
   // A snare drum: playing along to the beat. The crack stays put; only the shell tunes up.
   drum(k) {
@@ -474,6 +484,15 @@ export const sfx = {
    * being done. Red, green and blue play the root, third and fifth of a chord, and the
    * whole chord climbs a semitone with every hit of the streak (`combo` so far).
    */
+  /**
+   * A pad's own fixed note, for games where the pads play a tune to copy: red low, green
+   * a fourth above it, blue the octave. Far enough apart to tell by ear alone.
+   */
+  note(b: number, voice: HitVoice = 'simon') {
+    level = 1.5;
+    HIT[voice](semis([0, 5, 12][b] ?? 0));
+    level = 1;
+  },
   tap(b: number, combo: number, voice: HitVoice = 'blip') {
     level = 1.6;
     HIT[voice](semis(Math.min(Math.max(0, combo), CLIMB) + PAD_STEP[b]));

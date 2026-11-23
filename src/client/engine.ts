@@ -371,7 +371,7 @@ export function runMatch(o: {
     fx.flash('white');
     // The first kick is heard BEAT_SYNC into the round, however late this frame is running.
     const into = Math.max(0, now() - (phases[p]?.start ?? now()));
-    music.start(round.seed, round.level, { lead: (BEAT_SYNC - into) / 1000, beat: ON_THE_BEAT.has(round.id) });
+    music.start(round.seed, round.level, { lead: (BEAT_SYNC - into) / 1000, beat: ON_THE_BEAT.has(round.id), quiet: FIXED_NOTES.has(round.id) });
     // The arena lights throb in time with the round's music.
     arena.style.setProperty('--beat', `${60 / music.bpm(round.level)}s`);
     arena.classList.add('playing');
@@ -386,7 +386,7 @@ export function runMatch(o: {
         down,
         good(at, text) {
           setCombo(combo + 1);
-          sfx.good(combo, HIT_GOOD[round.id] ?? HIT_VOICE[round.id]);
+          if (!FIXED_NOTES.has(round.id)) sfx.good(combo, HIT_GOOD[round.id] ?? HIT_VOICE[round.id]);
           fx.burst(at ?? null, 'gold', 3);
           fx.lights('green');
           if (text) fx.pop(at ?? null, text, 'gold');
@@ -411,7 +411,7 @@ export function runMatch(o: {
           flash: fx.flash,
           shake: fx.shake,
           sound: (name) => sfx.named(name, combo),
-          note: (b) => sfx.tap(b, 0, HIT_VOICE[round.id]),
+          note: (b) => sfx.note(b, HIT_VOICE[round.id]),
         },
       });
     } catch (err) {
@@ -679,7 +679,8 @@ export function runMatch(o: {
     // The tap itself sounds like the game: its voice, at this pad's note, as high as the streak.
     if (kind === 'press') {
       const id = o.lineup[ph.round].id;
-      sfx.tap(b, FIXED_NOTES.has(id) ? 0 : combo, HIT_VOICE[id]);
+      if (FIXED_NOTES.has(id)) sfx.note(b, HIT_VOICE[id]);
+      else sfx.tap(b, combo, HIT_VOICE[id]);
     }
     try {
       if (kind === 'press') inst.press(b, now() - ph.start);
