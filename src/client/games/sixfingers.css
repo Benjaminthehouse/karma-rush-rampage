@@ -9,15 +9,7 @@
 .g-sixfingers .slot { flex: none; position: relative; z-index: 1; width: 100%; height: 8.6em; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff6dc; box-shadow: inset 0 0 0 0.45em #e0a822, inset 0 0 0 0.6em #8a5a10, 0 0 0 0.18em #0b1020, 0.3em 0.35em 0 0.18em #0b102055; }
 .g-sixfingers .legs { flex: 1 1 auto; min-height: 0.6em; width: 70%; margin-top: -0.2em; background: linear-gradient(90deg, #0000 0 8%, #b0703c 8% 20%, #0000 20% 44%, #8a5a2c 44% 56%, #0000 56% 80%, #b0703c 80% 92%, #0000 92%); }
 
-/* The hands: flat paint with a thick outline. */
-.g-sixfingers .hand { width: 70%; height: 72%; display: flex; flex-direction: column; }
-.g-sixfingers .fingers { flex: 1.3; display: flex; align-items: flex-end; justify-content: center; gap: 4%; }
-.g-sixfingers .fingers i { flex: 1; max-width: 17%; background: var(--tint); box-shadow: 0 0 0 0.12em #0b1020; }
-.g-sixfingers .hand b { flex: 1; margin-top: 0.12em; background: var(--tint); box-shadow: 0 0 0 0.12em #0b1020, inset -0.4em -0.3em 0 0 #0b10201f; }
-.g-sixfingers .gold { --tint: var(--gold); }
-.g-sixfingers .pink { --tint: #ff9fd6; }
-.g-sixfingers .teal { --tint: #6fe3d6; }
-.g-sixfingers .ink { --tint: #d6dcf5; }
+/* The hands are pixel sprites, centred in their frames. */
 
 /* The painter at the front: AutoMod in a beret, palette in hand. */
 .g-sixfingers .front { flex: none; margin-top: -1.2em; position: relative; z-index: 2; display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; width: 100%; gap: 0.3em; }
