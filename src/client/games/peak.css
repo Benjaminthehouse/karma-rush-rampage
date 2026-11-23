@@ -16,8 +16,8 @@
 .g-peak .zone { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, var(--c) 0 0.6em, var(--cd) 0.6em 0.75em); box-shadow: 0 0 0 0.2em #0b1020, inset 0 0 0 0.16em #ffffff88; }
 /* The arrow: a gold needle through the bar with an arrowhead at each end. The carrier is as
    wide as the bar and slides by its own width, so the needle sits exactly at `pos`. */
-.g-peak .clip { position: absolute; inset: -1.5em -1em; overflow: hidden; pointer-events: none; }
-.g-peak .carrier { position: absolute; inset: 1.5em 1em; will-change: transform; }
+.g-peak .clip { position: absolute; inset: -1.5em -0.7em; overflow: hidden; pointer-events: none; }
+.g-peak .carrier { position: absolute; inset: 1.5em 0.7em; will-change: transform; }
 .g-peak .marker { position: absolute; left: 0; top: -0.5em; bottom: -0.5em; width: 0.34em; margin-left: -0.17em; background: #ffcf3f; box-shadow: 0 0 0 0.16em #0b1020; }
 .g-peak .marker .tip { position: absolute; left: 50%; margin-left: -0.72em; top: -0.9em; }
 .g-peak .marker .tip + .tip { top: auto; bottom: -0.9em; }
