@@ -530,9 +530,10 @@ body::before { content: ''; position: fixed; z-index: -1; left: 0; right: 0; top
 }
 /* The scenery stands around the logo, so it keeps its place whatever the screen's shape.
    One wide box behind the logo holds every piece: cherry trees in front at each end, the
-   pagoda behind the left-hand trees. On a phone the ends run off the edges of the screen. */
+   pagoda behind the left-hand trees, the mountain behind the right-hand ones. On a phone the ends run off the edges of the screen. */
 .ui .logo::before { content: ''; position: absolute; z-index: -1; left: -44%; right: -44%; top: 12%; bottom: -8%;
   background:
     url('./art/trees.png') left bottom / auto 44% no-repeat,
     url('./art/trees-r.png') right bottom / auto 44% no-repeat,
+    url('./art/mountain.png') right -16% bottom 26% / auto 30% no-repeat,
     url('./art/pagoda.png') 9% 62% / auto 70% no-repeat; }
