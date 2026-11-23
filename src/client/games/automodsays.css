@@ -30,3 +30,6 @@
 .g-automodsays .podium { width: 12.5em; padding-bottom: 2.2em; }
 .g-automodsays .speaker > .costume, .g-automodsays .speaker.fake > .actor { display: none; }
 .g-automodsays .speaker.fake > .costume { display: block; }
+/* The bubble bobs gently on the speaker's head, so the eye goes to it. */
+.g-automodsays .talk { animation: g-automodsays-bob 0.7s steps(2) infinite; }
+@keyframes g-automodsays-bob { 50% { transform: translateY(-0.3em); } }
