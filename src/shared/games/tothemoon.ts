@@ -3,10 +3,10 @@ import { defineGame } from '../meta';
 export default defineGame({
   id: 'tothemoon',
   title: 'To The Moon',
-  shout: 'HOLD! LET GO ON THE MOON!',
-  how: 'Each button flies its own rocket. Hold to climb, let go when it is on its moon.',
-  labels: ['HOLD', 'HOLD', 'HOLD'],
+  shout: 'THRUST UP! LAND ON THE MOON!',
+  how: 'Mash red and blue to thrust. Tap green while the rocket is on the moon to land.',
+  labels: ['THRUST', 'LAND', 'THRUST'],
   duration: 8000,
-  kind: 'timing',
+  kind: 'mash',
   think: 0,
 });

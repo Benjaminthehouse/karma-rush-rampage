@@ -49,7 +49,7 @@ export const HIT_VOICE: Record<string, HitVoice> = {
   sortbynew: 'bell', // the bakery bell
   sortbytop: 'vote',
   stonks: 'coin',
-  tothemoon: 'coin',
+  tothemoon: 'sizzle', // thruster bursts; a landing rings (HIT_GOOD)
   upvote: 'vote',
   voidcanvas: 'water', // paint splashed on
   votemath: 'key', // chalk on the board
@@ -59,6 +59,7 @@ export const HIT_VOICE: Record<string, HitVoice> = {
 /** Games whose scoring hit sounds different from the tap: the tap's voice is the default. */
 export const HIT_GOOD: Record<string, HitVoice> = {
   cakeday: 'bell', // the snare is the tap; the chime is the candle catching
+  tothemoon: 'coin', // the thrusters hiss; a landing pays out
 };
 
 /** Games played to the music: the round's beat is spelled out so it can be heard on a phone. */
