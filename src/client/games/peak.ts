@@ -58,7 +58,10 @@ const PX = 0.34; // one clock pixel, in em
 // hour. Its colour says which button, the hand says when. Nothing else moves.
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   const par = 6 + Math.floor(level / 2);
-  const lap = 2300 - level * 150; // ms for the hand to go once round
+  const lap = 2300 - level * 150; // ms for the hand to go once round, at the start
+  // Every hit winds the clock a little faster, so a good run ends quicker than it began.
+  const FASTER = 0.035; // per hit
+  const TOP = 1.35; // and no faster than this
   // Slices come in three sizes around a base that is wide enough to hit by eye (the hand
   // is inside for about a third of a second at first, a fifth of a second in the last
   // round). One slice in every four is a sliver, a bullseye worth two posts.
@@ -86,6 +89,8 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let hits = 0;
   let misses = 0;
   let hour = 0; // where the hand points
+  let pace = 1; // how fast the hand is going, against its starting speed
+  let last = 0;
   let pausedUntil = 0;
 
   // The scene: OP Cat, phone out, under the town clock. The lit slice is when everyone is
@@ -136,6 +141,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       const { want, thin } = slices[idx % n];
       if (b === want && inside()) {
         hits += thin ? 2 : 1;
+        pace = Math.min(TOP, pace + FASTER);
         react(thin ? 'cool' : 'happy', t);
         good(stamp, thin ? 'BULLSEYE! ×2' : 'POSTED');
         fx.burst(clock, 'gold', thin ? 22 : 10);
@@ -149,7 +155,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       next();
     },
     tick(t) {
-      hour = ((t / lap) * 12) % 12;
+      const dt = Math.min(60, Math.max(0, t - last));
+      last = t;
+      hour = (hour + ((dt * pace) / lap) * 12) % 12;
       const deg = `rotate(${(hour * 30).toFixed(1)}deg)`;
       if (deg !== turn) {
         turn = deg;
