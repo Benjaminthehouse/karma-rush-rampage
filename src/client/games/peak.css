@@ -1,42 +1,33 @@
-/* The clock tower at peak hour: the tally up top, OP Cat and the tower in the middle, the
-   crowd under them, and the order on a sign at the very bottom, next to the buttons. */
-.g-peak { justify-content: space-between !important; gap: 0.3em !important; padding: 0.4em 0.8em 0.7em !important; overflow: hidden; }
-.g-peak .rule { flex: none; display: flex; align-items: center; gap: 0.5em; padding: 0.15em 0.8em; background: #0b1020; color: #fff0a8; font-size: 1.35em; white-space: nowrap;
-  box-shadow: 0 0 0 0.15em #ffcf3f, 0 0 0 0.3em #0b1020, 0.3em 0.45em 0 0.3em #0b102088; }
-/* The colour to post in: a filled chip, readable out of the corner of the eye. */
-.g-peak .rule b { font-weight: inherit; padding: 0 0.4em; background: var(--c); color: #0b1020; box-shadow: 0 0 0 0.1em #fff0a8; }
-.g-peak .rule .pad-dots { font-size: 0.8em; }
-.g-peak .rule .pad-dots i:not(.on) { background: #3a4370; box-shadow: 0 0 0 0.08em #fff0a8; }
-
-.g-peak .mid { position: relative; flex: 1 1 auto; padding-top: 1.9em; min-height: 0; width: min(100%, 24em); display: flex; align-items: flex-end; justify-content: center; gap: 0.6em; }
-.g-peak .poster { position: relative; flex: none; margin-bottom: 0.4em; }
-.g-peak .poster .phone { position: absolute; right: -0.5em; bottom: -0.2em; transform: rotate(12deg); }
-
-/* The tower: stone, a clock face on top, the crowd meter down its front. */
-.g-peak .tower { position: relative; flex: none; width: 8.4em; height: 100%; max-height: 19em; display: flex; flex-direction: column; align-items: center; gap: 0.5em; padding: 0.6em 0 0.6em;
-  background: linear-gradient(90deg, #0000 0 calc(100% - 0.6em), #646e9c 0), repeating-linear-gradient(#0000 0 1.1em, #7c86b0 1.1em 1.25em), #a8b1d6;
-  box-shadow: 0 -0.22em 0 0 #0b1020, -0.22em 0 0 0 #0b1020, 0.22em 0 0 0 #0b1020, 0.45em 0.3em 0 0 #0b102088; }
-.g-peak .tower > .roof { position: absolute; left: -0.6em; top: -1.6em; }
-/* The clock: the face, and a window on the minute-hand strip that steps a frame each tick. */
-.g-peak .clock { position: relative; flex: none; }
-.g-peak .clock .hands { position: absolute; inset: 0; overflow: hidden; }
-.g-peak .clock .hands .px { display: block; animation: g-peak-tick 2s steps(12) infinite; }
-@keyframes g-peak-tick { to { transform: translateX(-100%); } }
-
-/* The crowd meter: three bands bottom to top, a gold marker riding a rail as tall as the meter. */
-.g-peak .track { position: relative; flex: 1 1 auto; min-height: 5em; width: 3.4em; display: flex; flex-direction: column-reverse; box-shadow: 0 0 0 0.22em #0b1020; }
-.g-peak .zone { flex: 0 0 auto; background: var(--c); }
-.g-peak .zone + .zone { box-shadow: 0 0.12em 0 0 #0b1020; }
-.g-peak .clip { position: absolute; left: -1.6em; right: -1.6em; top: -0.5em; bottom: -0.5em; overflow: hidden; pointer-events: none; }
-.g-peak .rail { position: absolute; left: 0.7em; right: 0.7em; top: calc(100% - 0.5em); height: calc(100% - 1em); will-change: transform; pointer-events: none; }
-.g-peak .marker { position: absolute; left: 0; right: 0; top: 0; height: 0.5em; margin-top: -0.25em; background: #ffcf3f; box-shadow: 0 0 0 0.18em #0b1020; }
-.g-peak .marker .tip { position: absolute; top: 50%; margin-top: -0.56em; left: -0.7em; }
-.g-peak .marker .tip + .tip { left: auto; right: -0.7em; }
-
-/* The crowd: fans join from the middle out, each holding up a sign in the meter's colour. */
-.g-peak .crowd { flex: none; display: flex; justify-content: center; align-items: flex-end; height: 4.5em; }
-.g-peak .fan { position: relative; display: flex; flex-direction: column; align-items: center; margin: 0 -0.15em; opacity: 0; transform: translateY(1.2em); transition: opacity 0.12s, transform 0.12s; }
-.g-peak .fan.in { opacity: 1; transform: none; }
-.g-peak .sign { width: 1.9em; height: 1.1em; margin-bottom: -0.2em; background: var(--c, #dde2f5); box-shadow: 0 0 0 0.16em #0b1020; position: relative; z-index: 1; }
-.g-peak .sign::after { content: ''; position: absolute; left: 50%; top: 100%; width: 0.25em; height: 0.5em; margin-left: -0.125em; background: #6e3f1c; }
+/* Peak hour: OP Cat over the day's timeline. One bar, one gold arrow sweeping along it,
+   one lit zone; the rule sits at the bottom, next to the buttons. */
+.g-peak { justify-content: space-between !important; gap: 0.4em !important; padding: 0.4em 0.8em 0.7em !important; overflow: hidden; }
 .g-peak .g-note { flex: none; color: #fff0a8; min-height: 1.1em; }
+
+.g-peak .poster { position: relative; flex: 0 1 auto; display: flex; align-items: flex-end; justify-content: center; min-height: 0; }
+.g-peak .poster .phone { position: absolute; left: 50%; bottom: -0.2em; margin-left: 2.2em; transform: rotate(12deg); }
+.g-peak .poster.bump { animation: g-peak-bump 0.16s steps(2); }
+@keyframes g-peak-bump { 50% { transform: translateY(-0.5em); } }
+
+/* The bar: the day, with a mark every hour. Room above and below for the arrowheads. */
+.g-peak .bar { position: relative; flex: none; width: 100%; height: 4.2em; margin: 1.2em 0;
+  background: repeating-linear-gradient(90deg, #0000 0 calc(100% / 12 - 0.12em), #4b5890 0 calc(100% / 12)), #1a2140;
+  box-shadow: 0 0 0 0.22em #0b1020, 0 0 0 0.4em #fff0a8, 0 0 0 0.6em #0b1020, 0 0.5em 0 0.6em #0b102088; }
+/* The peak: a block in its button's colour. */
+.g-peak .zone { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, var(--c) 0 0.6em, var(--cd) 0.6em 0.75em); box-shadow: 0 0 0 0.2em #0b1020, inset 0 0 0 0.16em #ffffff88; }
+/* The arrow: a gold needle through the bar with an arrowhead at each end. The carrier is as
+   wide as the bar and slides by its own width, so the needle sits exactly at `pos`. */
+.g-peak .clip { position: absolute; inset: -1.5em -1em; overflow: hidden; pointer-events: none; }
+.g-peak .carrier { position: absolute; inset: 1.5em 1em; will-change: transform; }
+.g-peak .marker { position: absolute; left: 0; top: -0.5em; bottom: -0.5em; width: 0.34em; margin-left: -0.17em; background: #ffcf3f; box-shadow: 0 0 0 0.16em #0b1020; }
+.g-peak .marker .tip { position: absolute; left: 50%; margin-left: -0.72em; top: -0.9em; }
+.g-peak .marker .tip + .tip { top: auto; bottom: -0.9em; }
+
+/* The rule, which never changes. */
+.g-peak .rule { flex: none; padding: 0.15em 0.7em; background: #0b1020; color: #fff0a8; font-size: 1em; text-align: center; text-wrap: balance;
+  box-shadow: 0 0 0 0.15em #ffcf3f, 0 0 0 0.3em #0b1020; }
+
+/* Short stages: a smaller cat keeps the bar its full height. */
+@container (max-height: 470px) {
+  .g-peak .poster { font-size: 0.8em; }
+  .g-peak .bar { margin: 1.1em 0 1em; }
+}

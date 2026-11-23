@@ -1,200 +1,123 @@
 import './peak.css';
-import { actor, COLOR, COLOR_NAME, clamp1000, defineSprite, h, padDots, pulse, randBtn, shuffled, sprite, type ActorMood, type Btn, type GameFactory } from './common';
+import { actor, COLOR, clamp1000, defineSprite, h, pulse, randBtn, sprite, type ActorMood, type Btn, type GameFactory } from './common';
 
-const FANS = 7; // the crowd at the foot of the tower
+// The arrowhead at each end of the marker (pointing down; flipped for the one underneath).
+defineSprite('peak-pin', `
+kkkkkkkkk
+kyyYYYyyk
+.kyyYyyk.
+..kyyyk..
+...kyk...
+....k....`);
 
-// The clock: a 23-pixel face with a gold rim and the hour hand at ten, and a strip of twelve
-// minute-hand frames that slides one frame per tick behind a window the size of the face.
-const C = 11;
-const hand = (g: string[][], deg: number, len: number, ox = 0) => {
-  const a = (deg * Math.PI) / 180;
-  for (let i = 0; i <= len * 2; i++) g[Math.round(C - (Math.cos(a) * i) / 2)][ox + Math.round(C + (Math.sin(a) * i) / 2)] = 'k';
-};
-const face = Array.from({ length: 23 }, (_, y) =>
-  Array.from({ length: 23 }, (_, x) => {
-    const d = Math.hypot(x - C, y - C);
-    const tick = d > 5.6 && (x === C || y === C);
-    return d > 11.6 ? '.' : d > 10.5 ? 'k' : d > 8.7 ? (x + y < 19 ? 'Y' : x + y > 25 ? 'o' : 'y') : d > 7.8 || tick ? 'k' : 'Y';
-  }),
-);
-hand(face, -60, 4);
-for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) face[C + dy][C + dx] = 'k';
-defineSprite('peak-clock', face.map((r) => r.join('')));
-const strip = Array.from({ length: 23 }, () => Array<string>(23 * 12).fill('.'));
-for (let f = 0; f < 12; f++) hand(strip, f * 30, 7, f * 23);
-defineSprite('peak-hands', strip.map((r) => r.join('')));
-// The tower's pointed roof and the marker's arrowheads.
-defineSprite(
-  'peak-roof',
-  Array.from({ length: 6 }, (_, y) =>
-    Array.from({ length: 32 }, (_, x) => {
-      const o = Math.abs(x - 15.5);
-      const w = 3 + y * 2.6;
-      return o > w ? '.' : y === 5 || o > w - 1.5 ? 'k' : y === 1 || (x < 16 && o > w - 3) ? 'r' : 'R';
-    }).join(''),
-  ),
-);
-defineSprite('peak-arrow', `
-k...
-kk..
-kkk.
-kkkk
-kkk.
-kk..
-k...`);
-
+// One bar, one arrow, one coloured zone. The arrow sweeps back and forth; the zone is the
+// peak hour. Its colour says which button, the arrow says when. Nothing else moves.
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   const par = 6 + Math.floor(level / 2);
-  // Every press locks input for 250 ms, so this is more targets than anyone can use up: the round never goes dead.
+  const sweep = 1150 - level * 70; // ms for the arrow to cross once
+  // Every press locks input for 250 ms, so this is more zones than anyone can use up.
   const n = Math.ceil(duration / 250) + 2;
-  const sweep = 1150 - level * 90; // ms for the marker to cross once
-  const targets = Array.from({ length: n }, () => {
-    const order = shuffled(rng, [0, 1, 2] as Btn[]);
-    const a = 0.24 + rng() * 0.2;
-    const b = 0.24 + rng() * 0.2;
-    return { want: randBtn(rng), order, widths: [a, b, 1 - a - b] };
-  });
-  let idx = 0;
+  // Wide enough to hit by eye: the arrow is inside for about a third of a second at
+  // first, a fifth of a second in the last round.
+  const zones = Array.from({ length: n }, () => ({
+    want: randBtn(rng),
+    width: 0.26 - level * 0.02 + rng() * 0.08,
+    u: rng(),
+  }));
+  for (let i = 1; i < n; i++) while (zones[i].want === zones[i - 1].want) zones[i].want = ((zones[i].want + 1) % 3) as Btn;
+
+  let idx = -1;
+  let lo = 0;
+  let hi = 0;
   let hits = 0;
   let misses = 0;
   let pos = 0;
   let pausedUntil = 0;
 
-  // The clock tower at peak hour: a crowd meter down its face rises and falls, the crowd
-  // at its foot swells and drains with it and holds up signs in the colour of the band
-  // the meter is in. OP Cat waits beside it, phone out, to post at the right moment.
+  // The scene: OP Cat, phone out, over the day's timeline. The lit zone is when everyone
+  // is online; the gold arrow is the time now.
   const wrap = h('div', 'g-peak scene-stage');
-  // The order sits at the bottom of the stage, right above the buttons, where the thumbs
-  // and the eyes already are. Words pop from it, never from the marker: there they
-  // drifted across the next colour to read.
-  const ask = h('div', 'rule');
-  const mid = h('div', 'mid');
-  const poster = h('div', 'poster');
-  const cat = actor('op', { px: 0.38 });
-  poster.append(cat.el, sprite('phone', { px: 0.24 }, 'phone'));
-  const tower = h('div', 'tower');
-  const clock = sprite('peak-clock', { px: 0.254 }, 'clock');
-  const hands = h('i', 'hands');
-  hands.append(sprite('peak-hands', { px: 0.254 }));
-  clock.append(hands);
-  const track = h('div', 'track');
-  const zones = [h('i'), h('i'), h('i')];
-  const rail = h('div', 'rail');
-  const marker = h('b', 'marker');
-  marker.append(sprite('peak-arrow', { px: 0.16 }, 'tip'), sprite('peak-arrow', { px: 0.16, flip: true }, 'tip'));
-  rail.append(marker);
-  // The rail slides inside a clip a little wider than the meter, so it never pokes out of the tower.
-  const clip = h('div', 'clip');
-  clip.append(rail);
-  track.append(...zones, clip);
-  tower.append(sprite('peak-roof', { px: 0.3 }, 'roof'), clock, track);
-  mid.append(poster, tower);
-  const crowd = h('div', 'crowd');
-  const fans = Array.from({ length: FANS }, (_, i) => {
-    const fan = h('div', 'fan');
-    const who = actor('npc', { px: 0.17 });
-    fan.append(h('i', 'sign'), who.el);
-    fan.style.zIndex = String(FANS - Math.abs(i - 3));
-    crowd.append(fan);
-    return { fan, who };
-  });
-  // The fans join from the middle out as the crowd swells.
-  const joinOrder = [3, 2, 4, 1, 5, 0, 6];
   const note = h('div', 'g-note');
-  wrap.append(note, mid, crowd, ask);
+  const poster = h('div', 'poster');
+  const cat = actor('op', { px: 0.5 });
+  poster.append(cat.el, sprite('phone', { px: 0.3 }, 'phone'));
+  const bar = h('div', 'bar');
+  const zone = h('div', 'zone');
+  const carrier = h('div', 'carrier');
+  const marker = h('b', 'marker');
+  marker.append(sprite('peak-pin', { px: 0.16 }, 'tip'), sprite('peak-pin', { px: 0.16, flipY: true }, 'tip'));
+  carrier.append(marker);
+  // The carrier slides inside a clip a little bigger than the bar, so it never pokes out of the stage.
+  const clip = h('div', 'clip');
+  clip.append(carrier);
+  bar.append(zone, clip);
+  const rule = h('div', 'rule', 'Tap the zone’s colour while the arrow is in it');
+  wrap.append(note, poster, bar, rule);
   root.append(wrap);
 
-  let shown = -1; // fans shown
-  let tint = -1; // the crowd's colour
-  let y = '';
+  let x = '';
   let moodUntil = 0;
   function react(m: ActorMood, t: number) {
     cat.mood(m);
     moodUntil = t + 450;
   }
 
-  function show() {
-    const tg = targets[idx];
-    if (!tg) {
-      ask.textContent = 'Schedule full!';
-      note.textContent = `${hits} of ${n} posts landed`;
-      return;
-    }
-    ask.innerHTML = `Post during <b class="c-${COLOR[tg.want]}">${COLOR_NAME[tg.want]}</b>`;
-    ask.append(padDots(tg.want));
-    zones.forEach((z, i) => {
-      z.className = `zone c-${COLOR[tg.order[i]]}`;
-      z.style.flexBasis = `${tg.widths[i] * 100}%`;
-    });
-    tint = -1;
+  /** The next peak hour: a new colour, somewhere the arrow is not. */
+  function next() {
+    idx++;
+    const z = zones[idx % n];
+    const half = z.width / 2;
+    let mid = half + z.u * (1 - z.width);
+    // Never under the arrow: a zone that appeared around it would be a free hit or a trap.
+    if (Math.abs(mid - pos) < half + 0.14) mid = 1 - mid;
+    if (Math.abs(mid - pos) < half + 0.14) mid = pos < 0.5 ? 1 - half : half;
+    lo = mid - half;
+    hi = mid + half;
+    zone.className = `zone c-${COLOR[z.want]}`;
+    zone.style.left = `${lo * 100}%`;
+    zone.style.width = `${z.width * 100}%`;
+    pulse(zone, 'pop-in');
     note.textContent = `${hits} ${hits === 1 ? 'post' : 'posts'} landed`;
   }
-  show();
-
-  function zoneAt(p: number): Btn {
-    const tg = targets[idx];
-    let edge = 0;
-    for (let i = 0; i < 3; i++) {
-      edge += tg.widths[i];
-      if (p <= edge) return tg.order[i];
-    }
-    return tg.order[2];
-  }
+  next();
 
   return {
     press(b, t) {
-      const tg = targets[idx];
-      if (!tg || t < pausedUntil) return;
-      if (b === tg.want && zoneAt(pos) === tg.want) {
+      if (t < pausedUntil) return;
+      const want = zones[idx % n].want;
+      const inside = pos >= lo && pos <= hi;
+      if (b === want && inside) {
         hits++;
         react('happy', t);
         pulse(poster, 'bump');
-        good(marker);
-        fx.pop(ask, 'POSTED', 'gold');
-        for (const f of fans) f.who.mood('happy');
+        good(zone, 'POSTED');
+        fx.burst(zone, 'gold', 10);
       } else {
         misses++;
-        react(b === tg.want ? 'sad' : 'shock', t);
-        pulse(tower, 'shake');
-        bad(marker);
-        fx.pop(ask, b === tg.want ? 'BAD TIMING' : 'WRONG COLOUR', 'red');
-        for (const f of fans) f.who.mood('sleep');
+        react(b === want ? 'sad' : 'shock', t);
+        pulse(bar, 'shake');
+        bad(zone, b === want ? 'NOBODY ONLINE' : 'WRONG COLOUR');
       }
-      idx++;
       pausedUntil = t + 250;
-      show();
+      next();
     },
     tick(t) {
       const phase = (t / sweep) % 2;
       pos = phase < 1 ? phase : 2 - phase;
-      // The meter fills from the bottom: the marker rides up the rail by `pos` of its height.
-      const ny = `translateY(${(-pos * 100).toFixed(1)}%)`;
-      if (ny !== y) {
-        y = ny;
-        rail.style.transform = ny;
-      }
-      const count = 1 + Math.round(pos * (FANS - 1));
-      if (count !== shown) {
-        shown = count;
-        joinOrder.forEach((f, i) => fans[f].fan.classList.toggle('in', i < count));
-      }
-      if (targets[idx]) {
-        const z = zoneAt(pos);
-        if (z !== tint) {
-          tint = z;
-          crowd.className = `crowd c-${COLOR[z]}`;
-        }
+      const nx = `translateX(${(pos * 100).toFixed(1)}%)`;
+      if (nx !== x) {
+        x = nx;
+        carrier.style.transform = nx;
       }
       if (moodUntil && t >= moodUntil) {
         moodUntil = 0;
         cat.mood('idle');
-        for (const f of fans) f.who.mood('idle');
       }
     },
     score: () => clamp1000((1000 * (hits - misses / 2)) / par),
     hint(t) {
-      const tg = targets[idx];
-      return tg && t >= pausedUntil && zoneAt(pos) === tg.want ? tg.want : null;
+      // A touch inside the edges, so a bot's press lands before the arrow has left.
+      return t >= pausedUntil && pos >= lo + 0.02 && pos <= hi - 0.02 ? zones[idx % n].want : null;
     },
   };
 };
