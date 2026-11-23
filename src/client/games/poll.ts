@@ -75,11 +75,11 @@ export const create: GameFactory = ({ root, rng, level, good, bad }) => {
       note.textContent = 'All polls called';
       return;
     }
-    // Each vote is placed so the whole of it stays inside the glass.
+    // Each vote is placed so the whole of it stays inside the chart's axes.
     for (const d of p.dots) {
       const dot = h('i', `dot c-${COLOR[d.c]}`);
-      dot.style.left = `calc(0.95em + ${(d.x * 100).toFixed(1)}% - ${(d.x * 1.9).toFixed(2)}em)`;
-      dot.style.top = `calc(0.95em + ${(d.y * 100).toFixed(1)}% - ${(d.y * 1.9).toFixed(2)}em)`;
+      dot.style.left = `calc(2em + ${(d.x * 100).toFixed(1)}% - ${(d.x * 3).toFixed(2)}em)`;
+      dot.style.top = `calc(1em + ${(d.y * 100).toFixed(1)}% - ${(d.y * 3).toFixed(2)}em)`;
       glass.append(dot);
     }
     pulse(glass, 'pop-in');
