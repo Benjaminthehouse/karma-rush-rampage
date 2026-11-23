@@ -528,3 +528,7 @@ body::before { content: ''; position: fixed; z-index: -1; left: 0; right: 0; top
 @media (max-height: 420px) {
   .ui .logo, .splash .ui .logo { width: min(10rem, 34vw); }
 }
+/* The scenery stands beside the logo, so it keeps its place whatever the screen's shape.
+   The pagoda: to the left, its foot a little below the logo's, half off a phone's edge. */
+.ui .logo::before { content: ''; position: absolute; z-index: -1; right: 86%; bottom: -2%; height: 66%; aspect-ratio: 100 / 89;
+  background: url('./art/pagoda.png') center / 100% 100% no-repeat; }
