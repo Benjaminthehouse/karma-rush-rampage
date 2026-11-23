@@ -37,9 +37,9 @@ export const create: GameFactory = ({ root, rng, level, good, bad }) => {
   let lockedUntil = 0;
   let moodUntil = 0;
 
-  // Election night: the Mod Bear returning officer looks over three glass ballot boxes
-  // while poll workers drop the votes in. The votes are spread across all three boxes;
-  // call the colour with the most.
+  // Election night: the Mod Bear returning officer looks over one big glass ballot box
+  // while poll workers drop the votes in. One box, so there is one question: which colour
+  // is there the most of? (Three boxes, one over each button, read as three separate polls.)
   const wrap = h('div', 'g-poll scene-stage');
   const note = h('div', 'headline');
   const hall = h('div', 'hall');
@@ -49,15 +49,12 @@ export const create: GameFactory = ({ root, rng, level, good, bad }) => {
   const workers = [actor('npc', { px: 0.2 }), actor('npc', { px: 0.2 })];
   back.append(workers[0].el, officer.el, workers[1].el);
   const row = h('div', 'boxes');
-  const boxes = [0, 1, 2].map(() => {
-    const box = h('div', 'box');
-    const glass = h('div', 'glass');
-    const slip = h('i', 'slip');
-    box.append(slip, h('i', 'lid'), glass);
-    row.append(box);
-    return { glass, slip };
-  });
-  // Verdicts float up from the boxes' top edge, so they never cover the next poll's votes.
+  const box = h('div', 'box');
+  const glass = h('div', 'glass');
+  const slip = h('i', 'slip');
+  box.append(slip, h('i', 'lid'), glass);
+  row.append(box);
+  // Verdicts float up from the box's top edge, so they never cover the next poll's votes.
   const stamp = h('i', 'stamp');
   const closed = h('div', 'closed', 'POLLS CLOSED');
   hall.append(back, row, stamp, closed);
@@ -71,28 +68,24 @@ export const create: GameFactory = ({ root, rng, level, good, bad }) => {
   }
 
   function show() {
-    for (const g of boxes) g.glass.replaceChildren();
+    glass.replaceChildren();
     const p = polls[idx];
     if (!p) {
       closed.classList.add('on');
       note.textContent = 'All polls called';
       return;
     }
-    // Each vote keeps its place on the one big ballot it used to be, split three ways:
-    // the left third of the votes is in the left box, and so on.
+    // Each vote is placed so the whole of it stays inside the glass.
     for (const d of p.dots) {
-      const k = Math.min(2, Math.floor(d.x * 3));
       const dot = h('i', `dot c-${COLOR[d.c]}`);
-      dot.style.left = `calc(0.75em + ${((d.x * 3 - k) * 100).toFixed(1)}% - ${((d.x * 3 - k) * 1.5).toFixed(2)}em)`;
-      dot.style.top = `calc(0.75em + ${(d.y * 100).toFixed(1)}% - ${(d.y * 1.5).toFixed(2)}em)`;
-      boxes[k].glass.append(dot);
+      dot.style.left = `calc(0.95em + ${(d.x * 100).toFixed(1)}% - ${(d.x * 1.9).toFixed(2)}em)`;
+      dot.style.top = `calc(0.95em + ${(d.y * 100).toFixed(1)}% - ${(d.y * 1.9).toFixed(2)}em)`;
+      glass.append(dot);
     }
-    for (const g of boxes) {
-      pulse(g.glass, 'pop-in');
-      pulse(g.slip, 'drop');
-    }
+    pulse(glass, 'pop-in');
+    pulse(slip, 'drop');
     pulse(back, 'bump');
-    note.textContent = `Poll ${idx + 1}: most votes?`;
+    note.textContent = 'Which colour has the most?';
   }
   show();
 

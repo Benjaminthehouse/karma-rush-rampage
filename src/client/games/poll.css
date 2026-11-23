@@ -1,5 +1,5 @@
-/* Election night: a headline up top, the returning officer and poll workers behind three
-   glass ballot boxes standing on the boards. */
+/* Election night: a headline up top, the returning officer and poll workers behind one
+   big glass ballot box standing on the boards. */
 .g-poll { justify-content: space-between !important; gap: 0.3em !important; padding: 0.6em 0.6em 0.5em !important; overflow: hidden; }
 .g-poll .headline { flex: none; padding: 0.1em 0.8em; background: #0b1020; color: #fff0a8; font-size: 1.15em; white-space: nowrap; box-shadow: 0 0 0 0.15em #ff4b55, 0 0 0 0.3em #0b1020, 0.3em 0.45em 0 0.3em #0b102088; margin-top: 0.3em; }
 .g-poll .hall { position: relative; flex: 1 1 auto; min-height: 0; width: min(100%, 26em); display: flex; flex-direction: column; justify-content: flex-end; }
@@ -8,18 +8,18 @@
 .g-poll .back { position: relative; z-index: 0; flex: none; display: flex; justify-content: center; align-items: flex-end; gap: 0.3em; margin-bottom: -1.4em; }
 .g-poll .back .npc { margin-bottom: 1.5em; }
 
-/* Three ballot boxes: a wooden lid with a slot over a glass case of votes. */
+/* The ballot box: a wooden lid with a slot over one glass case holding every vote. */
 .g-poll .boxes { position: relative; z-index: 1; flex: 1 1 auto; min-height: 8em; max-height: 15em; display: flex; gap: 0.45em; }
 .g-poll .box { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; }
-/* A fresh ballot drops through each slot when a new poll comes in. */
+/* A fresh ballot drops through the slot when a new poll comes in. */
 .g-poll .slip { position: absolute; left: 50%; top: -0.4em; z-index: 0; width: 1.6em; height: 1.1em; margin-left: -0.8em; background: #fff; box-shadow: 0 0 0 0.16em #0b1020; opacity: 0; }
 .g-poll .slip.drop { animation: g-poll-drop 0.3s ease-in; }
 @keyframes g-poll-drop { from { opacity: 1; transform: translateY(-1.6em); } 80% { opacity: 1; transform: translateY(0.2em); } to { opacity: 0; transform: translateY(0.4em); } }
 .g-poll .lid { flex: none; height: 0.9em; background: #b0703c; position: relative; z-index: 1; box-shadow: 0 0 0 0.2em #0b1020; }
-.g-poll .lid::after { content: ''; position: absolute; left: 30%; right: 30%; top: 0.3em; height: 0.3em; background: #0b1020; }
+.g-poll .lid::after { content: ''; position: absolute; left: 38%; right: 38%; top: 0.3em; height: 0.3em; background: #0b1020; }
 .g-poll .glass { position: relative; flex: 1; margin-top: 0.2em; background: #cfeeff; box-shadow: 0 0 0 0.2em #0b1020, 0.35em 0.4em 0 0.2em #0b102088; }
 .g-poll .glass::before { content: ''; position: absolute; left: 0.35em; top: 0.35em; width: 0.35em; height: 40%; background: #ffffffaa; }
-.g-poll .dot { position: absolute; width: 1.5em; height: 1.5em; margin: -0.75em; background: var(--c); box-shadow: inset 0 0 0 0.16em #0b1020, inset 0.3em 0.3em 0 0.16em #ffffff55; }
+.g-poll .dot { position: absolute; width: 1.7em; height: 1.7em; margin: -0.85em; background: var(--c); box-shadow: inset 0 0 0 0.16em #0b1020, inset 0.3em 0.3em 0 0.16em #ffffff55; }
 
 .g-poll .stamp { position: absolute; left: 50%; bottom: 60%; }
 .g-poll .closed { position: absolute; left: 50%; top: 55%; z-index: 2; transform: translate(-50%, -50%) rotate(-6deg); padding: 0.2em 0.7em; background: #ff4b55; color: #fff; font-size: 1.5em; white-space: nowrap; box-shadow: 0 0 0 0.15em #0b1020; visibility: hidden; }
