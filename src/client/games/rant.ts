@@ -79,12 +79,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       if (b !== r.btn) {
         // Nobody stops mashing the instant the colour changes.
         if (b === lastBtn && t < graceEnd) return;
-        const lost = Math.min(4, typed);
-        typed -= lost;
-        total -= lost;
+        // A wrong colour buzzes and jams the keys for a moment. Nothing typed is ever lost.
         lockedUntil = t + 220;
         face.mood('shock');
-        show();
         pulse(view, 'shake');
         bad(spans[run].done, 'TYPO!');
         return;
