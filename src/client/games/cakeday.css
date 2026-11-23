@@ -38,3 +38,7 @@
 .g-cakeday .star { position: relative; transform-origin: 50% 100%; }
 .g-cakeday .hat { position: absolute; left: 50%; top: -1.9em; margin-left: -1.2em; transform: rotate(-10deg); }
 .g-cakeday .guest { margin-bottom: 0.1em; }
+
+/* The cake bounces on every beat of the music. */
+.g-cakeday .cake.thump { transform-origin: 50% 100%; animation: g-cakeday-thump 0.14s steps(2); }
+@keyframes g-cakeday-thump { 50% { transform: scaleY(1.07); } }

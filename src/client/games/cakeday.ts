@@ -1,5 +1,5 @@
 import './cakeday.css';
-import { actor, COLOR, clamp1000, defineSprite, h, pulse, randBtn, sprite, type ActorMood, type Btn, type GameFactory } from './common';
+import { actor, BEAT_SYNC, beatMs, COLOR, clamp1000, defineSprite, h, pulse, randBtn, sprite, type ActorMood, type Btn, type GameFactory } from './common';
 
 // A falling flame in the lane's colour (the sheet's flames are fixed orange).
 defineSprite('cakeday-drop', `
@@ -37,13 +37,15 @@ kAAAAAk
 ...k...`);
 
 const FALL = 1100; // ms a flame takes to reach the cake
-const WINDOW = 120; // ms either side of the beat that still counts
-const SYNC = 40; // ms after the round starts that the music's first kick sounds
+// How far off the beat a tap may be. Wider after the beat than before it: a thumb lands
+// a little after the ear hears the kick, and the phone reports it a little later still.
+const EARLY = 150;
+const LATE = 200;
 const FLAGS = ['pink', 'gold', 'purple', 'teal', 'orange', 'pink', 'gold', 'purple', 'teal'] as const;
 
 export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx }) => {
   // Same tempo as the round's music, so the flames land on the beat.
-  const beat = 60000 / (128 + level * 7);
+  const beat = beatMs(level);
   const notes: { at: number; lane: Btn; el: HTMLElement; state: 'fall' | 'hit' | 'miss'; y: string }[] = [];
 
   // The party stage: bunting across the top, a giant cake with three candles in the
@@ -84,7 +86,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   let prev = -1;
   // The music kicks on every multiple of `beat`, starting SYNC ms into the round.
   // Flames land on those kicks; the first one leaves room for a full fall.
-  const first = Math.ceil((FALL + 200) / beat) * beat + SYNC;
+  const first = Math.ceil((FALL + 200) / beat) * beat + BEAT_SYNC;
   for (let k = 0, at = first; at < duration - 200; k++, at += beat / 2) {
     // Early rounds play quarter notes; later rounds fill in the off-beats.
     const off = k % 2 === 1;
@@ -100,6 +102,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   }
   let hits = 0;
   let stray = 0;
+  let pulseAt = -1; // the last beat the cake bounced on
 
   // The crowd's faces: a mood holds for a moment, then they settle back.
   let moodUntil = 0;
@@ -116,7 +119,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   return {
     press(b, t) {
       now = t;
-      const n = notes.find((x) => x.state === 'fall' && x.lane === b && Math.abs(t - x.at) <= WINDOW);
+      const n = notes.find((x) => x.state === 'fall' && x.lane === b && t >= x.at - EARLY && t <= x.at + LATE);
       if (!n) {
         stray++;
         react('shock', t, 'angry');
@@ -129,7 +132,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       lanes[b].candle.classList.add('lit');
       react('happy', t);
       pulse(star, 'bump');
-      good(lanes[b].candle, Math.abs(t - n.at) < 45 ? 'PERFECT' : undefined);
+      good(lanes[b].candle, Math.abs(t - n.at) < 60 ? 'PERFECT' : undefined);
       if (hits === notes.length) {
         fx.burst(cake, 'gold', 26);
         fx.pop(cake, 'WISH!', 'gold');
@@ -137,11 +140,17 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
     },
     tick(t) {
       now = t;
+      // The cake bounces on every kick, so the beat can be seen as well as heard.
+      const k = Math.floor((t - BEAT_SYNC) / beat);
+      if (k !== pulseAt && t >= BEAT_SYNC) {
+        pulseAt = k;
+        pulse(cake, 'thump');
+      }
       for (const n of notes) {
         if (n.state !== 'fall') continue;
         const p = (t - (n.at - FALL)) / FALL;
         if (p < 0) continue;
-        if (t > n.at + WINDOW) {
+        if (t > n.at + LATE) {
           n.state = 'miss';
           n.el.style.display = 'none';
           lanes[n.lane].candle.classList.remove('lit');
@@ -163,9 +172,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
         moodUntil = 0;
       }
     },
-    score: () => clamp1000((1000 * (hits - stray / 2)) / notes.length),
+    score: () => clamp1000((1000 * (hits - stray / 3)) / notes.length),
     hint(t) {
-      const n = notes.find((x) => x.state === 'fall' && t >= x.at - 20 && t <= x.at + WINDOW);
+      const n = notes.find((x) => x.state === 'fall' && t >= x.at - 20 && t <= x.at + LATE);
       return n ? n.lane : null;
     },
   };

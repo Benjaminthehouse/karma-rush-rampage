@@ -19,6 +19,11 @@ export const COLOR_NAME = ['RED', 'GREEN', 'BLUE'] as const;
 import { sprite, type Tone } from '../kit/px';
 
 export type FxColor = 'red' | 'green' | 'blue' | 'gold' | 'white' | 'purple';
+/** A round's music puts its first kick this many ms after the round starts, and one every beat after. */
+export const BEAT_SYNC = 120;
+/** The music's tempo for a round level, in ms per beat. */
+export const beatMs = (level: number) => 60000 / (128 + level * 7);
+
 export type SoundName = 'pop' | 'coin' | 'zap' | 'whoosh' | 'thud' | 'tick' | 'power' | 'laser' | 'ding' | 'boing';
 
 export type GameCtx = {

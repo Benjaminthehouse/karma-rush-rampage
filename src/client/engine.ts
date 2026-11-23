@@ -9,9 +9,9 @@ import { fmt } from './api';
 import { avatar, shortName } from './avatar';
 import { createBot } from './bot';
 import { createFx } from './fx';
-import { COLOR, clamp1000, h, type Btn, type FxColor, type GameInst } from './games/common';
+import { BEAT_SYNC, COLOR, clamp1000, h, type Btn, type FxColor, type GameInst } from './games/common';
 import { GAMES } from './games/registry.gen';
-import { HIT_VOICE } from './hits';
+import { HIT_GOOD, HIT_VOICE, ON_THE_BEAT } from './hits';
 import { music, sfx } from './sfx';
 import { voice } from './voice';
 
@@ -369,7 +369,9 @@ export function runMatch(o: {
     lineUp();
     sfx.go();
     fx.flash('white');
-    music.start(round.seed, round.level);
+    // The first kick is heard BEAT_SYNC into the round, however late this frame is running.
+    const into = Math.max(0, now() - (phases[p]?.start ?? now()));
+    music.start(round.seed, round.level, { lead: (BEAT_SYNC - into) / 1000, beat: ON_THE_BEAT.has(round.id) });
     // The arena lights throb in time with the round's music.
     arena.style.setProperty('--beat', `${60 / music.bpm(round.level)}s`);
     arena.classList.add('playing');
@@ -384,7 +386,7 @@ export function runMatch(o: {
         down,
         good(at, text) {
           setCombo(combo + 1);
-          sfx.good(combo, HIT_VOICE[round.id]);
+          sfx.good(combo, HIT_GOOD[round.id] ?? HIT_VOICE[round.id]);
           fx.burst(at ?? null, 'gold', 3);
           fx.lights('green');
           if (text) fx.pop(at ?? null, text, 'gold');

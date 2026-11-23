@@ -106,7 +106,17 @@ function noise({ dur, vol = 0.08, type = 'highpass', f = 2000, to, at = 0, attac
   src.stop(t0 + dur + 0.02);
 }
 
-const kick = (at = 0, vol = 0.2, music = false) => tone({ f: 160, to: 42, dur: 0.16, type: 'sine', vol, at, music });
+// The low sine is the weight; a phone's speaker cannot play it, so a brighter knock rides
+// on top and carries the beat there.
+const kick = (at = 0, vol = 0.2, music = false) => {
+  tone({ f: 160, to: 42, dur: 0.16, type: 'sine', vol, at, music });
+  tone({ f: 420, to: 110, dur: 0.07, type: 'triangle', vol: vol * 0.45, at, music });
+};
+/** A woodblock: the click of a metronome, for rounds played to the beat. */
+const block = (at = 0, vol = 0.1) => {
+  tone({ f: 1320, to: 990, dur: 0.05, type: 'triangle', vol, at, music: true, attack: 0.001 });
+  tone({ f: 2640, dur: 0.02, type: 'sine', vol: vol * 0.4, at, music: true, attack: 0.001 });
+};
 const snare = (at = 0, vol = 0.12) => {
   noise({ dur: 0.12, vol, f: 1800, at, music: true });
   tone({ f: 190, to: 120, dur: 0.08, type: 'triangle', vol: vol * 0.8, at, music: true });
@@ -146,6 +156,7 @@ let musicTimer = 0;
 let musicNext = 0;
 let musicStep = 0;
 let musicRush = false;
+let musicBeat = false; // a round played to the beat: the beat is spelled out
 
 function musicTick(stepLen: number, riff: number[], root: number) {
   const a = ac;
@@ -153,13 +164,17 @@ function musicTick(stepLen: number, riff: number[], root: number) {
   while (musicNext < a.currentTime + 0.12) {
     const at = Math.max(0, musicNext - a.currentTime);
     const s = musicStep % 16;
-    if (s % 4 === 0) kick(at, 0.36, true);
-    if (s === 4 || s === 12) snare(at, 0.1);
+    if (s % 4 === 0) kick(at, musicBeat ? 0.5 : 0.36, true);
+    // To the beat: a woodblock on every beat, high on the first of the bar, and no
+    // backbeat snare, because the snare is what the player's own taps sound like.
+    if (musicBeat && s % 4 === 0) block(at, s === 0 ? 0.13 : 0.09);
+    if (!musicBeat && (s === 4 || s === 12)) snare(at, 0.1);
     if (s % 2 === 1 || musicRush) hat(at, s % 4 === 2 ? 0.04 : 0.022);
     if (s % 2 === 0) {
       const n = riff[(musicStep / 2) % riff.length | 0];
-      tone({ f: root * semis(n), dur: stepLen * 1.7, type: 'sawtooth', vol: 0.07, at, music: true });
-      tone({ f: root * 2 * semis(n), dur: stepLen * 0.9, type: 'square', vol: 0.028, at, music: true });
+      const thin = musicBeat ? 0.55 : 1; // the riff steps back so the beat is what you hear
+      tone({ f: root * semis(n), dur: stepLen * 1.7, type: 'sawtooth', vol: 0.07 * thin, at, music: true });
+      tone({ f: root * 2 * semis(n), dur: stepLen * 0.9, type: 'square', vol: 0.028 * thin, at, music: true });
     }
     if (musicRush && s % 4 === 2) tone({ f: 1760, dur: 0.04, type: 'square', vol: 0.05, at, music: true });
     musicNext += stepLen;
@@ -170,7 +185,12 @@ function musicTick(stepLen: number, riff: number[], root: number) {
 export const music = {
   /** Tempo climbs with the round. Games that land on the beat use the same number. */
   bpm: (round: number) => 128 + round * 7,
-  start(seed: number, round: number) {
+  /**
+   * `lead` is how many seconds from now the first kick should be heard; the time the
+   * device takes to get sound out of the speaker is taken off it, so what is heard lines
+   * up with what is seen. `beat` spells the beat out for rounds played to it.
+   */
+  start(seed: number, round: number, o: { lead?: number; beat?: boolean } = {}) {
     music.stop();
     const a = audio();
     if (!a) return;
@@ -178,9 +198,11 @@ export const music = {
     const stepLen = 60 / bpm / 4;
     const riff = RIFFS[seed % RIFFS.length];
     const root = 55 * semis([0, 3, 5, 7, 10][(seed >>> 3) % 5]);
-    musicNext = a.currentTime + 0.03;
+    const late = (a as AudioContext & { outputLatency?: number }).outputLatency || a.baseLatency || 0;
+    musicNext = a.currentTime + Math.max(0.01, (o.lead ?? 0.03) - late);
     musicStep = 0;
     musicRush = false;
+    musicBeat = !!o.beat;
     musicTimer = window.setInterval(() => musicTick(stepLen, riff, root), 25);
     musicTick(stepLen, riff, root);
   },
@@ -228,7 +250,7 @@ const NAMED: Record<string, (k: number) => void> = {
  */
 export type HitVoice =
   | 'blip' | 'vote' | 'coin' | 'water' | 'key' | 'stamp' | 'pop' | 'bell'
-  | 'zap' | 'pluck' | 'swipe' | 'step' | 'sizzle' | 'snap' | 'horn';
+  | 'zap' | 'pluck' | 'swipe' | 'step' | 'sizzle' | 'snap' | 'horn' | 'drum';
 
 const HIT: Record<HitVoice, (k: number) => void> = {
   // A game-console blip: the default, and anything robotic.
@@ -275,6 +297,13 @@ const HIT: Record<HitVoice, (k: number) => void> = {
   pop(k) {
     tone({ f: 380 * k, to: 900 * k, dur: 0.065, type: 'sine', vol: 0.16, attack: 0.004 });
     noise({ dur: 0.02, vol: 0.06, f: 4000, attack: 0.002 });
+  },
+  // A snare drum: playing along to the beat. The crack stays put; only the shell tunes up.
+  drum(k) {
+    const j = k ** 0.35;
+    noise({ dur: 0.13, vol: 0.14, f: 1700, attack: 0.001 });
+    noise({ dur: 0.05, vol: 0.05, f: 6000, attack: 0.001 });
+    tone({ f: 210 * j, to: 140 * j, dur: 0.09, type: 'triangle', vol: 0.13, attack: 0.001 });
   },
   // Dings, chimes, doorbells, "done!".
   bell(k) {

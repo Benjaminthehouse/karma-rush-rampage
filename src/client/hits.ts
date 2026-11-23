@@ -8,7 +8,7 @@ export const HIT_VOICE: Record<string, HitVoice> = {
   automodsays: 'blip', // a robot's order obeyed
   bananascale: 'snap', // the photo
   banevasion: 'stamp', // the ban hammer
-  cakeday: 'bell', // a candle lit, a birthday chime
+  cakeday: 'drum', // drumming along to the beat; a lit candle chimes (HIT_GOOD)
   chartcrime: 'stamp', // slamming the true number
   commentchain: 'pluck', // each reply is a note in the chain
   controversial: 'vote',
@@ -55,3 +55,11 @@ export const HIT_VOICE: Record<string, HitVoice> = {
   votemath: 'key', // chalk on the board
   worksonmine: 'bell', // it boots
 };
+
+/** Games whose scoring hit sounds different from the tap: the tap's voice is the default. */
+export const HIT_GOOD: Record<string, HitVoice> = {
+  cakeday: 'bell', // the snare is the tap; the chime is the candle catching
+};
+
+/** Games played to the music: the round's beat is spelled out so it can be heard on a phone. */
+export const ON_THE_BEAT = new Set(['cakeday']);
