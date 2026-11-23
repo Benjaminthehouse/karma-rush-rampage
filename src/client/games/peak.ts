@@ -64,7 +64,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   // at its foot swells and drains with it and holds up signs in the colour of the band
   // the meter is in. OP Cat waits beside it, phone out, to post at the right moment.
   const wrap = h('div', 'g-peak scene-stage');
-  // Words pop from above this line, never from the marker: there they drifted across the next colour to read.
+  // The order sits at the bottom of the stage, right above the buttons, where the thumbs
+  // and the eyes already are. Words pop from it, never from the marker: there they
+  // drifted across the next colour to read.
   const ask = h('div', 'rule');
   const mid = h('div', 'mid');
   const poster = h('div', 'poster');
@@ -99,7 +101,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   // The fans join from the middle out as the crowd swells.
   const joinOrder = [3, 2, 4, 1, 5, 0, 6];
   const note = h('div', 'g-note');
-  wrap.append(ask, mid, crowd, note);
+  wrap.append(note, mid, crowd, ask);
   root.append(wrap);
 
   let shown = -1; // fans shown
@@ -118,7 +120,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
       note.textContent = `${hits} of ${n} posts landed`;
       return;
     }
-    ask.innerHTML = `Post during <b class="t-${COLOR[tg.want]}">${COLOR_NAME[tg.want]}</b>`;
+    ask.innerHTML = `Post during <b class="c-${COLOR[tg.want]}">${COLOR_NAME[tg.want]}</b>`;
     ask.append(padDots(tg.want));
     zones.forEach((z, i) => {
       z.className = `zone c-${COLOR[tg.order[i]]}`;
