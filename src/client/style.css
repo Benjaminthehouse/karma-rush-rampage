@@ -505,3 +505,26 @@ body #final, body.ios #final { padding-bottom: 0.8rem; }
 
 /* Live Party: READY tapped, waiting for the others (and the GO that follows). */
 #card .ready.set { animation: none; background: var(--green); }
+
+/* ---------- the night sky behind every screen ----------
+   Real pixel art (tools/repixel.py), scaled up crisply. It always spans the full width;
+   on a phone that makes it about the top third of the screen. Its foot fades into the
+   page colour until the horizon art (mountains, trees) is there to cover the join. */
+body::before { content: ''; position: fixed; z-index: -1; left: 0; right: 0; top: 0; height: max(38vh, 50vw); pointer-events: none;
+  background: linear-gradient(#0000 55%, var(--bg)), url('./art/sky.png') top center / max(100vw, 76vh) auto no-repeat #080636;
+  image-rendering: pixelated; }
+
+/* ---------- the logo ----------
+   Drawn pixel art (art/logo.png, 160 by 123), scaled up crisply. The words stay in the
+   page for screen readers but are not shown. */
+.ui .logo { position: relative; display: block; flex: none; width: min(18rem, 64vw); aspect-ratio: 160 / 123; margin: -0.4rem 0 -0.2rem;
+  background: url('./art/logo.png') center / 100% 100% no-repeat; image-rendering: pixelated; animation: none; }
+.ui .logo span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; transform: none; }
+.splash .ui .logo { width: min(17rem, 60vw); }
+/* Short screens: the menu needs the room more than the logo does. */
+@media (max-height: 700px) {
+  .ui .logo { width: min(15.5rem, 58vw); }
+}
+@media (max-height: 420px) {
+  .ui .logo, .splash .ui .logo { width: min(10rem, 34vw); }
+}
