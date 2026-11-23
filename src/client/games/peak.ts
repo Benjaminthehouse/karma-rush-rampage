@@ -107,7 +107,7 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   // Words pop from the top of the clock, clear of the hand and the slice.
   const stamp = h('i', 'stamp');
   clock.append(sprite('peak-face', { px: PX }, 'face'), slice, hand, h('i', 'hub'), stamp);
-  const rule = h('div', 'rule', 'Tap the slice’s colour while the hand is in it');
+  const rule = h('div', 'rule', 'Tap the hour’s colour while the hand is in it');
   wrap.append(top, clock, rule);
   root.append(wrap);
 

@@ -82,11 +82,15 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
   const name = h('span', 'name');
   plate.append(shield, name);
   podium.append(plate);
-  // Verdicts float up from the speaker, clear of the next order.
+  // The bubble sits right on top of whoever is talking, its tail touching their head, so
+  // the order and the face that gives it are read in one look. Verdicts float up from
+  // above the bubble, clear of the next order.
   const stamp = h('i', 'stamp');
-  stage.append(speaker, podium, stamp);
+  const talk = h('div', 'talk');
+  talk.append(stamp, bubble);
+  stage.append(talk, speaker, podium);
   const note = h('div', 'tally');
-  wrap.append(bubble, stage, note);
+  wrap.append(note, stage);
   root.append(wrap);
 
   // The robot's mouth moves for the first moments of each order.
