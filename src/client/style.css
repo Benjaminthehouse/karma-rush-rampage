@@ -537,3 +537,17 @@ body::before { content: ''; position: fixed; z-index: -1; left: 0; right: 0; top
     url('./art/trees-r.png') right bottom / auto 44% no-repeat,
     url('./art/mountain.png') right -16% bottom 26% / auto 30% no-repeat,
     url('./art/pagoda.png') 9% 62% / auto 70% no-repeat; }
+
+/* ---------- the menu rows ----------
+   A drawn pixel frame (art/row-*.png, an 11 by 7 nine-slice: thick sides, thin top and
+   bottom) stretched round each row, with the row's own decoration at its right-hand end.
+   --u is one art pixel. */
+.ui .choice { --u: 0.19rem; border-style: solid; border-width: calc(3 * var(--u)) calc(5 * var(--u)); border-radius: 0;
+  border-image: url('./art/row-green.png') 3 5 / calc(3 * var(--u)) calc(5 * var(--u)) stretch;
+  background: #14153e; background-clip: padding-box; box-shadow: 0.25rem 0.4rem 0 0 #0007; padding: 0.4rem 0.8rem 0.45rem;
+  image-rendering: pixelated; }
+.ui .choice.c-blue { border-image-source: url('./art/row-blue.png'); }
+.ui .choice.c-red { border-image-source: url('./art/row-red.png'); }
+/* Today's Rush: green waves breaking at the right. */
+.ui .choice.c-green { background: url('./art/row-waves.png') right bottom / auto 100% no-repeat padding-box, #14153e padding-box; }
+.ui .choice b, .ui .choice small { position: relative; text-shadow: 0.08em 0.08em 0 #0b1020; }
