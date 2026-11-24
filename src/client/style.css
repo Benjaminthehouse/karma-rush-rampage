@@ -548,6 +548,15 @@ body::before { content: ''; position: fixed; z-index: -1; left: 0; right: 0; top
   image-rendering: pixelated; }
 .ui .choice.c-blue { border-image-source: url('./art/row-blue.png'); }
 .ui .choice.c-red { border-image-source: url('./art/row-red.png'); }
-/* Today's Rush: green waves breaking at the right. */
-.ui .choice.c-green { background: url('./art/row-waves.png') right bottom / auto 100% no-repeat padding-box, #14153e padding-box; }
+/* Waves breaking at the right-hand end, in the row's colour. The low ripples fade out
+   under the words, so the words stay easy to read. */
+.ui .choice.c-green { background: linear-gradient(90deg, #14153e 0 56%, #14153e00 80%) padding-box, url('./art/row-waves.png') right bottom / auto 100% no-repeat padding-box, #14153e padding-box; }
+.ui .choice.c-blue { background: linear-gradient(90deg, #14153e 0 56%, #14153e00 80%) padding-box, url('./art/row-waves-blue.png') right bottom / auto 100% no-repeat padding-box, #14153e padding-box; }
+.ui .choice.c-red { background: linear-gradient(90deg, #14153e 0 56%, #14153e00 80%) padding-box, url('./art/row-waves-red.png') right bottom / auto 100% no-repeat padding-box, #14153e padding-box; }
 .ui .choice b, .ui .choice small { position: relative; text-shadow: 0.08em 0.08em 0 #0b1020; }
+/* Each row's icon stands at its left-hand end, the words beside it. */
+.ui .choice { position: relative; padding-left: 3.5rem; }
+.ui .choice::before { content: ''; position: absolute; left: 0.55rem; top: 50%; width: 2.4rem; height: 2.4rem; margin-top: -1.2rem;
+  background: url('./art/icon-rush.png') center / contain no-repeat; }
+.ui .choice.c-blue::before { background-image: url('./art/icon-party.png'); }
+.ui .choice.c-red::before { background-image: url('./art/icon-practice.png'); }
