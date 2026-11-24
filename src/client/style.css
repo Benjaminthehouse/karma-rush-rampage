@@ -568,3 +568,19 @@ body::before { content: ''; position: fixed; z-index: -1; left: 0; right: 0; top
 /* The arcade's way back to the menu wears the back arrow too. */
 #arcade-back { display: flex; align-items: center; gap: 0.35rem; image-rendering: pixelated; }
 #arcade-back::before { content: ''; width: 1.3rem; height: 1.36rem; background: url('./art/icon-back.png') center / contain no-repeat; }
+
+/* ---------- the row to press ----------
+   Today's Rush, until it has been played, beats like a heart: it swells and a glow in its
+   colour spreads from its frame. With FLASH off it only stands a little larger. */
+.ui .choice.primary { transform: scale(1.03); animation: choice-pulse 1.1s ease-in-out infinite; }
+@keyframes choice-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0.25rem 0.4rem 0 0 #0007, 0 0 0 0 color-mix(in srgb, var(--c) 0%, transparent); }
+  50% { transform: scale(1.045); box-shadow: 0.25rem 0.4rem 0 0 #0007, 0 0 1.4rem 0.25rem color-mix(in srgb, var(--c) 70%, transparent); }
+}
+/* Its icon nods in time. */
+.ui .choice.primary::before { animation: choice-nod 1.1s ease-in-out infinite; }
+@keyframes choice-nod { 50% { transform: translateY(-0.18rem) scale(1.12); } }
+body.fx-low .ui .choice.primary, body.fx-low .ui .choice.primary::before { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .ui .choice.primary, .ui .choice.primary::before { animation: none; }
+}
