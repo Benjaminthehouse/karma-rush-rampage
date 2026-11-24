@@ -69,7 +69,7 @@ function setPads(labels: [string, string, string], actions?: ((() => void) | nul
 
 const held = [false, false, false];
 /** Shown on the menu so a tester can tell which build they are looking at. */
-const BUILD = 59;
+const BUILD = 60;
 let dayLine = '';
 /** The menu's status line, with the audio state so "no sound" can be told apart by cause. */
 function paintStatus() {
@@ -333,7 +333,7 @@ const ROW_ICON: Record<string, string> = {
   PRACTICE: 'practice',
   'KEEP PLAYING': 'practice',
   BACK: 'back',
-  'RANDOM FIVE': 'rush',
+  'RANDOM FIVE': 'dice',
   ARCADE: 'arcade',
 };
 

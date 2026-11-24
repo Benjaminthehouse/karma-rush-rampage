@@ -564,6 +564,7 @@ body::before { content: ''; position: fixed; z-index: -1; left: 0; right: 0; top
 .ui .choice[data-icon='practice']::before { background-image: url('./art/icon-practice.png'); }
 .ui .choice[data-icon='back']::before { background-image: url('./art/icon-back.png'); }
 .ui .choice[data-icon='arcade']::before { background-image: url('./art/icon-arcade.png'); }
+.ui .choice[data-icon='dice']::before { background-image: url('./art/icon-dice.png'); }
 /* The arcade's way back to the menu wears the back arrow too. */
 #arcade-back { display: flex; align-items: center; gap: 0.35rem; image-rendering: pixelated; }
 #arcade-back::before { content: ''; width: 1.3rem; height: 1.36rem; background: url('./art/icon-back.png') center / contain no-repeat; }
