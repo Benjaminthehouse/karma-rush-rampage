@@ -48,12 +48,16 @@ Then the piece, in one or two sentences, and its size.
 
 ## 3. How to send the art back
 
-- File names: `<game or set>-<piece>-<state>.png`, for example `cast-modbear-moods.png`,
-  `set-office.png`, `tothemoon-rocket.png`, `cakeday-candle-lit.png`.
-- Best: put them in `art/incoming/` in the GitHub repo (a folder per game is fine) and
-  say so. That handles hundreds of files at once.
-- Or attach them in the chat, a few at a time, in a message of their own. (A picture
-  pasted while a task is running is not saved and has to be sent again.)
+Attach each PNG in the chat, one at a time, with a few words saying what it is ("to the
+moon rocket", "mod bear moods"). That is all that is needed: naming, sorting into folders,
+cutting out the background, snapping to the pixel grid and shrinking the file are done on
+arrival.
+
+- Send a picture in a message of its own, after the reply to the last one has finished.
+  A picture pasted while a task is still running is not saved and has to be sent again.
+- The file names in the tables below are what each piece will be called in the game.
+  They are there so both sides can refer to a piece; the files you send can be named
+  anything.
 
 ## 4. Shared pieces: draw these first
 
