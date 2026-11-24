@@ -69,7 +69,7 @@ function setPads(labels: [string, string, string], actions?: ((() => void) | nul
 
 const held = [false, false, false];
 /** Shown on the menu so a tester can tell which build they are looking at. */
-const BUILD = 56;
+const BUILD = 57;
 let dayLine = '';
 /** The menu's status line, with the audio state so "no sound" can be told apart by cause. */
 function paintStatus() {
@@ -321,8 +321,21 @@ function setChoices(cards: [string, string][]) {
     const el = document.querySelector<HTMLElement>(`.choice[data-pad="${b}"]`)!;
     el.querySelector('b')!.textContent = title;
     el.querySelector('small')!.textContent = sub;
+    // The row's picture goes with what it does now, not with its colour.
+    (el as HTMLElement).dataset.icon = ROW_ICON[title] ?? ROW_ICON[title.split(':')[0]] ?? '';
   });
 }
+
+/** Which drawn icon a menu row shows, by its title. */
+const ROW_ICON: Record<string, string> = {
+  'TODAY’S RUSH': 'rush',
+  'LIVE PARTY': 'party',
+  PRACTICE: 'practice',
+  'KEEP PLAYING': 'practice',
+  BACK: 'back',
+  'RANDOM FIVE': 'rush',
+  ARCADE: 'practice',
+};
 
 /** PRACTICE opens a choice: a random five, or the arcade to pick one game. */
 function practiceMenu() {

@@ -554,9 +554,15 @@ body::before { content: ''; position: fixed; z-index: -1; left: 0; right: 0; top
 .ui .choice.c-blue { background: linear-gradient(90deg, #14153e 0 56%, #14153e00 80%) padding-box, url('./art/row-waves-blue.png') right bottom / auto 100% no-repeat padding-box, #14153e padding-box; }
 .ui .choice.c-red { background: linear-gradient(90deg, #14153e 0 56%, #14153e00 80%) padding-box, url('./art/row-waves-red.png') right bottom / auto 100% no-repeat padding-box, #14153e padding-box; }
 .ui .choice b, .ui .choice small { position: relative; text-shadow: 0.08em 0.08em 0 #0b1020; }
-/* Each row's icon stands at its left-hand end, the words beside it. */
+/* Each row's icon stands at its left-hand end, the words beside it. Which icon is set by
+   what the row does (data-icon), since the same row is PRACTICE on one menu and BACK on the next. */
 .ui .choice { position: relative; padding-left: 3.5rem; }
 .ui .choice::before { content: ''; position: absolute; left: 0.55rem; top: 50%; width: 2.4rem; height: 2.4rem; margin-top: -1.2rem;
-  background: url('./art/icon-rush.png') center / contain no-repeat; }
-.ui .choice.c-blue::before { background-image: url('./art/icon-party.png'); }
-.ui .choice.c-red::before { background-image: url('./art/icon-practice.png'); }
+  background: center / contain no-repeat; }
+.ui .choice[data-icon='rush']::before { background-image: url('./art/icon-rush.png'); }
+.ui .choice[data-icon='party']::before { background-image: url('./art/icon-party.png'); }
+.ui .choice[data-icon='practice']::before { background-image: url('./art/icon-practice.png'); }
+.ui .choice[data-icon='back']::before { background-image: url('./art/icon-back.png'); }
+/* The arcade's way back to the menu wears the back arrow too. */
+#arcade-back { display: flex; align-items: center; gap: 0.35rem; image-rendering: pixelated; }
+#arcade-back::before { content: ''; width: 1.3rem; height: 1.36rem; background: url('./art/icon-back.png') center / contain no-repeat; }
