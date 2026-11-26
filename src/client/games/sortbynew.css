@@ -5,8 +5,12 @@
 
 /* Back wall: the baker in a tall hat beside a big brick oven with fire in the door. */
 .g-sortbynew .back { flex: 1 1 auto; min-height: 0; margin-bottom: 0.5em; display: flex; align-items: flex-end; justify-content: center; gap: 0.8em; width: min(100%, 24em); }
-.g-sortbynew .baker { flex: none; width: calc(37 * var(--u)); height: calc(43 * var(--u)); background: url('./art/sortbynew-baker.png') center / 100% 100% no-repeat; transform-origin: 50% 100%; }
-.g-sortbynew .oven { flex: none; width: calc(57 * var(--u)); height: calc(40 * var(--u)); background: url('./art/sortbynew-oven.png') center / 100% 100% no-repeat; }
+.g-sortbynew .baker { flex: none; width: calc(36.5 * var(--u)); height: calc(43 * var(--u)); background: url('./art/sortbynew-baker.png') center / 100% 100% no-repeat; transform-origin: 50% 100%; animation: g-sortbynew-idle 0.9s steps(2) infinite; }
+@keyframes g-sortbynew-idle { 50% { transform: translateY(-0.18em); } }
+.g-sortbynew .oven { position: relative; flex: none; width: calc(56 * var(--u)); height: calc(39 * var(--u)); background: url('./art/sortbynew-oven.png') center / 100% 100% no-repeat; }
+/* The fire in the oven door flickers: a warm glow over the drawn flames, on and off. */
+.g-sortbynew .oven::after { content: ''; position: absolute; left: 27%; right: 27%; top: 58%; bottom: 20%; background: #ffe27a; opacity: 0; animation: g-sortbynew-fire 0.36s steps(2) infinite; }
+@keyframes g-sortbynew-fire { 50% { opacity: 0.38; } }
 .g-sortbynew .sign { padding: 0.1em 0.6em; background: #fff0a8; color: #8e1a2c; font-size: 1.2em; white-space: nowrap; box-shadow: 0 0 0 0.18em #0b1020, 0.25em 0.3em 0 0.18em #0b1020; }
 
 /* The counter: three loaves, each with an age tag above and its title on a slip below. */
