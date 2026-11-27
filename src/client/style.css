@@ -588,28 +588,31 @@ body.fx-low .ui .choice.primary, body.fx-low .ui .choice.primary::before { anima
 /* ---------- the title cards: arrows that fit into each other ----------
    Up arrows and down arrows tile the card exactly: the space between the up arrows IS the
    down arrows. Each is its own layer (a colour showing through an arrow-shaped mask), so
-   on every beat the up arrows slide up half a step and the down arrows slide down half a
-   step, pass through each other, and lock together again. --au is one pixel of the pattern. */
-#card.card-intro, #card.card-count { --au: 0.3rem; background: color-mix(in srgb, var(--r1, #2f9bff) 50%, var(--r2, #1c6fe0)); }
+   the up arrows can glide up half a step while the down arrows glide down half a step,
+   pass through each other, and settle together again. It is a backdrop for words, so it
+   is quiet: the two blues are close to each other, the glide is slow and even, and it
+   rests between moves. --au is one pixel of the pattern. */
+#card.card-intro, #card.card-count { --au: 0.3rem; --a-dark: color-mix(in srgb, var(--r2, #1c6fe0) 45%, var(--r1, #2f9bff)); background: color-mix(in srgb, var(--a-dark) 50%, var(--r1, #2f9bff)); }
 #card.card-intro::before, #card.card-count::before, #card.card-intro::after, #card.card-count::after {
   content: ''; position: absolute; z-index: -1; inset: calc(-16 * var(--au)) 0; opacity: 1; pointer-events: none; will-change: transform;
   -webkit-mask-size: calc(14 * var(--au)) calc(16 * var(--au)); mask-size: calc(14 * var(--au)) calc(16 * var(--au));
   -webkit-mask-position: 50% 0; mask-position: 50% 0; -webkit-mask-repeat: repeat; mask-repeat: repeat; }
-#card.card-intro::before, #card.card-count::before { background: var(--r2, #1c6fe0);
+#card.card-intro::before, #card.card-count::before { background: var(--a-dark);
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 16' shape-rendering='crispEdges'%3E%3Crect x='0' y='0' width='1' height='1'/%3E%3Crect x='0' y='1' width='2' height='1'/%3E%3Crect x='13' y='1' width='1' height='1'/%3E%3Crect x='0' y='2' width='3' height='1'/%3E%3Crect x='12' y='2' width='2' height='1'/%3E%3Crect x='0' y='3' width='4' height='1'/%3E%3Crect x='11' y='3' width='3' height='1'/%3E%3Crect x='0' y='4' width='5' height='1'/%3E%3Crect x='10' y='4' width='4' height='1'/%3E%3Crect x='0' y='5' width='6' height='1'/%3E%3Crect x='9' y='5' width='5' height='1'/%3E%3Crect x='0' y='6' width='7' height='1'/%3E%3Crect x='8' y='6' width='6' height='1'/%3E%3Crect x='0' y='7' width='4' height='1'/%3E%3Crect x='11' y='7' width='3' height='1'/%3E%3Crect x='0' y='8' width='4' height='1'/%3E%3Crect x='11' y='8' width='3' height='1'/%3E%3Crect x='0' y='9' width='4' height='1'/%3E%3Crect x='11' y='9' width='3' height='1'/%3E%3Crect x='0' y='10' width='4' height='1'/%3E%3Crect x='11' y='10' width='3' height='1'/%3E%3Crect x='0' y='11' width='4' height='1'/%3E%3Crect x='11' y='11' width='3' height='1'/%3E%3Crect x='0' y='12' width='4' height='1'/%3E%3Crect x='11' y='12' width='3' height='1'/%3E%3Crect x='0' y='13' width='4' height='1'/%3E%3Crect x='11' y='13' width='3' height='1'/%3E%3Crect x='0' y='14' width='4' height='1'/%3E%3Crect x='11' y='14' width='3' height='1'/%3E%3Crect x='0' y='15' width='4' height='1'/%3E%3Crect x='11' y='15' width='3' height='1'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 16' shape-rendering='crispEdges'%3E%3Crect x='0' y='0' width='1' height='1'/%3E%3Crect x='0' y='1' width='2' height='1'/%3E%3Crect x='13' y='1' width='1' height='1'/%3E%3Crect x='0' y='2' width='3' height='1'/%3E%3Crect x='12' y='2' width='2' height='1'/%3E%3Crect x='0' y='3' width='4' height='1'/%3E%3Crect x='11' y='3' width='3' height='1'/%3E%3Crect x='0' y='4' width='5' height='1'/%3E%3Crect x='10' y='4' width='4' height='1'/%3E%3Crect x='0' y='5' width='6' height='1'/%3E%3Crect x='9' y='5' width='5' height='1'/%3E%3Crect x='0' y='6' width='7' height='1'/%3E%3Crect x='8' y='6' width='6' height='1'/%3E%3Crect x='0' y='7' width='4' height='1'/%3E%3Crect x='11' y='7' width='3' height='1'/%3E%3Crect x='0' y='8' width='4' height='1'/%3E%3Crect x='11' y='8' width='3' height='1'/%3E%3Crect x='0' y='9' width='4' height='1'/%3E%3Crect x='11' y='9' width='3' height='1'/%3E%3Crect x='0' y='10' width='4' height='1'/%3E%3Crect x='11' y='10' width='3' height='1'/%3E%3Crect x='0' y='11' width='4' height='1'/%3E%3Crect x='11' y='11' width='3' height='1'/%3E%3Crect x='0' y='12' width='4' height='1'/%3E%3Crect x='11' y='12' width='3' height='1'/%3E%3Crect x='0' y='13' width='4' height='1'/%3E%3Crect x='11' y='13' width='3' height='1'/%3E%3Crect x='0' y='14' width='4' height='1'/%3E%3Crect x='11' y='14' width='3' height='1'/%3E%3Crect x='0' y='15' width='4' height='1'/%3E%3Crect x='11' y='15' width='3' height='1'/%3E%3C/svg%3E");
-  animation: arrows-up 1.7s infinite; }
+  animation: arrows-up 9s infinite; }
 #card.card-intro::after, #card.card-count::after { background: var(--r1, #2f9bff);
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 16' shape-rendering='crispEdges'%3E%3Crect x='1' y='0' width='13' height='1'/%3E%3Crect x='2' y='1' width='11' height='1'/%3E%3Crect x='3' y='2' width='9' height='1'/%3E%3Crect x='4' y='3' width='7' height='1'/%3E%3Crect x='5' y='4' width='5' height='1'/%3E%3Crect x='6' y='5' width='3' height='1'/%3E%3Crect x='7' y='6' width='1' height='1'/%3E%3Crect x='4' y='7' width='7' height='1'/%3E%3Crect x='4' y='8' width='7' height='1'/%3E%3Crect x='4' y='9' width='7' height='1'/%3E%3Crect x='4' y='10' width='7' height='1'/%3E%3Crect x='4' y='11' width='7' height='1'/%3E%3Crect x='4' y='12' width='7' height='1'/%3E%3Crect x='4' y='13' width='7' height='1'/%3E%3Crect x='4' y='14' width='7' height='1'/%3E%3Crect x='4' y='15' width='7' height='1'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 16' shape-rendering='crispEdges'%3E%3Crect x='1' y='0' width='13' height='1'/%3E%3Crect x='2' y='1' width='11' height='1'/%3E%3Crect x='3' y='2' width='9' height='1'/%3E%3Crect x='4' y='3' width='7' height='1'/%3E%3Crect x='5' y='4' width='5' height='1'/%3E%3Crect x='6' y='5' width='3' height='1'/%3E%3Crect x='7' y='6' width='1' height='1'/%3E%3Crect x='4' y='7' width='7' height='1'/%3E%3Crect x='4' y='8' width='7' height='1'/%3E%3Crect x='4' y='9' width='7' height='1'/%3E%3Crect x='4' y='10' width='7' height='1'/%3E%3Crect x='4' y='11' width='7' height='1'/%3E%3Crect x='4' y='12' width='7' height='1'/%3E%3Crect x='4' y='13' width='7' height='1'/%3E%3Crect x='4' y='14' width='7' height='1'/%3E%3Crect x='4' y='15' width='7' height='1'/%3E%3C/svg%3E");
-  animation: arrows-down 1.7s infinite; }
-/* Half a step, hold, half a step, hold. One full step later the pattern is where it began. */
+  animation: arrows-down 9s infinite; }
+/* Rest, glide half a step, rest, glide half a step. One full step later the pattern is
+   where it began, so the loop has no seam. */
 @keyframes arrows-up {
-  0%, 30% { transform: translateY(0); animation-timing-function: cubic-bezier(0.3, 1.5, 0.5, 1); }
-  50%, 80% { transform: translateY(calc(-8 * var(--au))); animation-timing-function: cubic-bezier(0.3, 1.5, 0.5, 1); }
+  0%, 16% { transform: translateY(0); animation-timing-function: ease-in-out; }
+  50%, 66% { transform: translateY(calc(-8 * var(--au))); animation-timing-function: ease-in-out; }
   100% { transform: translateY(calc(-16 * var(--au))); }
 }
 @keyframes arrows-down {
-  0%, 30% { transform: translateY(0); animation-timing-function: cubic-bezier(0.3, 1.5, 0.5, 1); }
-  50%, 80% { transform: translateY(calc(8 * var(--au))); animation-timing-function: cubic-bezier(0.3, 1.5, 0.5, 1); }
+  0%, 16% { transform: translateY(0); animation-timing-function: ease-in-out; }
+  50%, 66% { transform: translateY(calc(8 * var(--au))); animation-timing-function: ease-in-out; }
   100% { transform: translateY(calc(16 * var(--au))); }
 }
 body.fx-low #card.card-intro::before, body.fx-low #card.card-count::before, body.fx-low #card.card-intro::after, body.fx-low #card.card-count::after { animation: none; opacity: 1; }
