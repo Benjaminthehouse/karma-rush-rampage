@@ -95,6 +95,32 @@
 .actor.op i.sad { background-image: url('./art/op-sad.png'); }
 .actor.op i.shock { background-image: url('./art/op-shock.png'); }
 .actor.op i.angry { background-image: url('./art/op-angry.png'); }
+.actor.troll i.idle { background-image: url('./art/troll-idle.png'); }
+.actor.troll i.happy { background-image: url('./art/troll-happy.png'); }
+.actor.troll i.angry { background-image: url('./art/troll-angry.png'); }
+.actor.troll i.shock { background-image: url('./art/troll-shock.png'); }
+.actor.troll i.sad { background-image: url('./art/troll-sad.png'); }
+.actor.dev i.idle { background-image: url('./art/dev-idle.png'); }
+.actor.dev i.happy { background-image: url('./art/dev-happy.png'); }
+.actor.dev i.shock { background-image: url('./art/dev-shock.png'); }
+.actor.dev i.sad { background-image: url('./art/dev-sad.png'); }
+.actor.ape i.idle { background-image: url('./art/ape-idle.png'); }
+.actor.ape i.cool { background-image: url('./art/ape-cool.png'); }
+.actor.ape i.happy { background-image: url('./art/ape-happy.png'); }
+.actor.ape i.sad { background-image: url('./art/ape-sad.png'); }
+.actor.lurker i.idle { background-image: url('./art/lurker-idle.png'); }
+.actor.lurker i.peep { background-image: url('./art/lurker-peep.png'); }
+.actor.lurker i.shock { background-image: url('./art/lurker-shock.png'); }
+.actor.lurker i.happy { background-image: url('./art/lurker-happy.png'); }
+.actor.automod i.idle { background-image: url('./art/automod-idle.png'); }
+.actor.automod i.talk { background-image: url('./art/automod-talk.png'); }
+.actor.automod i.angry { background-image: url('./art/automod-angry.png'); }
+.actor.automod i.shock { background-image: url('./art/automod-shock.png'); }
+.actor.npc i.idle { background-image: url('./art/npc-idle.png'); }
+.actor.npc i.happy { background-image: url('./art/npc-happy.png'); }
+.actor.npc i.shock { background-image: url('./art/npc-shock.png'); }
+.actor.npc i.angry { background-image: url('./art/npc-angry.png'); }
+.actor.npc i.sleep { background-image: url('./art/npc-sleep.png'); }
 
 /* ---- the sets: shared backdrops, placeholders until drawn. Text on them is dark unless noted ---- */
 /* Courtroom: wood panelling, a bench line, a gold seal. */

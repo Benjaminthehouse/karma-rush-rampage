@@ -2,13 +2,13 @@
 // redrawn here (or swapped for hand-drawn art in ./art) changes in every game at once.
 //
 //   modbear  the mods: judge, bouncer, desk officer         (hand-drawn: sleep, peep, angry)
-//   automod  grey screen-faced robot: rules, orders, bots
-//   troll    green and horned: impostors, alts, sarcasm, rug pulls
+//   automod  grey screen-faced robot: rules, orders, bots         (drawn)
+//   troll    green and horned: impostors, alts, sarcasm, rug pulls (drawn)
 //   op       the poster, a cat: wants upvotes and first comments   (drawn: seven faces, ./art/op-*.png)
-//   dev      hoodie and dark circles: servers, deploys, vibecoding
-//   ape      diamond hands: stonks, rug pulls, the moon
-//   npc      identical grey default people: crowds, voters, extras
-//   lurker   hooded, glowing eyes: watches, remembers, spots reposts
+//   dev      hoodie and dark circles: servers, deploys, vibecoding (drawn)
+//   ape      diamond hands: stonks, rug pulls, the moon            (drawn)
+//   npc      identical grey default people: crowds, voters, extras (drawn)
+//   lurker   hooded, glowing eyes: watches, remembers, spots reposts (drawn)
 import './sprites';
 import { person, type Mood } from './people';
 import { defineSprite, setSprite, sprite } from './px';
@@ -50,6 +50,41 @@ const DRAWN: Partial<Record<Who, { w: number; h: number; faces: string[]; mood: 
     h: 39,
     faces: ['idle', 'happy', 'wink', 'calm', 'sad', 'shock', 'angry'],
     mood: { idle: 'idle', peep: 'idle', talk: 'happy', happy: 'happy', cool: 'wink', wink: 'wink', sleep: 'calm', sad: 'sad', dead: 'sad', shock: 'shock', angry: 'angry' },
+  },  troll: {
+    w: 45,
+    h: 43,
+    faces: ['idle', 'happy', 'angry', 'shock', 'sad'],
+    mood: { idle: 'idle', peep: 'idle', wink: 'idle', cool: 'idle', talk: 'happy', happy: 'happy', angry: 'angry', shock: 'shock', sad: 'sad', dead: 'sad', sleep: 'sad' },
+  },
+  dev: {
+    w: 43,
+    h: 45,
+    faces: ['idle', 'happy', 'shock', 'sad'],
+    mood: { idle: 'idle', peep: 'idle', sleep: 'idle', talk: 'happy', happy: 'happy', cool: 'happy', wink: 'happy', shock: 'shock', angry: 'shock', sad: 'sad', dead: 'sad' },
+  },
+  ape: {
+    w: 45,
+    h: 37,
+    faces: ['idle', 'cool', 'happy', 'sad'],
+    mood: { idle: 'idle', peep: 'idle', sleep: 'idle', cool: 'cool', wink: 'cool', talk: 'happy', happy: 'happy', sad: 'sad', dead: 'sad', shock: 'sad', angry: 'sad' },
+  },
+  lurker: {
+    w: 44,
+    h: 40,
+    faces: ['idle', 'peep', 'shock', 'happy'],
+    mood: { idle: 'idle', talk: 'idle', peep: 'peep', angry: 'peep', sad: 'peep', dead: 'peep', sleep: 'peep', cool: 'happy', happy: 'happy', wink: 'happy', shock: 'shock' },
+  },
+  automod: {
+    w: 36,
+    h: 43,
+    faces: ['idle', 'talk', 'angry', 'shock'],
+    mood: { idle: 'idle', peep: 'idle', happy: 'idle', cool: 'idle', wink: 'idle', sleep: 'idle', talk: 'talk', angry: 'angry', dead: 'angry', sad: 'angry', shock: 'shock' },
+  },
+  npc: {
+    w: 40,
+    h: 42,
+    faces: ['idle', 'happy', 'shock', 'angry', 'sleep'],
+    mood: { idle: 'idle', peep: 'idle', talk: 'happy', happy: 'happy', cool: 'happy', wink: 'happy', shock: 'shock', angry: 'angry', sleep: 'sleep', sad: 'sleep', dead: 'sleep' },
   },
 };
 
