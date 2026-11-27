@@ -84,6 +84,17 @@
 .actor.modbear i.peep { background-image: url('./art/modbear-peep.svg'); }
 .actor.modbear i.angry { background-image: url('./art/modbear-angry.svg'); }
 .actor.modbear.sleep i.sleep, .actor.modbear.peep i.peep, .actor.modbear.angry i.angry { visibility: visible; }
+/* Cast drawn as pixel art: one image per face, stacked, the current one shown. */
+.actor.drawn { position: relative; background: none; }
+.actor.drawn i { position: absolute; inset: 0; background: center / 100% 100% no-repeat; visibility: hidden; }
+.actor.drawn i.on { visibility: visible; }
+.actor.op i.idle { background-image: url('./art/op-idle.png'); }
+.actor.op i.happy { background-image: url('./art/op-happy.png'); }
+.actor.op i.wink { background-image: url('./art/op-wink.png'); }
+.actor.op i.calm { background-image: url('./art/op-calm.png'); }
+.actor.op i.sad { background-image: url('./art/op-sad.png'); }
+.actor.op i.shock { background-image: url('./art/op-shock.png'); }
+.actor.op i.angry { background-image: url('./art/op-angry.png'); }
 
 /* ---- the sets: shared backdrops, placeholders until drawn. Text on them is dark unless noted ---- */
 /* Courtroom: wood panelling, a bench line, a gold seal. */

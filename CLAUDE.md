@@ -32,8 +32,18 @@ A Devvit Web daily game for Reddit's "Game of the Day" hackathon (deadline 8 Dec
 
 ## The art pipeline
 
-The owner supplies art; nothing here generates images. Every piece ends up as a small
-PNG with one image pixel per art pixel, shown with `image-rendering: pixelated`.
+Art comes from the owner (SVGs, sheets) or from the Sprite Fusion connector, which makes
+true pixel art and spends the owner's credits: 15 per request (a set of options, an edit,
+a style match or an animation), 3 for a single sprite. Check `get_credits` first and say
+what a job will cost. Every piece ends up as a small PNG with one image pixel per art
+pixel, shown with `image-rendering: pixelated`.
+
+Sprite Fusion results arrive as enlarged previews saved under the session's tool-results
+folder (exact 5x or 6x blocks): crop to the drawing and sample one pixel per block.
+`generate_sprites_in_style` with an existing piece as the reference keeps the look, and
+its nine options usually include several usable expressions of the same character;
+`edit_sprite` on the chosen one gives the rest. OP the cat was made this way
+(`src/client/kit/art/op-*.png`, wired through `DRAWN` in `src/client/kit/cast.ts`).
 
 | The art arrives as | Use |
 |---|---|

@@ -4,7 +4,7 @@
 //   modbear  the mods: judge, bouncer, desk officer         (hand-drawn: sleep, peep, angry)
 //   automod  grey screen-faced robot: rules, orders, bots
 //   troll    green and horned: impostors, alts, sarcasm, rug pulls
-//   op       the poster, a cat: wants upvotes and first comments
+//   op       the poster, a cat: wants upvotes and first comments   (drawn: seven faces, ./art/op-*.png)
 //   dev      hoodie and dark circles: servers, deploys, vibecoding
 //   ape      diamond hands: stonks, rug pulls, the moon
 //   npc      identical grey default people: crowds, voters, extras
@@ -39,6 +39,20 @@ const BEAR_MOOD: Record<ActorMood, 'sleep' | 'peep' | 'angry'> = {
   shock: 'angry', angry: 'angry', dead: 'angry', sad: 'peep', sleep: 'sleep',
 };
 
+/**
+ * Cast members with drawn pixel art: one PNG per face in ./art (`<who>-<face>.png`, all the
+ * same size), and which face stands in for each mood. The faces are stacked and one is
+ * shown (see `.actor.drawn` in kit.css).
+ */
+const DRAWN: Partial<Record<Who, { w: number; h: number; faces: string[]; mood: Record<ActorMood, string> }>> = {
+  op: {
+    w: 41,
+    h: 39,
+    faces: ['idle', 'happy', 'wink', 'calm', 'sad', 'shock', 'angry'],
+    mood: { idle: 'idle', peep: 'idle', talk: 'happy', happy: 'happy', cool: 'wink', wink: 'wink', sleep: 'calm', sad: 'sad', dead: 'sad', shock: 'shock', angry: 'angry' },
+  },
+};
+
 /** The placeholder faces for the rest of the cast, until they are drawn. */
 const FACES: Record<Exclude<Who, 'modbear' | 'automod'>, Parameters<typeof person>[0]> = {
   troll: { tone: 'green', hat: 'horns' },
@@ -69,6 +83,26 @@ export function actor(who: Who, o: { mood?: ActorMood; px?: number } = {}): Acto
         if (m === mood) return;
         mood = m;
         el.className = `px actor modbear ${BEAR_MOOD[m]}`;
+      },
+    };
+  }
+  const drawn = DRAWN[who];
+  if (drawn) {
+    // Drawn pixel art: every face stacked, the current one shown. As wide as any other actor.
+    const el = document.createElement('div');
+    el.className = `px actor drawn ${who}`;
+    el.style.width = `${16 * px}em`;
+    el.style.aspectRatio = `${drawn.w} / ${drawn.h}`;
+    const faces = drawn.faces.map((f) => el.appendChild(Object.assign(document.createElement('i'), { className: f })));
+    const show = (m: ActorMood) => faces.forEach((f) => f.classList.toggle('on', f.classList.contains(drawn.mood[m])));
+    show(mood);
+    return {
+      el,
+      who,
+      mood(m) {
+        if (m === mood) return;
+        mood = m;
+        show(m);
       },
     };
   }
