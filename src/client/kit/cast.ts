@@ -1,7 +1,7 @@
 // The recurring cast. Every game draws its characters through `actor()`, so a character
 // redrawn here (or swapped for hand-drawn art in ./art) changes in every game at once.
 //
-//   modbear  the mods: judge, bouncer, desk officer         (hand-drawn: sleep, peep, angry)
+//   modbear  the mods: judge, bouncer, desk officer                (drawn)
 //   automod  grey screen-faced robot: rules, orders, bots         (drawn)
 //   troll    green and horned: impostors, alts, sarcasm, rug pulls (drawn)
 //   op       the poster, a cat: wants upvotes and first comments   (drawn: seven faces, ./art/op-*.png)
@@ -33,18 +33,18 @@ const BOT_FACE: Record<string, string[]> = {
 for (const [m, face] of Object.entries(BOT_FACE)) defineSprite(`cast-automod-${m}`, [...BOT_TOP, ...face, ...BOT_BOTTOM]);
 const BOT_MOOD: Partial<Record<ActorMood, string>> = { talk: 'talk', happy: 'happy', cool: 'happy', wink: 'happy', angry: 'angry', dead: 'angry', shock: 'shock', sad: 'sad', sleep: 'sleep' };
 
-/** The hand-drawn Mod Bear moods, and which one stands in for the moods not yet drawn. */
-const BEAR_MOOD: Record<ActorMood, 'sleep' | 'peep' | 'angry'> = {
-  idle: 'peep', peep: 'peep', talk: 'peep', happy: 'sleep', cool: 'sleep', wink: 'peep',
-  shock: 'angry', angry: 'angry', dead: 'angry', sad: 'peep', sleep: 'sleep',
-};
-
 /**
  * Cast members with drawn pixel art: one PNG per face in ./art (`<who>-<face>.png`, all the
  * same size), and which face stands in for each mood. The faces are stacked and one is
  * shown (see `.actor.drawn` in kit.css).
  */
 const DRAWN: Partial<Record<Who, { w: number; h: number; faces: string[]; mood: Record<ActorMood, string> }>> = {
+  modbear: {
+    w: 41,
+    h: 44,
+    faces: ['idle', 'peep', 'happy', 'angry', 'shock', 'sleep'],
+    mood: { idle: 'idle', talk: 'idle', sad: 'idle', peep: 'peep', wink: 'peep', happy: 'happy', cool: 'happy', angry: 'angry', dead: 'angry', shock: 'shock', sleep: 'sleep' },
+  },
   op: {
     w: 41,
     h: 39,
@@ -89,7 +89,7 @@ const DRAWN: Partial<Record<Who, { w: number; h: number; faces: string[]; mood: 
 };
 
 /** The placeholder faces for the rest of the cast, until they are drawn. */
-const FACES: Record<Exclude<Who, 'modbear' | 'automod'>, Parameters<typeof person>[0]> = {
+const FACES: Partial<Record<Who, Parameters<typeof person>[0]>> = {
   troll: { tone: 'green', hat: 'horns' },
   op: { tone: 'gold', kind: 'cat' },
   dev: { tone: 'purple' },
@@ -105,22 +105,6 @@ const FACES: Record<Exclude<Who, 'modbear' | 'automod'>, Parameters<typeof perso
 export function actor(who: Who, o: { mood?: ActorMood; px?: number } = {}): Actor {
   const px = o.px ?? 0.4;
   let mood: ActorMood = o.mood ?? 'idle';
-  if (who === 'modbear') {
-    // Hand-drawn: three SVG drawings stacked, one shown.
-    const el = document.createElement('div');
-    el.className = `px actor modbear ${BEAR_MOOD[mood]}`;
-    el.style.width = `${16 * px}em`;
-    for (const m of ['sleep', 'peep', 'angry']) el.append(Object.assign(document.createElement('i'), { className: m }));
-    return {
-      el,
-      who,
-      mood(m) {
-        if (m === mood) return;
-        mood = m;
-        el.className = `px actor modbear ${BEAR_MOOD[m]}`;
-      },
-    };
-  }
   const drawn = DRAWN[who];
   if (drawn) {
     // Drawn pixel art: every face stacked, the current one shown. As wide as any other actor.

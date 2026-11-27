@@ -78,16 +78,16 @@
 .scene-sun { background: linear-gradient(#ffd84a 0 40%, #ffb03a 40% 72%, #ff8a3d 72%); }
 
 /* ---- the cast (see kit/cast.ts). Mod Bear is hand-drawn: three moods stacked, one shown ---- */
-.actor.modbear { position: relative; aspect-ratio: 614 / 575; }
-.actor.modbear i { position: absolute; inset: 0; background: center / contain no-repeat; visibility: hidden; }
-.actor.modbear i.sleep { background-image: url('./art/modbear-sleep.svg'); }
-.actor.modbear i.peep { background-image: url('./art/modbear-peep.svg'); }
-.actor.modbear i.angry { background-image: url('./art/modbear-angry.svg'); }
-.actor.modbear.sleep i.sleep, .actor.modbear.peep i.peep, .actor.modbear.angry i.angry { visibility: visible; }
 /* Cast drawn as pixel art: one image per face, stacked, the current one shown. */
 .actor.drawn { position: relative; background: none; }
 .actor.drawn i { position: absolute; inset: 0; background: center / 100% 100% no-repeat; visibility: hidden; }
 .actor.drawn i.on { visibility: visible; }
+.actor.modbear i.idle { background-image: url('./art/modbear-idle.png'); }
+.actor.modbear i.peep { background-image: url('./art/modbear-peep.png'); }
+.actor.modbear i.happy { background-image: url('./art/modbear-happy.png'); }
+.actor.modbear i.angry { background-image: url('./art/modbear-angry.png'); }
+.actor.modbear i.shock { background-image: url('./art/modbear-shock.png'); }
+.actor.modbear i.sleep { background-image: url('./art/modbear-sleep.png'); }
 .actor.op i.idle { background-image: url('./art/op-idle.png'); }
 .actor.op i.happy { background-image: url('./art/op-happy.png'); }
 .actor.op i.wink { background-image: url('./art/op-wink.png'); }
