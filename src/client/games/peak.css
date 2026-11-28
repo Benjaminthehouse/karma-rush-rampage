@@ -2,10 +2,10 @@
    Cat and the tally up top, the rule at the bottom next to the buttons. */
 .g-peak { justify-content: space-between !important; gap: 0.3em !important; padding: 0.4em 0.8em 0.7em !important; overflow: hidden; }
 .g-peak .top { flex: none; display: flex; align-items: center; justify-content: center; gap: 0.4em; color: #fff0a8; }
-.g-peak .top .phone { margin-left: -1em; align-self: flex-end; transform: rotate(12deg); }
+.g-peak .top .phone { margin-left: -1.4em; align-self: flex-end; transform: rotate(12deg); }
 .g-peak .note { white-space: nowrap; }
 
-/* The clock: face, slice and hand share one centre. Sizes are in clock pixels (0.34em). */
+/* The clock: face, slice and hand share one centre. Sizes are in clock units (0.34em). */
 .g-peak .clock { position: relative; flex: none; width: 15.3em; height: 15.3em; }
 .g-peak .clock > .px { position: absolute; left: 0; top: 0; }
 /* The hand: a gold needle from the hub to the edge of the face, turning about the hub. */
@@ -21,4 +21,10 @@
 /* Tall stages (a phone held upright): the clock can be bigger. */
 @container (min-height: 560px) {
   .g-peak .clock { font-size: 1.12em; }
+}
+/* Short stages (a small phone, a wide desktop window): a smaller cat and a slightly smaller
+   clock, so the rule at the bottom is never pushed off. */
+@container (max-height: 559px) {
+  .g-peak .top .actor, .g-peak .top .phone { font-size: 0.7em; }
+  .g-peak .clock { font-size: 0.95em; }
 }

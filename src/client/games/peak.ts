@@ -1,14 +1,23 @@
 import './peak.css';
 import { actor, COLOR, clamp1000, defineSprite, h, hasSprite, pulse, randBtn, setSprite, sprite, type ActorMood, type Btn, type GameFactory } from './common';
 
-// The clock, in pixels: a 45-pixel face with a gold rim and a mark at every hour.
+// The clock: a face 45 units across with a gold rim and a mark at every hour, drawn at
+// FINE pixels to the unit so its pixels are about the size of the cat's beside it.
 const S = 45;
 const C = 22;
+const FINE = 2;
 const FACE_R = 16.9; // the face inside the rim
 /** Where a pixel is on the dial, in hours: 0 at twelve o'clock, clockwise. */
 const hourAt = (x: number, y: number) => ((Math.atan2(x - C, C - y) / (2 * Math.PI)) * 12 + 12) % 12;
 const grid = (cell: (x: number, y: number, d: number, hr: number) => string) =>
-  Array.from({ length: S }, (_, y) => Array.from({ length: S }, (_, x) => cell(x, y, Math.hypot(x - C, y - C), hourAt(x, y))).join(''));
+  Array.from({ length: S * FINE }, (_, row) =>
+    Array.from({ length: S * FINE }, (_, col) => {
+      // The middle of this pixel, in clock units.
+      const x = (col + 0.5) / FINE - 0.5;
+      const y = (row + 0.5) / FINE - 0.5;
+      return cell(x, y, Math.hypot(x - C, y - C), hourAt(x, y));
+    }).join(''),
+  );
 
 defineSprite(
   'peak-face',
@@ -45,14 +54,14 @@ function wedge(startQ: number, widthQ: number): string {
         if (d > FACE_R || d < 2.6 || into > width) return '.';
         // A dark edge along both sides, and a stripe of light for texture.
         const side = Math.min(into, width - into) * ((2 * Math.PI * d) / 12);
-        return side < (width < 1.1 ? 0.55 : 0.8) ? 'k' : (x + y) % 5 === 0 ? 'L' : 'A';
+        return side < (width < 1.1 ? 0.55 : 0.8) ? 'k' : Math.round((x + y) * FINE) % 8 === 0 ? 'L' : 'A';
       }),
     );
   }
   return name;
 }
 
-const PX = 0.34; // one clock pixel, in em
+const PX = 0.34 / FINE; // one clock pixel, in em
 
 // One clock, one hand, one coloured slice. The hand sweeps round; the slice is the peak
 // hour. Its colour says which button, the hand says when. Nothing else moves.
@@ -97,9 +106,9 @@ export const create: GameFactory = ({ root, rng, level, duration, good, bad, fx 
   // online; the gold hand is the time now.
   const wrap = h('div', 'g-peak scene-stage');
   const top = h('div', 'top');
-  const cat = actor('op', { px: 0.24 });
+  const cat = actor('op', { px: 0.36 });
   const note = h('span', 'note');
-  top.append(cat.el, sprite('phone', { px: 0.16 }, 'phone'), note);
+  top.append(cat.el, sprite('phone', { px: 0.24 }, 'phone'), note);
   const clock = h('div', 'clock');
   const slice = sprite(wedge(0, baseQ), { tone: 'red', px: PX }, 'slice');
   const hand = h('b', 'hand');
