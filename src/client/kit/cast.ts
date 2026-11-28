@@ -51,8 +51,8 @@ const DRAWN: Partial<Record<Who, { w: number; h: number; faces: string[]; mood: 
     faces: ['idle', 'happy', 'wink', 'calm', 'sad', 'shock', 'angry'],
     mood: { idle: 'idle', peep: 'idle', talk: 'happy', happy: 'happy', cool: 'wink', wink: 'wink', sleep: 'calm', sad: 'sad', dead: 'sad', shock: 'shock', angry: 'angry' },
   },  troll: {
-    w: 45,
-    h: 43,
+    w: 43,
+    h: 40,
     faces: ['idle', 'happy', 'angry', 'shock', 'sad'],
     mood: { idle: 'idle', peep: 'idle', wink: 'idle', cool: 'idle', talk: 'happy', happy: 'happy', angry: 'angry', shock: 'shock', sad: 'sad', dead: 'sad', sleep: 'sad' },
   },
@@ -69,7 +69,7 @@ const DRAWN: Partial<Record<Who, { w: number; h: number; faces: string[]; mood: 
     mood: { idle: 'idle', peep: 'idle', sleep: 'idle', cool: 'cool', wink: 'cool', talk: 'happy', happy: 'happy', sad: 'sad', dead: 'sad', shock: 'sad', angry: 'sad' },
   },
   lurker: {
-    w: 44,
+    w: 45,
     h: 40,
     faces: ['idle', 'peep', 'shock', 'happy'],
     mood: { idle: 'idle', talk: 'idle', peep: 'peep', angry: 'peep', sad: 'peep', dead: 'peep', sleep: 'peep', cool: 'happy', happy: 'happy', wink: 'happy', shock: 'shock' },

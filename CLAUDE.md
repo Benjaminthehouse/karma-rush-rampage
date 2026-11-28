@@ -43,8 +43,16 @@ folder (an exact whole-number enlargement): `python3 tools/sf-exact.py preview.p
 turns one back into the sprite.
 `generate_sprites_in_style` with an existing piece as the reference keeps the look, and
 its nine options usually include several usable expressions of the same character;
-`edit_sprite` on the chosen one gives the rest. OP the cat was made this way
-(`src/client/kit/art/op-*.png`, wired through `DRAWN` in `src/client/kit/cast.ts`).
+`edit_sprite` on the chosen one gives the rest. The cast was made this way
+(`src/client/kit/art/<who>-<face>.png`, wired through `DRAWN` in `src/client/kit/cast.ts`).
+The cast's look is Japanese-cute: a round squishy head, big sparkly eyes set low and wide,
+a tiny mouth, blush cheeks, flat colour with almost no shading, black outline. The owner
+found the earlier, more detailed faces "too illustrative". OP the cat (it has a leaf
+sprout) is the style reference for anything new. All of one character's faces share one
+canvas size, because each is stretched to the same box.
+If a request times out, its results are usually saved anyway: find them with `list_assets`,
+and fetch each with the free `snap_to_palette` (`max_colors: 256`), since the media host is
+not reachable from a cloud session.
 
 Props (coin, rocket, cake, the per-game objects) are drawn too. A PNG in `art/sprites/`
 replaces the hand-typed placeholder sprite of the same name everywhere the game draws it,
