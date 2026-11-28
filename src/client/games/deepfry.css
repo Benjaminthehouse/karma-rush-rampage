@@ -54,9 +54,7 @@
 .g-deepfry .dials { display: flex; gap: 0.5em; }
 .g-deepfry .dial { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.4em; padding: 0.45em 0 0.35em; background: #fff; box-shadow: 0 0 0 0.14em #0b1020; }
 .g-deepfry .knob { position: relative; width: 4.2em; height: 4.2em; }
-.g-deepfry .knob .ring { position: absolute; inset: 0; }
-.g-deepfry .knob .notch { position: absolute; }
-.g-deepfry .knob .turn { position: absolute; left: 0.8em; top: 0.8em; }
+.g-deepfry .knob .turn { display: block; }
 .g-deepfry .knob.crank { animation: g-deepfry-crank 0.1s steps(2); }
 @keyframes g-deepfry-crank { 50% { transform: scale(1.14); } }
 .g-deepfry .name { font-size: 0.74em; letter-spacing: 0.05em; line-height: 1.2; padding: 0 0.45em 0.08em; background: var(--c); color: #0b1020; box-shadow: 0 0 0 0.14em #0b1020; }

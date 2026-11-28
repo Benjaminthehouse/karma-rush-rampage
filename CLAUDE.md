@@ -54,7 +54,9 @@ with `generate_sprites`, `count: 1` (3 credits), size 24 or 32 (48 for furniture
 game's own 42 colours as the palette (`TONES` and `INK` in `px.ts`), and every prompt
 ending "Thick dark outline, bold simple shapes, bright playful colours, one highlight."
 The generator leans pale: gold comes back cream, red comes back with orange shading. Swap
-those pixels for the exact game colours afterwards. A prop the game recolours (a bin in
+those pixels for the exact game colours afterwards, then run `python3 tools/art-ink.py`
+on the new files: the house look is one solid black outline (`#0b1020`) round saturated
+colour, never a grey or navy outline and never pastel fills. A prop the game recolours (a bin in
 each button colour) is drawn in red and listed under `tint` in
 `art/sprites/manifest.json`; `mirror` and `alias` there reuse one drawing.
 
