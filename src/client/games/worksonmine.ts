@@ -152,6 +152,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       const clean = right >= 3 && !wrong; // three for three, and a fourth keeps the gold
       face(mine, 'win', 'WORKS');
       look('happy');
+      pulse(devEl, 'bump');
       banner.innerHTML = clean ? '<span class="stamp gold">CERTIFIED: WORKS EVERYWHERE</span>' : '<span class="stamp">WORKS ON MY MACHINE!</span>';
       good(mine.el, CHEERS[right % CHEERS.length]);
       fx.burst(mine.el, 'green', 18);
@@ -165,6 +166,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
       face(mine, 'boom', bout().errors[0]);
       face(lucky, 'was', 'WORKS');
       look('shock');
+      pulse(devEl, 'shake');
       banner.innerHTML = `<i>“${excuses[wrong % excuses.length]}”</i>`;
       wrong++;
       bad(mine.el, 'NOPE');
@@ -196,7 +198,7 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         phase = 'shuffle';
         rigs.forEach((r) => face(r, 'off'));
         banner.textContent = 'Don’t lose it…';
-        look('cool');
+        look('idle'); // eyes on the shuffle
       }
       if (phase !== 'shuffle') return;
       while (step < swaps && t >= shuffleAt + step * swapMs) swap(bout().moves[step++]);
@@ -205,7 +207,8 @@ export const create: GameFactory = ({ root, rng, level, good, bad, fx }) => {
         desk.className = 'desk ask';
         rigs.forEach((r) => face(r, 'ask'));
         banner.innerHTML = '<b>Which one works?</b>';
-        look('wink');
+        look('sad'); // the sweat drop: "please let it be that one"
+        pulse(devEl, 'bump');
         fx.sound('ding');
       }
     },
