@@ -24,7 +24,7 @@ def flat(img, k):
     )
 
 
-for k in (10, 8, 7, 6, 5, 4, 3, 2, 1):
+for k in (16, 12, 10, 8, 7, 6, 5, 4, 3, 2, 1):
     # The margin is a whole number of blocks too, so snap the crop to the grid.
     b = (box[0] // k * k, box[1] // k * k, -(-box[2] // k) * k, -(-box[3] // k) * k)
     c = im.crop(b)
