@@ -40,14 +40,14 @@ const BOT_MOOD: Partial<Record<ActorMood, string>> = { talk: 'talk', happy: 'hap
  */
 const DRAWN: Partial<Record<Who, { w: number; h: number; faces: string[]; mood: Record<ActorMood, string> }>> = {
   modbear: {
-    w: 41,
-    h: 44,
+    w: 43,
+    h: 41,
     faces: ['idle', 'peep', 'happy', 'angry', 'shock', 'sleep'],
     mood: { idle: 'idle', talk: 'idle', sad: 'idle', peep: 'peep', wink: 'peep', happy: 'happy', cool: 'happy', angry: 'angry', dead: 'angry', shock: 'shock', sleep: 'sleep' },
   },
   op: {
-    w: 41,
-    h: 39,
+    w: 42,
+    h: 42,
     faces: ['idle', 'happy', 'wink', 'calm', 'sad', 'shock', 'angry'],
     mood: { idle: 'idle', peep: 'idle', talk: 'happy', happy: 'happy', cool: 'wink', wink: 'wink', sleep: 'calm', sad: 'sad', dead: 'sad', shock: 'shock', angry: 'angry' },
   },  troll: {
@@ -57,14 +57,14 @@ const DRAWN: Partial<Record<Who, { w: number; h: number; faces: string[]; mood: 
     mood: { idle: 'idle', peep: 'idle', wink: 'idle', cool: 'idle', talk: 'happy', happy: 'happy', angry: 'angry', shock: 'shock', sad: 'sad', dead: 'sad', sleep: 'sad' },
   },
   dev: {
-    w: 43,
-    h: 45,
+    w: 42,
+    h: 40,
     faces: ['idle', 'happy', 'shock', 'sad'],
     mood: { idle: 'idle', peep: 'idle', sleep: 'idle', talk: 'happy', happy: 'happy', cool: 'happy', wink: 'happy', shock: 'shock', angry: 'shock', sad: 'sad', dead: 'sad' },
   },
   ape: {
-    w: 45,
-    h: 37,
+    w: 44,
+    h: 39,
     faces: ['idle', 'cool', 'happy', 'sad'],
     mood: { idle: 'idle', peep: 'idle', sleep: 'idle', cool: 'cool', wink: 'cool', talk: 'happy', happy: 'happy', sad: 'sad', dead: 'sad', shock: 'sad', angry: 'sad' },
   },
@@ -75,14 +75,14 @@ const DRAWN: Partial<Record<Who, { w: number; h: number; faces: string[]; mood: 
     mood: { idle: 'idle', talk: 'idle', peep: 'peep', angry: 'peep', sad: 'peep', dead: 'peep', sleep: 'peep', cool: 'happy', happy: 'happy', wink: 'happy', shock: 'shock' },
   },
   automod: {
-    w: 36,
-    h: 43,
+    w: 42,
+    h: 41,
     faces: ['idle', 'talk', 'angry', 'shock'],
     mood: { idle: 'idle', peep: 'idle', happy: 'idle', cool: 'idle', wink: 'idle', sleep: 'idle', talk: 'talk', angry: 'angry', dead: 'angry', sad: 'angry', shock: 'shock' },
   },
   npc: {
-    w: 40,
-    h: 42,
+    w: 41,
+    h: 39,
     faces: ['idle', 'happy', 'shock', 'angry', 'sleep'],
     mood: { idle: 'idle', peep: 'idle', talk: 'happy', happy: 'happy', cool: 'happy', wink: 'happy', shock: 'shock', angry: 'angry', sleep: 'sleep', sad: 'sleep', dead: 'sleep' },
   },

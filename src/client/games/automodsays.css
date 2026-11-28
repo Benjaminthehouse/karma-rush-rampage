@@ -34,4 +34,4 @@
 .g-automodsays .talk { animation: g-automodsays-bob 0.7s steps(2) infinite; }
 @keyframes g-automodsays-bob { 50% { transform: translateY(-0.3em); } }
 /* The impostors are drawn at the real robot's width and stand on the same spot. */
-.g-automodsays .speaker > .costume { width: 8.96em !important; height: 11.45em !important; background-position: center bottom !important; }
+.g-automodsays .speaker > .costume { width: 8.96em !important; height: 9.6em !important; background-position: center bottom !important; }
