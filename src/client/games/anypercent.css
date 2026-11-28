@@ -14,7 +14,7 @@
 
 .g-anypercent .scene { position: absolute; inset: 0; overflow: hidden; container-type: size; --floor: 22cqh; }
 /* The runner and the track grow with the stage's height, so a tall phone gets a big runner. */
-.g-anypercent .lines, .g-anypercent .strip, .g-anypercent .shadow, .g-anypercent .runner, .g-anypercent .cue, .g-anypercent .callout { font-size: clamp(1em, 6cqh, 1.7em); }
+.g-anypercent .clouds, .g-anypercent .lines, .g-anypercent .strip, .g-anypercent .shadow, .g-anypercent .runner, .g-anypercent .cue, .g-anypercent .callout { font-size: clamp(1em, 6cqh, 1.7em); }
 .g-anypercent .clouds { position: absolute; left: 0; top: 0; width: 200%; height: 100%; }
 .g-anypercent .clouds .px { position: absolute; }
 /* Speed lines: the faster the pace, the more they show. */
@@ -27,14 +27,13 @@
 .g-anypercent .scene.won .banner { display: block; }
 @keyframes g-anypercent-slam { from { transform: translateX(-50%) scale(2.6) rotate(-6deg); opacity: 0; } }
 
-/* The world: a strip that slides left under the runner. */
-.g-anypercent .strip { position: absolute; inset: 0; transition: transform 0.09s linear; }
-.g-anypercent .scene.air .strip { transition: transform 0.24s cubic-bezier(0.3, 0.7, 0.5, 1); }
+/* The world: a strip that slides left under the runner. The game moves it every frame, so no transition here. */
+.g-anypercent .strip { position: absolute; inset: 0; will-change: transform; }
 .g-anypercent .floor { position: absolute; bottom: 0; width: calc(var(--tile) * 24); height: var(--floor); border-top: 0.2em solid #0b1020; background: linear-gradient(#dba678 0 0.3em, #0000 0.3em), repeating-linear-gradient(90deg, #b0703c 0 var(--tile), #9a5f30 var(--tile) calc(var(--tile) * 2)); }
 .g-anypercent .goal { position: absolute; top: 0; bottom: var(--floor); width: 0.8em; margin-left: -0.4em; background: conic-gradient(#fff 25%, #0b1020 0 50%, #fff 0 75%, #0b1020 0) 0 0 / 0.8em 0.8em; box-shadow: 0 0 0 0.15em #0b1020; }
 /* The trophy waits just past the line, clear of the runner's boots as they cross it. */
 .g-anypercent .goal .px { position: absolute; left: calc(var(--tile) / 2 + 2.1em); bottom: 0; }
-.g-anypercent .ghost { position: absolute; top: 6.4em; bottom: var(--floor); width: 0.25em; margin-left: -0.12em; background: #0b1020; transition: left 0.09s linear; }
+.g-anypercent .ghost { position: absolute; top: 6.4em; bottom: var(--floor); width: 0.25em; margin-left: -0.12em; background: #0b1020; }
 .g-anypercent .ghost b { position: absolute; left: 0.25em; top: 0; white-space: nowrap; font-size: 0.8em; padding: 0.1em 0.45em; background: var(--gold); color: #0b1020; box-shadow: 0 0 0 0.15em #0b1020; }
 
 /* A trap is four tiles: a green launch pad and the spike. The pad's near edge sits where the front boot (1.4em
@@ -49,20 +48,24 @@
 .g-anypercent .trap.done .spike { opacity: 0.5; }
 .g-anypercent .trap.hit .spike { transform: scaleY(0.35); filter: grayscale(1); }
 
-/* The runner: a robot head on a body whose boots are the red and blue buttons. */
-.g-anypercent .shadow { position: absolute; left: calc(var(--tile) * (var(--me) + 0.5)); bottom: calc(var(--floor) - 0.55em); width: 2.6em; height: 0.3em; margin-left: -1.3em; background: #0b102066; }
-.g-anypercent .runner { position: absolute; left: calc(var(--tile) * (var(--me) + 0.5)); bottom: var(--floor); width: 3.2em; margin-left: -1.6em; display: flex; flex-direction: column; align-items: center; transform-origin: 50% 65%; }
-.g-anypercent .legs { margin-top: -0.2em; }
+/* The runner: the cat's head on a body whose shoes are the red and blue buttons. */
+.g-anypercent .shadow { position: absolute; left: calc(var(--tile) * (var(--me) + 0.5)); bottom: calc(var(--floor) - 0.55em); width: 3.2em; height: 0.3em; margin-left: -1.6em; background: #0b102066; }
+.g-anypercent .runner { position: absolute; left: calc(var(--tile) * (var(--me) + 0.5)); bottom: var(--floor); width: 3.84em; margin-left: -1.92em; transform-origin: 50% 65%; }
+.g-anypercent .bob { display: flex; flex-direction: column; align-items: center; }
+.g-anypercent .legs { margin-top: -0.3em; }
+/* Every stride is a small bounce. */
+.g-anypercent .bob.g-anypercent-stride { animation: g-anypercent-stride 0.11s ease-out; }
+@keyframes g-anypercent-stride { 45% { transform: translateY(-0.28em); } }
 .g-anypercent .runner.g-anypercent-hop { transform-origin: 50% 50%; animation: g-anypercent-hop 0.3s cubic-bezier(0.3, 0.6, 0.6, 1); }
 .g-anypercent .runner.g-anypercent-whiff { animation: g-anypercent-whiff 0.24s ease-out; }
 .g-anypercent .runner.down { transform: translateY(0.8em) rotate(90deg); animation: g-anypercent-dead 0.12s steps(2) infinite; }
-@keyframes g-anypercent-hop { 50% { transform: translateY(-3.2em) rotate(180deg); } to { transform: rotate(360deg); } }
+@keyframes g-anypercent-hop { 50% { transform: translateY(-3.6em) rotate(180deg); } to { transform: rotate(360deg); } }
 @keyframes g-anypercent-whiff { 40% { transform: translateY(-1em); } }
 @keyframes g-anypercent-dead { 50% { opacity: 0.4; } }
 /* "Press green now": an up arrow over the runner while a spike is in reach. */
-.g-anypercent .cue { position: absolute; left: calc(var(--tile) * (var(--me) + 0.5)); bottom: calc(var(--floor) + 4.9em); margin-left: -1.1em; opacity: 0; }
+.g-anypercent .cue { position: absolute; left: calc(var(--tile) * (var(--me) + 0.5)); bottom: calc(var(--floor) + 6.3em); margin-left: -1.2em; opacity: 0; }
 .g-anypercent .scene.go .cue { opacity: 1; animation: g-anypercent-bob 0.18s steps(2) infinite alternate; }
-.g-anypercent .callout { position: absolute; left: 50%; bottom: calc(var(--floor) + 5.4em); }
+.g-anypercent .callout { position: absolute; left: 50%; bottom: calc(var(--floor) + 6.8em); }
 
 .g-anypercent .chat { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 0.55em; min-height: 1.7em; margin-bottom: 0.7em; }
 .g-anypercent .line { font-size: 0.8em; white-space: nowrap; padding: 0.15em 0.5em; background: #fff; color: #0b1020; box-shadow: 0 0 0 0.16em #0b1020, 0.3em 0.4em 0 #0b102066; }
