@@ -39,11 +39,24 @@ what a job will cost. Every piece ends up as a small PNG with one image pixel pe
 pixel, shown with `image-rendering: pixelated`.
 
 Sprite Fusion results arrive as enlarged previews saved under the session's tool-results
-folder (exact 5x or 6x blocks): crop to the drawing and sample one pixel per block.
+folder (an exact whole-number enlargement): `python3 tools/sf-exact.py preview.png out.png`
+turns one back into the sprite.
 `generate_sprites_in_style` with an existing piece as the reference keeps the look, and
 its nine options usually include several usable expressions of the same character;
 `edit_sprite` on the chosen one gives the rest. OP the cat was made this way
 (`src/client/kit/art/op-*.png`, wired through `DRAWN` in `src/client/kit/cast.ts`).
+
+Props (coin, rocket, cake, the per-game objects) are drawn too. A PNG in `art/sprites/`
+replaces the hand-typed placeholder sprite of the same name everywhere the game draws it,
+inside the box the placeholder had: add or change the PNG, run
+`python3 tools/art-sprites.py`, and it is in `src/client/kit/art.gen.ts`. They were made
+with `generate_sprites`, `count: 1` (3 credits), size 24 or 32 (48 for furniture), the
+game's own 42 colours as the palette (`TONES` and `INK` in `px.ts`), and every prompt
+ending "Thick dark outline, bold simple shapes, bright playful colours, one highlight."
+The generator leans pale: gold comes back cream, red comes back with orange shading. Swap
+those pixels for the exact game colours afterwards. A prop the game recolours (a bin in
+each button colour) is drawn in red and listed under `tint` in
+`art/sprites/manifest.json`; `mirror` and `alias` there reuse one drawing.
 
 | The art arrives as | Use |
 |---|---|

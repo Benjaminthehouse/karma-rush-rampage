@@ -1,6 +1,11 @@
 // Pixel art without image files. A sprite is a grid of characters; each
 // character is a colour. Grids are drawn once to a tiny canvas and shown as a
 // crisp, scaled-up background, so sprites stay sharp at any stage size.
+//
+// A grid can be replaced by a drawn prop of the same name (art/sprites/<name>.png, built
+// into art.gen.ts). The drawing takes the grid's place and its box on screen, so a game
+// that asks for `sprite('coin')` gets the drawn coin without knowing it.
+import { ART, ART_ALPHABET, type Art } from './art.gen';
 
 /** A colour family for the recolourable part of a sprite: [main, shade, light]. */
 export const TONES = {
@@ -56,7 +61,7 @@ export function defineSprite(name: string, art: string | string[]) {
   GRIDS[name] = rows.map((r) => r.padEnd(w, '.'));
 }
 
-export const hasSprite = (name: string) => name in GRIDS;
+export const hasSprite = (name: string) => name in GRIDS || name in ART;
 
 export type Layer = string | { name: string; tone?: Tone; x?: number; y?: number };
 export type SpriteOpts = {
@@ -69,9 +74,40 @@ export type SpriteOpts = {
   px?: number;
 };
 
-const cache = new Map<string, { url: string; w: number; h: number }>();
+const cache = new Map<string, Drawn>();
 
-function render(layers: Layer[], opts: SpriteOpts) {
+type Drawn = { url: string; w: number; h: number; art?: boolean };
+
+/** A drawn prop: its own pixels, with the keyed colour families swapped for the tone asked for. */
+function renderArt(art: Art, opts: SpriteOpts): string {
+  const pal = [...art.pal];
+  if (art.tint) {
+    const to = TONES[opts.tone ?? 'gold'];
+    for (const family of art.tint) {
+      TONES[family].forEach((from, i) => {
+        const at = pal.indexOf(from);
+        if (at >= 0) pal[at] = to[i];
+      });
+    }
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = art.w;
+  canvas.height = art.h;
+  const c = canvas.getContext('2d')!;
+  if (opts.flip || opts.flipY) {
+    c.translate(opts.flip ? art.w : 0, opts.flipY ? art.h : 0);
+    c.scale(opts.flip ? -1 : 1, opts.flipY ? -1 : 1);
+  }
+  for (let i = 0; i < art.px.length; i++) {
+    const ch = art.px[i];
+    if (ch === '.') continue;
+    c.fillStyle = pal[ART_ALPHABET.indexOf(ch)];
+    c.fillRect(i % art.w, Math.floor(i / art.w), 1, 1);
+  }
+  return canvas.toDataURL();
+}
+
+function render(layers: Layer[], opts: SpriteOpts): Drawn {
   const key = JSON.stringify([layers, opts.tone, opts.flip, opts.flipY]);
   const hit = cache.get(key);
   if (hit) return hit;
@@ -83,6 +119,13 @@ function render(layers: Layer[], opts: SpriteOpts) {
     if (!g) continue;
     w = Math.max(w, p.x + g[0].length);
     h = Math.max(h, p.y + g.length);
+  }
+  // One layer with a drawing: show the drawing in the box the grid had.
+  const art = parts.length === 1 ? ART[parts[0].name] : undefined;
+  if (art) {
+    const drawn = { url: renderArt(art, { ...opts, tone: parts[0].tone }), w: GRIDS[parts[0].name] ? w : art.w, h: GRIDS[parts[0].name] ? h : art.h, art: true };
+    cache.set(key, drawn);
+    return drawn;
   }
   const canvas = document.createElement('canvas');
   canvas.width = w;
@@ -112,9 +155,12 @@ function render(layers: Layer[], opts: SpriteOpts) {
 }
 
 function paint(el: HTMLElement, layers: Layer[], opts: SpriteOpts) {
-  const { url, w, h } = render(layers, opts);
+  const { url, w, h, art } = render(layers, opts);
   const px = opts.px ?? 0.25;
   el.style.backgroundImage = `url(${url})`;
+  // A drawing keeps its own proportions inside the grid's box.
+  el.style.backgroundSize = art ? 'contain' : '';
+  el.style.backgroundPosition = art ? 'center' : '';
   el.style.width = `${w * px}em`;
   el.style.height = `${h * px}em`;
 }

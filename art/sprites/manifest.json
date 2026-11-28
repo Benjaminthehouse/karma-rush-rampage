@@ -1,0 +1,16 @@
+{
+  "tint": {
+    "rocket": ["red", "orange"],
+    "cakeday-drop": ["red"],
+    "copypasta-bow": ["red"],
+    "copypasta-penne": ["red"],
+    "copypasta-shell": ["red"],
+    "dumpsterfire-bin": ["red"],
+    "modqueue-stamp": ["red"],
+    "rugpull-coin": ["red"],
+    "voidcanvas-bucket": ["red"],
+    "voidcanvas-brush": ["red"]
+  },
+  "alias": { "tothemoon-rocket": "rocket" },
+  "mirror": { "flame2": "flame1" }
+}
