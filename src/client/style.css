@@ -617,3 +617,19 @@ body.fx-low #cardbg b { animation: none; opacity: 0; }
 @media (prefers-reduced-motion: reduce) {
   #cardbg b { animation: none; opacity: 0; }
 }
+
+/* ---- the Live Party lobby: one big row per player, and empty chairs for those still to come ---- */
+#lobby h2 { font-size: 2.7rem; line-height: 1; margin-bottom: 0.1rem; }
+#lobby .tag { font-size: 1.1rem; color: #c4cbe4; }
+.ui .party-list { gap: 0.6rem; margin: 0.5rem 0 0.3rem; font-size: 1.7rem; }
+.ui .party-list li { align-items: center; justify-content: flex-start; gap: 0.7rem; min-height: 3.5rem; padding: 0.35rem 0.7rem; background: #1a2140; }
+.ui .party-list li.you { background: #2b2713; }
+.ui .party-list .av { position: relative; font-size: 2.5rem; }
+.ui .party-list .who { flex: 1 1 auto; min-width: 0; text-align: left; letter-spacing: 0.02em; }
+.ui .party-list .who em { font-size: 0.85rem; color: #0b1020; background: var(--gold); border: 0; border-radius: 0; padding: 0.05rem 0.35rem 0.1rem; margin-left: 0.5rem; }
+.ui .party-list .ready { flex: none; padding: 0.05rem 0.6rem 0.15rem; font-size: 1.35rem; letter-spacing: 0.05em; color: #0b1020; background: var(--green); box-shadow: 0 0 0 2px #0b1020, 0 4px 0 0 #128a41; animation: party-ready 1.2s steps(2) infinite; }
+.ui .party-list .pts { flex: none; font-size: 1.5rem; }
+.ui .party-list li.open { justify-content: center; min-height: 3.5rem; font-size: 1rem; font-weight: 400; color: #7c86b0; background: #0b102066; box-shadow: none; outline: 2px dashed #3a4370; outline-offset: -2px; }
+@keyframes party-ready { 50% { transform: translateY(-2px); } }
+@media (prefers-reduced-motion: reduce) { .ui .party-list .ready { animation: none; } }
+@media (max-height: 620px) { .ui .party-list { font-size: 1.4rem; gap: 0.4rem; } .ui .party-list li, .ui .party-list li.open { min-height: 2.8rem; } .ui .party-list .av { font-size: 2rem; } }

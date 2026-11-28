@@ -69,7 +69,7 @@ function setPads(labels: [string, string, string], actions?: ((() => void) | nul
 
 const held = [false, false, false];
 /** Shown on the menu so a tester can tell which build they are looking at. */
-const BUILD = 73;
+const BUILD = 74;
 let dayLine = '';
 /** The menu's status line, with the audio state so "no sound" can be told apart by cause. */
 function paintStatus() {
@@ -730,16 +730,21 @@ async function startParty() {
 function paintLobby() {
   if (!party) return;
   const list = $('lobby-players');
-  list.replaceChildren(
-    ...party.players.map((p) => {
-      const li = h('li', p.name === party!.you ? 'you' : '');
-      const total = p.rounds.reduce((a, b) => a + b, 0);
-      const bar = h('i');
-      bar.style.width = `${Math.max(2, (total / MAX_TOTAL) * 100)}%`;
-      li.append(bar, h('span', 'who', p.name === party!.you ? `${p.name} (you)` : p.name), h('span', 'pts', p.inMatch ? fmt(total) : 'ready'));
-      return li;
-    })
-  );
+  const rows = party.players.map((p) => {
+    const me = p.name === party!.you;
+    const li = h('li', me ? 'you' : '');
+    const total = p.rounds.reduce((a, b) => a + b, 0);
+    const bar = h('i');
+    bar.style.width = `${p.inMatch ? Math.max(2, (total / MAX_TOTAL) * 100) : 0}%`;
+    const who = h('span', 'who', shortName(p.name, 14));
+    if (me) who.append(h('em', '', 'YOU'));
+    li.append(bar, avatar(p.name, { url: p.avatar }), who, p.inMatch ? h('span', 'pts', fmt(total)) : h('span', 'ready', 'READY'));
+    return li;
+  });
+  // Empty chairs, so the room reads as a party waiting to fill up.
+  const here = rows.length;
+  for (let i = here; i < 4; i++) rows.push(h('li', 'open', i === here ? 'Waiting for more players…' : ''));
+  list.replaceChildren(...rows);
   const status = $('lobby-status');
   if (party.status === 'running' && !seen.has(party.id)) {
     // Joinable until the first game actually starts (so, all through its instructions).
